@@ -293,7 +293,11 @@ function matches(it, f = F()) {
   if (!visible(it)) return false;
   if (f.group && typeGroup(it.type) !== f.group && it.type !== f.group) return false;
   if (f.families && f.families.length && !(it.colours || []).some(c => f.families.includes((K.byId.colours.get(c) || {}).family))) return false;
-  if (f.gender && f.gender.length && !(it.gender || []).some(g => f.gender.includes(g))) return false;
+  // Androgynous items belong under Masc and Fem too, so either filter finds them
+  if (f.gender && f.gender.length) {
+    const want = new Set(f.gender); if (want.has('masc') || want.has('fem')) want.add('androgynous');
+    if (!(it.gender || []).some(g => want.has(g))) return false;
+  }
   if (f.size && !(it.sizes || []).some(s => String(s.value).toLowerCase() === f.size.toLowerCase())) return false;
   if (f.spicyOnly && !it.spicy) return false;
   if (f.q) { const q = f.q.toLowerCase(); if (![it.name, it.brand, it.notes, kname('types', it.type)].some(s => s && s.toLowerCase().includes(q))) return false; }
