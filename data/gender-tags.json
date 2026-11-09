@@ -1,0 +1,6 @@
+[
+  { "id": "womenswear", "name": "Womenswear" },
+  { "id": "menswear", "name": "Menswear" },
+  { "id": "unisex", "name": "Unisex" },
+  { "id": "androgynous", "name": "Androgynous" }
+]

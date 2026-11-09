@@ -1,0 +1,23 @@
+name: Check data
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Validate each dataset against its schema
+        run: |
+          for f in data/*.json; do
+            set=$(basename "$f" .json)
+            npx --yes ajv-cli@5 validate --spec=draft7 --strict=false -s "data/schema/$set.schema.json" -d "$f"
+          done
+      - name: Check ids and references
+        run: node scripts/check-data.js

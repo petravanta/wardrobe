@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Wardrobe</title>
+<meta name="description" content="Your clothes, outfits and what you wore, kept in an open file in your own Google Drive.">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#172129" media="(prefers-color-scheme: dark)">
+<script>try{var t=localStorage.getItem('petravanta.theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ===== Shared look: petravanta's apps =====
+   Canonical copy of the tokens, type and components used by Fitness Coach and Skating Mentor (and this hub).
+   Apps currently inline this block between "Shared look" and "end shared look"; update both when it changes.
+   Each app only overrides the --accent values after this block. */
+:root{
+  --bg:#eef2f4; --surface:#ffffff; --sunk:#e3e9ec; --line:#cdd6db; --ink:#14212a; --muted:#566771; --faint:#8a99a2;
+  --lv-new:#9aa8b0; --lv-learn:#c07a00; --lv-dev:#2f6fd0; --lv-conf:#11897a; --lv-solid:#0c5e3e;
+  --lv-learn-bg:#fbefd9; --lv-dev-bg:#e1ebfa; --lv-conf-bg:#d9f1ec; --lv-solid-bg:#d5eadf;
+  --danger:#b3261e; --danger-soft:#fbe3e1;
+  --f-display:"Unbounded","Arial Rounded MT Bold",system-ui,sans-serif;
+  --f-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f161b; --surface:#172129; --sunk:#111a20; --line:#2a3842; --ink:#e4ecf0; --muted:#9fb0ba; --faint:#6b7d88;
+  --lv-new:#64757f; --lv-learn:#e6a33a; --lv-dev:#6ea0f0; --lv-conf:#3cc3ad; --lv-solid:#6fd39a;
+  --lv-learn-bg:#3a2a10; --lv-dev-bg:#182a45; --lv-conf-bg:#0f3530; --lv-solid-bg:#143224;
+  --danger:#ff8a80; --danger-soft:#3d1c1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161b; --surface:#172129; --sunk:#111a20; --line:#2a3842; --ink:#e4ecf0; --muted:#9fb0ba; --faint:#6b7d88;
+  --lv-new:#64757f; --lv-learn:#e6a33a; --lv-dev:#6ea0f0; --lv-conf:#3cc3ad; --lv-solid:#6fd39a;
+  --lv-learn-bg:#3a2a10; --lv-dev-bg:#182a45; --lv-conf-bg:#0f3530; --lv-solid-bg:#143224;
+  --danger:#ff8a80; --danger-soft:#3d1c1a; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar{display:flex;align-items:center;gap:16px;padding-block:12px 0;flex-wrap:wrap}
+.brand{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand svg{width:26px;height:26px;flex:none}
+.save-state{margin-left:auto;font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;padding-top:8px;scrollbar-width:none}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:8px 12px 9px;font-weight:600;color:var(--muted);white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+main{padding-block:20px 80px}
+h2{font-family:var(--f-display);font-weight:500;font-size:20px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:none}
+.btn.danger{color:var(--danger)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.btn.big{padding:12px 22px;font-size:16px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+select,input[type=text],input[type=number],textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;min-width:0}
+textarea{resize:vertical}
+.ctx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+@media (max-width:720px){.ctx{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ctx-note{font-size:13px;color:var(--muted);margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.pill.l1{background:var(--lv-learn-bg);color:var(--lv-learn)}
+.pill.l2{background:var(--lv-dev-bg);color:var(--lv-dev)}
+.pill.l3{background:var(--lv-conf-bg);color:var(--lv-conf)}
+.pill.l4{background:var(--lv-solid-bg);color:var(--lv-solid)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:720px){.two{grid-template-columns:minmax(0,1fr)}}
+.banner{background:var(--accent-soft);border-radius:var(--r);padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner p{flex:1 1 260px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:620px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat b{display:block;font-family:var(--f-mono);font-size:24px;font-weight:500}
+.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.meter{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.meter i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.scrim{position:fixed;inset:0;background:rgba(10,16,20,.35);z-index:40}
+.drawer{position:fixed;z-index:41;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line);overflow-y:auto;
+  padding:calc(env(safe-area-inset-top,0px) + 18px) max(18px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) 18px;display:flex;flex-direction:column;gap:16px}
+@media (max-width:640px){.drawer{top:auto;left:0;width:100%;max-height:86vh;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding-left:max(18px,env(safe-area-inset-left,0px))}}
+.drawer .x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:max(12px,env(safe-area-inset-right,0px));background:var(--sunk);border:0;border-radius:999px;width:32px;height:32px;font-size:18px;line-height:1}
+@media (max-width:640px){.drawer .x{top:12px}}
+.drawer h2{padding-right:40px}
+.drawer ul,.cues{margin:0;padding-left:18px}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:inline-flex;align-items:center;gap:5px;font-size:13px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--sunk)}
+.entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:8px 0;border-top:1px solid var(--line)}
+.entry .meta{font-size:12px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.4}}}
+/* ===== end shared look ===== */
+/* Wardrobe accent: slate */
+:root{--accent:#475569;--accent-ink:#ffffff;--accent-soft:#e5e9ef}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--accent:#a5b4c8;--accent-ink:#10161d;--accent-soft:#222b36}}
+:root[data-theme="dark"]{--accent:#a5b4c8;--accent-ink:#10161d;--accent-soft:#222b36}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.bar select{padding:5px 10px;font-size:14px;border-radius:999px}
+.bar .grow{flex:1}
+.swatch{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--line);vertical-align:-1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;list-style:none;margin:0;padding:0}
+@media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0;width:100%}
+.card:hover{border-color:var(--muted)}
+.card .ph{aspect-ratio:3/4;background:var(--sunk);display:grid;place-items:center;color:var(--faint);overflow:hidden}
+.card .ph img{width:100%;height:100%;object-fit:cover}
+.card .ph img.cut{object-fit:contain;padding:8px}
+.card .cap{padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.card .cap b{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .cap span{font-size:12px;color:var(--muted)}
+.card[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:-3px}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap}
+.thumbs figure{margin:0;position:relative;width:96px}
+.thumbs img{width:96px;height:128px;object-fit:cover;border-radius:8px;background:var(--sunk);display:block}
+.thumbs figcaption{font-size:11px;color:var(--muted);text-align:center}
+.thumbs .rm{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;line-height:1}
+.minis{display:flex;gap:4px;margin-top:6px}
+.minis img,.minis i{width:36px;height:48px;border-radius:4px;object-fit:cover;background:var(--sunk);display:block}
+.drop{position:fixed;inset:0;z-index:70;background:color-mix(in srgb,var(--accent) 22%,transparent);border:4px dashed var(--accent);display:grid;place-items:center;pointer-events:none}
+.drop p{background:var(--surface);color:var(--ink);border-radius:999px;padding:12px 22px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.fine-only{display:none}
+@media (pointer:fine){.fine-only{display:inline}}
+.spicy-tag{color:var(--danger)}
+details.more summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px}
+.form{display:flex;flex-direction:column;gap:12px}
+.form .two{gap:12px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0;margin-bottom:4px}
+.sizes .row select,.sizes .row input{flex:1}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="topbar">
+      <a data-hub-link href="../general/">All apps</a>
+      <div class="brand">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 6.5a2.6 2.6 0 1 1 2.6 2.6c-1 0-2.6.9-2.6 2.4v1.2L4.4 21.5a1.6 1.6 0 0 0 1 2.9h21.2a1.6 1.6 0 0 0 1-2.9L16 12.7" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Wardrobe
+      </div>
+      <span class="save-state" id="saveState">Saved in this browser</span>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Sections" role="tablist">
+      <button type="button" role="tab" data-tab="closet" aria-selected="true">Closet</button>
+      <button type="button" role="tab" data-tab="outfits">Outfits</button>
+      <button type="button" role="tab" data-tab="worn">Worn</button>
+      <button type="button" role="tab" data-tab="settings">Settings</button>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="main"></main>
+<div id="layer"></div>
+<input type="file" id="photoIn" accept="image/*" multiple hidden>
+<input type="file" id="backupIn" accept=".json,application/json" hidden>
+<script>
+'use strict';
+/* Wardrobe. A catalogue of the clothes you own, outfits made from them, and a log of what you wore.
+   Built-in knowledge (types, colours, materials, sizes…) comes from data/*.json; items refer to it by id.
+   User data follows the "User data" section of petravanta/general STANDARDS.md: one JSON document, a working copy in
+   localStorage, optional sync to "Wardrobe data.json" in the user's Google Drive.
+   Photos live in this browser (IndexedDB) for now; the Google Photos album adapter is the next step (see README). */
+
+/* Google Drive sync: the shared OAuth client for petravanta.github.io (see README). Leave empty to turn Drive off. */
+const GOOGLE_CLIENT_ID = '326863468616-4hf2conk0ks0s4qdva9tphphdo7ht7eh.apps.googleusercontent.com';
+const KEY = 'wardrobe.data', TAB_KEY = 'wardrobe.tab';
+const LISTS = ['items', 'outfits', 'wears'];
+const DATASETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags'];
+
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const now = () => new Date().toISOString();
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const today = () => new Date().toISOString().slice(0, 10);
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+
+/* ---------- Built-in knowledge ---------- */
+const K = {}; // K.types = [...], K.byId.types = Map
+async function loadKnowledge() {
+  K.byId = {};
+  await Promise.all(DATASETS.map(async set => {
+    const r = await fetch(`data/${set}.json`);
+    if (!r.ok) throw new Error(`data/${set}.json: ${r.status}`);
+    const key = set.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+    K[key] = await r.json(); K.byId[key] = new Map(K[key].map(x => [x.id, x]));
+  }));
+}
+const kname = (set, id) => (K.byId[set].get(id) || { name: id }).name;
+const typeGroup = id => { const t = K.byId.types.get(id); return t ? (t.parent || t.id) : null; };
+const typeSizeSystems = id => { const t = K.byId.types.get(id) || {}; return t.sizeSystems || (K.byId.types.get(t.parent) || {}).sizeSystems || ['letter']; };
+
+/* ---------- User data ---------- */
+function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {} }, items: [], outfits: [], wears: [], deleted: [] }; }
+// Older or partial documents become the current shape; never write an older format
+function upgrade(d) {
+  const b = blankDoc();
+  if (!d || typeof d !== 'object') return b;
+  const out = { ...b, ...d, version: 1, settings: { ...b.settings, ...(d.settings || {}) } };
+  LISTS.forEach(l => { out[l] = Array.isArray(d[l]) ? d[l].filter(r => r && r.id) : []; });
+  out.deleted = Array.isArray(d.deleted) ? d.deleted : [];
+  return out;
+}
+// STANDARDS.md "Merging two copies": by id, newer u wins; deleted ids drop out; newer settings win
+function mergeDocs(a, b) {
+  a = upgrade(a); b = upgrade(b);
+  const deleted = [...new Set([...a.deleted, ...b.deleted])], gone = new Set(deleted);
+  const out = { version: 1, settings: (b.settings.updatedAt || '') > (a.settings.updatedAt || '') ? b.settings : a.settings, deleted };
+  LISTS.forEach(l => {
+    const m = new Map();
+    [...a[l], ...b[l]].forEach(r => { const o = m.get(r.id); if (!o || (r.u || '') > (o.u || '')) m.set(r.id, r); });
+    out[l] = [...m.values()].filter(r => !gone.has(r.id));
+  });
+  return out;
+}
+let doc = upgrade(lsGet(KEY));
+function save() { lsSet(KEY, doc); if (store.known) store.save(doc); showSaveState(); }
+function put(list, rec) { rec.u = now(); const i = doc[list].findIndex(r => r.id === rec.id); i < 0 ? doc[list].push(rec) : doc[list][i] = rec; save(); }
+function remove(list, id) { doc[list] = doc[list].filter(r => r.id !== id); doc.deleted.push(id); save(); }
+function setSetting(k, v) { doc.settings = { ...doc.settings, [k]: v, updatedAt: now() }; save(); }
+const visible = it => doc.settings.showSpicy || !it.spicy;
+const itemById = id => doc.items.find(i => i.id === id);
+
+/* ---------- Photos (this browser only, for now) ---------- */
+// Each item photo is {id, role:'main'|'cutout'|'label', mediaItemId?}. The bytes live in IndexedDB here; once the
+// Google Photos adapter lands, mediaItemId points at the copy in the app's Wardrobe album and this becomes a cache.
+const Photos = (() => {
+  let dbp;
+  const db = () => dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('wardrobe', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('photos'); r.result.createObjectStore('thumbs'); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  }));
+  const tx = async (store, mode, fn) => { const d = await db(); return new Promise((res, rej) => { const t = d.transaction(store, mode), q = fn(t.objectStore(store)); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); }); };
+  const urls = new Map();
+  async function resize(file, max, type = 'image/jpeg', q = .86) {
+    const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+    const s = Math.min(1, max / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+    c.width = Math.round(bmp.width * s); c.height = Math.round(bmp.height * s);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); bmp.close && bmp.close();
+    return new Promise(r => c.toBlob(r, type, q));
+  }
+  return {
+    // Every way in (button, drop, later the Picker and camera) goes through here: same resizing, same storage
+    async add(file) {
+      const id = uid(), png = file.type === 'image/png';
+      const [full, thumb] = await Promise.all([resize(file, 1600, png ? 'image/png' : 'image/jpeg'), resize(file, 400, png ? 'image/png' : 'image/jpeg', .8)]);
+      await tx('photos', 'readwrite', s => s.put(full, id)); await tx('thumbs', 'readwrite', s => s.put(thumb, id));
+      return id;
+    },
+    async thumb(id) {
+      if (urls.has(id)) return urls.get(id);
+      const b = await tx('thumbs', 'readonly', s => s.get(id)).catch(() => null);
+      const u = b ? URL.createObjectURL(b) : ''; urls.set(id, u); return u;
+    },
+    async drop(id) { await tx('photos', 'readwrite', s => s.delete(id)); await tx('thumbs', 'readwrite', s => s.delete(id)); urls.delete(id); }
+  };
+})();
+const isImage = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name);
+const coverPhoto = it => { const p = it.photos || []; return p.find(x => x.role === 'cutout') || p.find(x => x.role === 'main') || p[0]; };
+async function fillThumbs(root = document) {
+  for (const img of $$('img[data-photo]', root)) if (!img.src) { const u = await Photos.thumb(img.dataset.photo); if (u) img.src = u; else img.remove(); }
+}
+
+/* ---------- Filters ---------- */
+// AND across dimensions, OR within one. State lives in settings.filters and syncs.
+const F = () => doc.settings.filters || {};
+function matches(it, f = F()) {
+  if (!visible(it)) return false;
+  if (f.group && typeGroup(it.type) !== f.group && it.type !== f.group) return false;
+  if (f.families && f.families.length && !(it.colours || []).some(c => f.families.includes((K.byId.colours.get(c) || {}).family))) return false;
+  if (f.gender && f.gender.length && !(it.gender || []).some(g => f.gender.includes(g))) return false;
+  if (f.size && !(it.sizes || []).some(s => String(s.value).toLowerCase() === f.size.toLowerCase())) return false;
+  if (f.spicyOnly && !it.spicy) return false;
+  if (f.q) { const q = f.q.toLowerCase(); if (![it.name, it.brand, it.notes, kname('types', it.type)].some(s => s && s.toLowerCase().includes(q))) return false; }
+  return true;
+}
+function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); }
+
+/* ---------- Views ---------- */
+let tab = lsGet(TAB_KEY) || 'closet';
+const wearsOf = id => doc.wears.filter(w => w.item === id || (w.outfit && ((doc.outfits.find(o => o.id === w.outfit) || {}).items || []).includes(id)));
+function render() {
+  $$('#tabs [data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
+  ({ closet: renderCloset, outfits: renderOutfits, worn: renderWorn, settings: renderSettings })[tab]();
+  fillThumbs($('#main'));
+}
+function card(it, pressed) {
+  const p = coverPhoto(it), sub = [kname('types', it.type), it.brand].filter(Boolean).join(' · ');
+  return `<li><button type="button" class="card" data-item="${esc(it.id)}"${pressed == null ? '' : ` aria-pressed="${pressed}"`}>
+    <span class="ph">${p ? `<img alt="" data-photo="${esc(p.id)}"${p.role === 'cutout' ? ' class="cut"' : ''}>` : 'No photo'}</span>
+    <span class="cap"><b>${esc(it.name || kname('types', it.type))}</b><span>${(it.colours || []).slice(0, 3).map(c => `<i class="swatch" style="background:${esc((K.byId.colours.get(c) || {}).hex || '#888')}"></i>`).join(' ')} ${esc(sub)}${it.spicy ? ' <span class="spicy-tag">· spicy</span>' : ''}</span></span>
+  </button></li>`;
+}
+function renderCloset() {
+  const f = F(), items = doc.items.filter(it => matches(it));
+  const groups = K.types.filter(t => !t.parent && (doc.settings.showSpicy || !t.spicy));
+  const fams = [...new Set(K.colours.map(c => c.family))];
+  const gtags = [...new Set([...K.genderTags.map(g => g.id), ...doc.items.flatMap(i => i.gender || [])])];
+  $('#main').innerHTML = `
+  <div class="bar">
+    <button type="button" class="btn primary" data-act="add">Add item</button>
+    <span class="small muted fine-only">or drop photos anywhere</span>
+    <span class="grow"></span>
+    <label class="sr-only" for="q">Search</label><input type="text" id="q" placeholder="Search" value="${esc(f.q || '')}" style="max-width:180px">
+  </div>
+  <div class="bar" role="group" aria-label="Filters">
+    <label class="sr-only" for="fGroup">Item type</label>
+    <select id="fGroup"><option value="">All types</option>${groups.map(g => `<option value="${g.id}"${f.group === g.id ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</select>
+    <label class="sr-only" for="fSize">Size</label>
+    <input type="text" id="fSize" placeholder="Size" value="${esc(f.size || '')}" style="width:80px">
+    <div class="chips">${fams.map(x => `<button type="button" class="chip" data-fam="${x}" aria-pressed="${(f.families || []).includes(x)}">${esc(x)}</button>`).join('')}</div>
+    <div class="chips">${gtags.map(x => `<button type="button" class="chip" data-gender="${esc(x)}" aria-pressed="${(f.gender || []).includes(x)}">${esc(K.byId.genderTags.has(x) ? kname('genderTags', x) : x)}</button>`).join('')}</div>
+    ${doc.settings.showSpicy ? `<button type="button" class="chip" data-spicy aria-pressed="${!!f.spicyOnly}">Spicy only</button>` : ''}
+    ${Object.values(f).some(v => v && (!Array.isArray(v) || v.length)) ? '<button type="button" class="btn ghost sm" data-act="clear">Clear filters</button>' : ''}
+  </div>
+  ${items.length ? `<ul class="grid">${items.map(it => card(it)).join('')}</ul>`
+    : `<div class="empty">${doc.items.length ? 'Nothing matches these filters.' : 'Your closet is empty. Add your first item, or drop a few photos here.'}</div>`}`;
+}
+function renderOutfits() {
+  const outfits = doc.outfits.filter(o => (o.items || []).every(id => { const it = itemById(id); return !it || visible(it); }));
+  $('#main').innerHTML = `
+  <div class="bar"><button type="button" class="btn primary" data-act="new-outfit">New outfit</button></div>
+  ${outfits.length ? `<div class="stack">${outfits.map(o => `<button type="button" class="panel card" data-outfit="${esc(o.id)}" style="padding:12px 14px">
+      <span><b>${esc(o.name || 'Outfit')}</b> <span class="muted small">${esc((o.occasions || []).map(x => kname('occasions', x)).join(', '))}</span></span>
+      <span class="minis">${(o.items || []).map(itemById).filter(Boolean).slice(0, 8).map(it => { const p = coverPhoto(it); return p ? `<img alt="" data-photo="${esc(p.id)}">` : '<i></i>'; }).join('')}</span>
+    </button>`).join('')}</div>` : '<div class="empty">No outfits yet. Put a few items together and save them as an outfit.</div>'}`;
+}
+function renderWorn() {
+  const wears = [...doc.wears].filter(w => { const it = w.item && itemById(w.item); return !it || visible(it); }).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+  const items = doc.items.filter(visible);
+  const counts = new Map(items.map(it => [it.id, wearsOf(it.id).length]));
+  const cpw = items.filter(it => it.price > 0 && counts.get(it.id)).map(it => ({ it, v: it.price / counts.get(it.id) })).sort((a, b) => b.v - a.v);
+  const least = [...items].sort((a, b) => counts.get(a.id) - counts.get(b.id)).slice(0, 6);
+  $('#main').innerHTML = `
+  <div class="bar"><button type="button" class="btn primary" data-act="log-wear">Log what I wore</button></div>
+  <div class="stats" style="margin-bottom:16px">
+    <div class="stat panel"><b>${items.length}</b><span>Items</span></div>
+    <div class="stat panel"><b>${doc.outfits.length}</b><span>Outfits</span></div>
+    <div class="stat panel"><b>${wears.length}</b><span>Times worn</span></div>
+    <div class="stat panel"><b>${items.filter(it => !counts.get(it.id)).length}</b><span>Never worn</span></div>
+  </div>
+  <div class="two">
+    <section class="panel stack"><h3>Wear log</h3>${wears.length ? wears.slice(0, 60).map(w => `<div class="entry"><span>${esc(w.outfit ? ((doc.outfits.find(o => o.id === w.outfit) || {}).name || 'Outfit') : (itemById(w.item) || {}).name || 'Item')}</span><span class="meta mono">${esc((w.at || '').slice(0, 10))} <button type="button" class="btn ghost sm" data-unwear="${esc(w.id)}" aria-label="Remove">×</button></span></div>`).join('') : '<p class="muted">Nothing logged yet.</p>'}</section>
+    <section class="panel stack"><h3>Least worn</h3>${least.map(it => `<div class="entry"><span>${esc(it.name || kname('types', it.type))}</span><span class="meta">${counts.get(it.id)}×</span></div>`).join('') || '<p class="muted">Add items to see this.</p>'}
+      <h3>Cost per wear</h3>${cpw.slice(0, 6).map(({ it, v }) => `<div class="entry"><span>${esc(it.name || kname('types', it.type))}</span><span class="meta mono">${v.toFixed(2)}</span></div>`).join('') || '<p class="muted">Add a price to an item and log a wear to see this.</p>'}</section>
+  </div>`;
+}
+function renderSettings() {
+  const conn = store.known;
+  $('#main').innerHTML = `<div class="stack">
+  <section class="panel stack"><h3>Google Drive</h3>
+    <p>${conn ? `Syncing to <b>${esc(store.file)}</b> in your Google Drive. ${esc(store.status())}` : 'Your wardrobe is saved in this browser. Connect Google Drive to keep it in an open JSON file in your own Drive and use it on other devices.'}</p>
+    <div class="row">${store.configured ? (conn ? '<button type="button" class="btn" data-drive="off">Disconnect</button>' : '<button type="button" class="btn primary" data-drive="on">Connect Google Drive</button>') : '<span class="muted">Drive sync is turned off in this copy.</span>'}</div>
+    <p class="small muted">Photos stay in this browser for now. Saving them to a Wardrobe album in Google Photos is coming next.</p>
+  </section>
+  <section class="panel stack"><h3>Privacy</h3>
+    <label class="row"><input type="checkbox" id="showSpicy"${doc.settings.showSpicy ? ' checked' : ''}> Show spicy items</label>
+    <p class="small muted">When this is off, spicy items are hidden everywhere: the closet, outfits, stats and search.</p>
+  </section>
+  <section class="panel stack"><h3>Backup</h3>
+    <p class="small muted">The backup is the same open JSON as the Drive file. Importing merges it in; nothing is overwritten.</p>
+    <div class="row"><button type="button" class="btn" data-act="export">Export backup</button><button type="button" class="btn" data-act="import">Import backup</button></div>
+  </section></div>`;
+}
+
+/* ---------- Drawers ---------- */
+function openDrawer(html) {
+  $('#layer').innerHTML = `<div class="scrim" data-close></div><div class="drawer" role="dialog" aria-modal="true"><button type="button" class="x" data-close aria-label="Close">×</button>${html}</div>`;
+  fillThumbs($('#layer'));
+  const f = $('#layer input,#layer select,#layer textarea'); if (f) f.focus();
+}
+function closeDrawer() { $('#layer').innerHTML = ''; editing = null; }
+let editing = null; // the item being edited in the drawer, if any (drops add photos to it)
+
+const checks = (name, set, list, sel = []) => `<fieldset><legend>${name}</legend><div class="checks">${list.map(x => `<label><input type="checkbox" name="${set}" value="${esc(x.id)}"${sel.includes(x.id) ? ' checked' : ''}> ${x.hex ? `<i class="swatch" style="background:${x.hex}"></i>` : ''}${esc(x.name)}</label>`).join('')}</div></fieldset>`;
+function itemForm(it) {
+  editing = it;
+  const types = K.types.filter(t => doc.settings.showSpicy || !t.spicy || t.id === it.type);
+  const groups = types.filter(t => !t.parent);
+  const typeOpts = groups.map(g => `<optgroup label="${esc(g.name)}"><option value="${g.id}"${it.type === g.id ? ' selected' : ''}>${esc(g.name)} (other)</option>${types.filter(t => t.parent === g.id).map(t => `<option value="${t.id}"${it.type === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</optgroup>`).join('');
+  const sizes = (it.sizes && it.sizes.length ? it.sizes : [{ system: typeSizeSystems(it.type)[0], value: '' }]);
+  const isNew = !doc.items.some(x => x.id === it.id);
+  openDrawer(`<h2>${isNew ? 'Add item' : esc(it.name || 'Item')}</h2>
+  <div class="thumbs" id="thumbs">${(it.photos || []).map(p => `<figure><img alt="" data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${esc(p.role)}</figcaption></figure>`).join('')}</div>
+  <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button><span class="small muted fine-only">or drop one here</span></div>
+  <form class="form" id="itemForm">
+    <label class="field">Name<input type="text" name="name" value="${esc(it.name || '')}" placeholder="Black midi skirt"></label>
+    <label class="field">Type<select name="type">${typeOpts}</select></label>
+    ${checks('Colours (main first)', 'colours', K.colours, it.colours)}
+    <fieldset class="sizes"><legend>Size</legend>${sizes.map(s => `<div class="row"><select name="sizeSystem">${K.sizeSystems.map(x => `<option value="${x.id}"${s.system === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select><input type="text" name="sizeValue" value="${esc(s.value)}" placeholder="M, 38, 75B…"></div>`).join('')}</fieldset>
+    <div class="two"><label class="field">Brand<input type="text" name="brand" value="${esc(it.brand || '')}"></label>
+    <label class="field">Price<input type="number" name="price" min="0" step="0.01" value="${it.price == null ? '' : esc(it.price)}"></label></div>
+    <label class="field">Bought<input type="text" name="purchased" value="${esc(it.purchased || '')}" placeholder="2025-03"></label>
+    <label class="row"><input type="checkbox" name="spicy"${it.spicy ? ' checked' : ''}> Spicy <span class="small muted">(hidden unless "Show spicy items" is on)</span></label>
+    <details class="more"><summary>More details</summary><div class="form" style="margin-top:12px">
+      ${checks('Materials', 'materials', K.materials.filter(m => doc.settings.showSpicy || !m.spicy || (it.materials || []).includes(m.id)), it.materials)}
+      ${checks('Seasons', 'seasons', K.seasons, it.seasons)}
+      ${checks('Occasions', 'occasions', K.occasions, it.occasions)}
+      ${checks('Care', 'care', K.care, it.care)}
+      <label class="field">Gender tags (cut or where it was sold)<input type="text" name="gender" value="${esc((it.gender || []).join(', '))}" placeholder="${K.genderTags.map(g => g.id).join(', ')}"></label>
+      <label class="field">Notes<textarea name="notes" rows="3">${esc(it.notes || '')}</textarea></label>
+    </div></details>
+    <div class="row"><button type="submit" class="btn primary">Save</button>${isNew ? '' : `<button type="button" class="btn" data-wear-item="${esc(it.id)}">Wore it today</button><span class="grow" style="flex:1"></span><button type="button" class="btn danger" data-del-item="${esc(it.id)}">Delete</button>`}</div>
+  </form>`);
+  // Suggest the spicy flag when a spicy-leaning type or material is picked
+  $('#itemForm').addEventListener('change', e => {
+    const fd = new FormData($('#itemForm')), sp = $('#itemForm [name=spicy]');
+    if (e.target.name === 'type' || e.target.name === 'materials') {
+      const t = K.byId.types.get(fd.get('type')) || {};
+      if ((t.spicy || fd.getAll('materials').some(m => (K.byId.materials.get(m) || {}).spicy)) && !sp.checked) { sp.checked = true; toast('Marked as spicy. Untick it if you’d rather not.'); }
+    }
+  });
+}
+function readItemForm(it) {
+  const fd = new FormData($('#itemForm')), vals = fd.getAll('sizeValue'), sys = fd.getAll('sizeSystem');
+  return {
+    ...it, name: fd.get('name').trim(), type: fd.get('type'), colours: fd.getAll('colours'),
+    sizes: vals.map((v, i) => ({ system: sys[i], value: v.trim() })).filter(s => s.value),
+    brand: fd.get('brand').trim() || undefined, price: fd.get('price') === '' ? undefined : +fd.get('price'),
+    purchased: fd.get('purchased').trim() || undefined, spicy: fd.has('spicy') || undefined,
+    materials: fd.getAll('materials'), seasons: fd.getAll('seasons'), occasions: fd.getAll('occasions'), care: fd.getAll('care'),
+    gender: fd.get('gender').split(',').map(s => s.trim().toLowerCase()).filter(Boolean), notes: fd.get('notes').trim() || undefined
+  };
+}
+const newItem = () => ({ id: uid(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
+function outfitForm(o) {
+  const items = doc.items.filter(visible), sel = new Set(o.items || []);
+  openDrawer(`<h2>${doc.outfits.some(x => x.id === o.id) ? 'Edit outfit' : 'New outfit'}</h2>
+  <form class="form" id="outfitForm">
+    <label class="field">Name<input type="text" name="name" value="${esc(o.name || '')}" placeholder="Club night"></label>
+    ${checks('Occasions', 'occasions', K.occasions, o.occasions)}
+    <fieldset><legend>Items</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, sel.has(it.id))).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
+    <div class="row"><button type="submit" class="btn primary">Save</button>${doc.outfits.some(x => x.id === o.id) ? `<button type="button" class="btn" data-wear-outfit="${esc(o.id)}">Wore it today</button><span style="flex:1"></span><button type="button" class="btn danger" data-del-outfit="${esc(o.id)}">Delete</button>` : ''}</div>
+  </form>`);
+  $('#outfitForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
+  $('#outfitForm').addEventListener('submit', e => {
+    e.preventDefault(); const fd = new FormData(e.target);
+    put('outfits', { ...o, name: fd.get('name').trim(), occasions: fd.getAll('occasions'), items: $$('#outfitForm [data-item][aria-pressed="true"]').map(b => b.dataset.item) });
+    closeDrawer(); render(); toast('Outfit saved');
+  });
+}
+function wearForm() {
+  const items = doc.items.filter(visible);
+  openDrawer(`<h2>Log what I wore</h2>
+  <form class="form" id="wearForm">
+    <label class="field">Date<input type="text" name="at" value="${today()}"></label>
+    ${doc.outfits.length ? `<label class="field">Outfit<select name="outfit"><option value="">Separate items…</option>${doc.outfits.map(o => `<option value="${esc(o.id)}">${esc(o.name || 'Outfit')}</option>`).join('')}</select></label>` : ''}
+    <fieldset><legend>Items</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, false)).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
+    <p class="small muted">Logging from a photo of yourself, with the app suggesting the items, is planned.</p>
+    <div class="row"><button type="submit" class="btn primary">Log it</button></div>
+  </form>`);
+  $('#wearForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
+  $('#wearForm').addEventListener('submit', e => {
+    e.preventDefault(); const fd = new FormData(e.target), at = (fd.get('at') || today()).trim(), outfit = fd.get('outfit');
+    if (outfit) logWear({ outfit }, at);
+    else { const ids = $$('#wearForm [data-item][aria-pressed="true"]').map(b => b.dataset.item); if (!ids.length) return toast('Pick an outfit or at least one item'); ids.forEach(item => logWear({ item }, at)); }
+    closeDrawer(); render();
+  });
+}
+function logWear(what, at = today()) { put('wears', { id: uid(), at, source: 'manual', ...what }); toast('Logged'); }
+
+/* ---------- Adding photos: button, drop, one path ---------- */
+async function takePhotos(files, target) {
+  const all = [...files], imgs = all.filter(isImage), skipped = all.length - imgs.length;
+  if (!imgs.length) return toast('Only photos can be added (JPEG, PNG, WebP, HEIC).');
+  if (target) { // into the item being edited
+    for (const f of imgs) target.photos = [...(target.photos || []), { id: await Photos.add(f), role: (target.photos || []).length ? 'label' : 'main' }];
+    const cur = readItemForm(target); itemForm({ ...cur, photos: target.photos });
+  } else { // one new item per photo; open the first to fill in
+    const made = [];
+    for (const f of imgs) { const it = newItem(); it.photos = [{ id: await Photos.add(f), role: 'main' }]; it.name = ''; made.push(it); }
+    if (made.length > 1) { made.forEach(it => put('items', it)); render(); }
+    itemForm(made[0]);
+  }
+  if (skipped) toast(`Skipped ${skipped} file${skipped > 1 ? 's' : ''} that ${skipped > 1 ? 'aren’t photos' : 'isn’t a photo'}`);
+}
+let dragDepth = 0;
+const isFileDrag = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+function dropLabel(n) { return editing ? `Drop to add ${n > 1 ? n + ' photos' : 'the photo'} to ${editing.name || 'this item'}` : `Drop to add ${n > 1 ? n + ' items' : 'an item'} to your closet`; }
+addEventListener('dragenter', e => {
+  if (!isFileDrag(e)) return; e.preventDefault();
+  if (dragDepth++ === 0) { const d = document.createElement('div'); d.className = 'drop'; d.id = 'dropOverlay'; d.innerHTML = `<p>${esc(dropLabel(e.dataTransfer.items ? e.dataTransfer.items.length : 1))}</p>`; document.body.appendChild(d); }
+});
+addEventListener('dragleave', e => { if (isFileDrag(e) && --dragDepth <= 0) { dragDepth = 0; const d = $('#dropOverlay'); d && d.remove(); } });
+addEventListener('dragover', e => { if (isFileDrag(e)) e.preventDefault(); });
+addEventListener('drop', e => {
+  if (!isFileDrag(e)) return; e.preventDefault(); dragDepth = 0; const d = $('#dropOverlay'); d && d.remove();
+  if ($('#layer').innerHTML && !editing) return toast('Close this panel to add photos');
+  takePhotos(e.dataTransfer.files, editing);
+});
+$('#photoIn').addEventListener('change', e => { takePhotos(e.target.files, editing); e.target.value = ''; });
+
+/* ---------- Backup ---------- */
+function exportBackup() {
+  const blob = new Blob([JSON.stringify({ app: 'wardrobe', saved: now(), ...doc }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Wardrobe backup ${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+}
+$('#backupIn').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!LISTS.some(l => Array.isArray(d[l]))) throw 0; doc = mergeDocs(doc, d); save(); render(); toast('Backup merged in'); }
+  catch (err) { toast('That file isn’t a Wardrobe backup'); }
+});
+
+/* ---------- Events ---------- */
+document.addEventListener('click', async e => {
+  const t = e.target.closest('button,[data-close]'); if (!t) return;
+  const d = t.dataset;
+  if (d.close !== undefined) return closeDrawer();
+  if (d.tab) { tab = d.tab; lsSet(TAB_KEY, tab); return render(); }
+  if (d.act === 'add') return itemForm(newItem());
+  if (d.act === 'photo') return $('#photoIn').click();
+  if (d.act === 'clear') { setSetting('filters', {}); return render(); }
+  if (d.act === 'new-outfit') return outfitForm({ id: uid(), items: [] });
+  if (d.act === 'log-wear') return wearForm();
+  if (d.act === 'export') return exportBackup();
+  if (d.act === 'import') return $('#backupIn').click();
+  if (d.fam) { const s = new Set(F().families || []); s.has(d.fam) ? s.delete(d.fam) : s.add(d.fam); return setFilter('families', [...s]); }
+  if (d.gender) { const s = new Set(F().gender || []); s.has(d.gender) ? s.delete(d.gender) : s.add(d.gender); return setFilter('gender', [...s]); }
+  if (d.spicy !== undefined) return setFilter('spicyOnly', !F().spicyOnly);
+  if (d.item && !t.closest('#layer')) return itemForm(structuredClone(itemById(d.item)));
+  if (d.outfit) return outfitForm(structuredClone(doc.outfits.find(o => o.id === d.outfit)));
+  if (d.rmphoto && editing) { editing.photos = editing.photos.filter(p => p.id !== d.rmphoto); Photos.drop(d.rmphoto); return itemForm({ ...readItemForm(editing), photos: editing.photos }); }
+  if (d.wearItem) { logWear({ item: d.wearItem }); return closeDrawer(), render(); }
+  if (d.wearOutfit) { logWear({ outfit: d.wearOutfit }); return closeDrawer(), render(); }
+  if (d.unwear) { remove('wears', d.unwear); return render(); }
+  if (d.delItem && confirm('Delete this item? Outfits and the wear log keep their other items.')) { const it = itemById(d.delItem); remove('items', d.delItem); (it.photos || []).forEach(p => Photos.drop(p.id)); closeDrawer(); return render(); }
+  if (d.delOutfit && confirm('Delete this outfit? Its items stay in your closet.')) { remove('outfits', d.delOutfit); closeDrawer(); return render(); }
+  if (d.drive === 'off') { store.signOut(); render(); return toast('Disconnected. Your wardrobe stays in this browser.'); }
+  if (d.drive === 'on') {
+    try { doc = mergeDocs(doc, await store.load(true)); save(); render(); toast('Connected to Google Drive'); }
+    catch (err) { toast(err && err.code === 'offline' ? 'You’re offline' : 'Couldn’t connect to Google Drive'); render(); }
+  }
+});
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'itemForm') return;
+  e.preventDefault(); const it = readItemForm(editing);
+  if (!it.name) it.name = kname('types', it.type);
+  put('items', it); closeDrawer(); render(); toast('Saved');
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'showSpicy') { setSetting('showSpicy', e.target.checked); render(); }
+  if (e.target.id === 'fGroup') setFilter('group', e.target.value);
+  if (e.target.id === 'fSize') setFilter('size', e.target.value.trim());
+});
+let qTimer;
+document.addEventListener('input', e => { if (e.target.id === 'q') { clearTimeout(qTimer); qTimer = setTimeout(() => { setFilter('q', e.target.value); const q = $('#q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#layer').innerHTML) closeDrawer(); });
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg, ms = 2600) {
+  clearTimeout(toastTimer); let t = $('.toast');
+  if (!t) { t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.textContent = msg; toastTimer = setTimeout(() => t.remove(), ms);
+}
+
+/* ===== Google sign-in shared by petravanta's apps =====
+   Canonical copy: https://github.com/petravanta/general/blob/main/shared/google-token.js (see STANDARDS.md, "Staying connected to Google Drive").
+   Every app lives on petravanta.github.io and uses the same OAuth client, so a Drive token one app gets works in all of them.
+   This keeps that token where every app can see it (localStorage key petravanta.google), one per Google account, so
+   reconnecting in one app reconnects them all, and an app only ever uses the token of the account it connected with.
+   Google gives a static site no refresh token: a token lasts an hour, and getting a new one opens Google's window,
+   which browsers only allow right after a tap. With the account's email as a hint, that window closes by itself. */
+const GoogleToken=(()=>{
+  const KEY='petravanta.google', SCOPE='https://www.googleapis.com/auth/drive.file';
+  const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||'null')||{}}catch(e){return {}}};
+  const write=v=>{try{localStorage.setItem(KEY,JSON.stringify(v))}catch(e){}};
+  const subs=[];
+  // Another tab or app on this site got a token: let this one pick it up without a tap
+  window.addEventListener('storage',e=>{if(e.key===KEY) subs.forEach(f=>{try{f()}catch(_){}})});
+  function gis(){return new Promise((res,rej)=>{
+    if(window.google&&google.accounts&&google.accounts.oauth2) return res();
+    const s=document.createElement('script'); s.src='https://accounts.google.com/gsi/client'; s.onload=res; s.onerror=()=>rej({code:'offline'}); document.head.appendChild(s)})}
+  // A token for this account with time left on it, or null
+  function get(email){const t=email&&(read().tokens||{})[email]; return t&&t.exp>Date.now()?t:null}
+  // o: {clientId, hint:'email to suggest', prompt:'' | 'select_account' | 'consent'}. Call from a tap. Resolves {token, exp, email}.
+  function request(o){return new Promise(async(res,rej)=>{
+    try{await gis()}catch(e){return rej(e)}
+    google.accounts.oauth2.initTokenClient({client_id:o.clientId,scope:SCOPE,login_hint:o.hint||undefined,error_callback:rej,
+      callback:async r=>{
+        if(r.error) return rej(r);
+        const t={token:r.access_token,exp:Date.now()+(Number(r.expires_in||3600)-60)*1000};
+        // Which account it is, so the token is filed under the right one
+        let email='';
+        try{const j=await (await fetch('https://www.googleapis.com/drive/v3/about?fields=user(emailAddress)',{headers:{Authorization:'Bearer '+t.token}})).json(); email=(j.user&&j.user.emailAddress)||''}catch(e){}
+        if(!email) email=o.hint||'';
+        if(email){
+          const v=read(), now=Date.now(); v.tokens=v.tokens||{};
+          for(const k in v.tokens) if(!(v.tokens[k].exp>now)) delete v.tokens[k];
+          v.tokens[email]=t; v.last=email; write(v);
+        }
+        res({...t,email});
+      }
+    }).requestAccessToken({prompt:o.prompt||''});
+  })}
+  // Signing out on this browser. Google's permission stays, since the other apps and devices still use it.
+  function forget(email){const v=read(); if(v.tokens&&email) delete v.tokens[email]; write(v)}
+  return {get,request,forget,gis,onChange:f=>subs.push(f),get lastEmail(){return read().last||''}};
+})();
+/* ===== end Google sign-in ===== */
+/* ===== Drive store: petravanta's apps =====
+   Canonical copy: https://github.com/petravanta/general/blob/main/shared/drive-store.js (see STANDARDS.md, "Data lives in Google Drive").
+   Needs GoogleToken (shared/google-token.js) inlined above it.
+   Keeps an app's data in one JSON file in the user's Google Drive (drive.file scope: the app only sees files it created).
+   The browser keeps a copy of the last data, so the app opens straight away even when the hour-long Google sign-in has run out,
+   and changes that haven't reached Drive yet (for example while offline). The first tap after that reconnects, merges with
+   Drive's copy and saves. */
+function DriveStore(o){
+  // o: {clientId, file:'App data.json', app:'app-id', key:'localStorage prefix', empty:()=>data, merge:(remote,local)=>data,
+  //     onChange:()=>{}, onRemote:data=>{} (Drive's copy changed what the app shows)}
+  const API='https://www.googleapis.com';
+  const get=k=>{try{return JSON.parse(localStorage.getItem(o.key+'.'+k)||'null')}catch(e){return null}};
+  const put=(k,v)=>{try{v==null?localStorage.removeItem(o.key+'.'+k):localStorage.setItem(o.key+'.'+k,JSON.stringify(v));return true}catch(e){return false}};
+  const S={token:null,exp:0,email:get('email')||'',fileId:get('file'),known:!!get('known'),data:null,stale:false,busy:false,err:null,last:null,timer:null,ask:0};
+  // The app's own token from before tokens were shared; good until it runs out
+  const t=get('token'); if(t&&t.exp>Date.now()){S.token=t.token;S.exp=t.exp} put('token',null);
+  if(S.known){const c=get('copy')||get('pending'); if(c){S.data=c; S.stale=true}}
+  // Load Google's script now: if it only starts loading on the tap, the browser may block its window
+  if(o.clientId&&S.known) GoogleToken.gis().catch(()=>{});
+  const live=()=>{
+    const g=GoogleToken.get(S.email); if(g&&g.exp>S.exp){S.token=g.token;S.exp=g.exp}
+    return !!S.token&&Date.now()<S.exp;
+  };
+  const note=()=>{try{o.onChange&&o.onChange()}catch(e){}};
+  // Opens Google's window, so call this from a tap. For an account that already agreed, the window closes by itself.
+  // A first connect suggests the account the other apps use; after that, the account this app connected with.
+  async function signIn(){
+    const r=await GoogleToken.request({clientId:o.clientId,hint:S.email||(S.known?'':GoogleToken.lastEmail),prompt:S.known||GoogleToken.lastEmail?'':'consent'});
+    S.token=r.token; S.exp=r.exp; S.known=true; put('known',true);
+    if(r.email&&r.email!==S.email){S.email=r.email; put('email',r.email)}
+  }
+  async function call(path,opt={}){
+    if(!live()) throw {code:'expired'};
+    let r; try{r=await fetch(API+path,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+S.token}})}catch(e){throw {code:'offline'}}
+    if(r.status===401){S.token=null; S.exp=0; GoogleToken.forget(S.email); throw {code:'expired'}}
+    if(!r.ok) throw {code:'http',status:r.status};
+    return r;
+  }
+  async function find(){
+    if(S.fileId){try{const j=await (await call(`/drive/v3/files/${S.fileId}?fields=id,trashed`)).json(); if(!j.trashed) return S.fileId}catch(e){if(e.code!=='http') throw e}}
+    const q=encodeURIComponent(`name='${o.file.replace(/'/g,"\\'")}' and trashed=false`);
+    const j=await (await call(`/drive/v3/files?q=${q}&orderBy=modifiedTime desc&fields=files(id)`)).json();
+    S.fileId=j.files&&j.files[0]?j.files[0].id:null; put('file',S.fileId); return S.fileId;
+  }
+  async function read(){const id=await find(); return id?(await call(`/drive/v3/files/${id}?alt=media`)).json():null}
+  async function write(data){
+    const body=JSON.stringify({app:o.app,saved:new Date().toISOString(),...data}), id=await find();
+    if(id){await call(`/upload/drive/v3/files/${id}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body});return}
+    const b='b'+Math.random().toString(36).slice(2), meta=JSON.stringify({name:o.file,mimeType:'application/json'});
+    const j=await (await call('/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},
+      body:`--${b}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${b}\r\nContent-Type: application/json\r\n\r\n${body}\r\n--${b}--`})).json();
+    S.fileId=j.id; put('file',j.id);
+  }
+  // Data opened from this browser's copy may be behind Drive's: merge Drive's in before writing over it
+  async function catchUp(){
+    if(!S.stale) return;
+    const remote=await read(); S.stale=false;
+    if(!remote) return;
+    const before=JSON.stringify(S.data); S.data=o.merge(remote,S.data); put('copy',S.data);
+    if(JSON.stringify(S.data)!==before) try{o.onRemote&&o.onRemote(S.data)}catch(e){}
+  }
+  async function flush(){
+    clearTimeout(S.timer); if(!S.data||S.busy) return;
+    if(!live()){note();return}
+    S.busy=true; note();
+    try{await catchUp(); await write(S.data); S.err=null; S.last=new Date(); put('pending',null)}
+    catch(e){S.err=e.code==='expired'?null:e.code==='offline'?'offline':'error'}
+    finally{S.busy=false; note()}
+  }
+  // Load: Drive's copy, merged with any changes this browser hadn't saved yet. Creates the file on first use.
+  async function load(interactive){
+    if(!live()){ if(!interactive) throw {code:'expired'}; await signIn() }
+    S.busy=true; note();
+    const pending=get('pending');
+    try{
+      const remote=await read();
+      let data=remote?o.merge(remote,o.empty()):o.empty();
+      if(pending) data=o.merge(pending,data);
+      S.data=data; S.stale=false; S.err=null; S.last=new Date(); put('copy',data);
+      if(!remote||pending){await write(data); put('pending',null)}
+      return data;
+    }catch(e){
+      // offline with unsaved changes: carry on from them; they go to Drive once the connection is back
+      if(e.code==='offline'&&pending){S.data=o.merge(pending,o.empty()); S.stale=true; S.err='offline'; return S.data}
+      S.err=e.code==='offline'?'offline':e.code==='expired'?null:'error'; throw e;
+    }finally{S.busy=false; note()}
+  }
+  // Pick up changes made on another device
+  async function refresh(){
+    if(!live()||S.busy||!S.data) return false;
+    try{const r=await read(); if(!r) return false; const before=JSON.stringify(S.data); S.data=o.merge(r,S.data); S.stale=false; put('copy',S.data); return JSON.stringify(S.data)!==before}
+    catch(e){return false}
+  }
+  function save(data){S.data=data; put('copy',data); if(!put('pending',data)) {/* storage full or blocked: Drive still gets it */} clearTimeout(S.timer); S.timer=setTimeout(flush,1500); note()}
+  function signOut(){
+    GoogleToken.forget(S.email);
+    S.token=null; S.exp=0; S.data=null; S.stale=false; S.email=''; ['known','file','pending','copy','email'].forEach(k=>put(k,null)); S.known=false; note();
+  }
+  // Tokens last an hour. Renew on a tap when it is close to running out or gone, then save anything waiting.
+  document.addEventListener('click',e=>{
+    if(!o.clientId||!S.known||e.target.closest('[data-drive]')) return;
+    live(); if(S.exp-Date.now()>10*60000||Date.now()-S.ask<60000) return;
+    S.ask=Date.now(); signIn().then(flush).catch(()=>note());
+  },true);
+  // Another app or tab reconnected this account: carry on with its token
+  GoogleToken.onChange(()=>{if(S.known&&S.data&&live()) flush(); else note()});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden') flush()});
+  window.addEventListener('online',()=>flush());
+  function status(){
+    if(!S.data) return '';
+    if(S.busy) return 'Saving to Google Drive…';
+    const waiting=!!get('pending');
+    if(S.err==='offline') return 'Offline · changes save to Drive when you’re back online';
+    if(S.err) return 'Couldn’t reach Google Drive · will retry';
+    if(!live()) return waiting?'Tap anywhere to save to Google Drive':'Tap anywhere to reconnect Google Drive';
+    if(waiting) return 'Saving to Google Drive…';
+    return 'Saved to Google Drive'+(S.last?' · '+S.last.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'');
+  }
+  return {load,save,flush,refresh,signIn,signOut,status,live,
+    get data(){return S.data}, get known(){return S.known}, get configured(){return !!o.clientId}, get file(){return o.file},
+    get needsTap(){return !!S.data&&!live()}};
+}
+/* ===== end Drive store ===== */
+const store = DriveStore({
+  clientId: GOOGLE_CLIENT_ID, file: 'Wardrobe data.json', app: 'wardrobe', key: 'wardrobe.drive',
+  empty: blankDoc, merge: (remote, local) => mergeDocs(local, remote),
+  onChange: () => showSaveState(),
+  onRemote: data => remoteIn(data)
+});
+function remoteIn(data) { doc = mergeDocs(doc, data); lsSet(KEY, doc); if (!$('#layer').innerHTML) render(); }
+function showSaveState() { $('#saveState').textContent = store.known ? store.status() || 'Saved in this browser' : 'Saved in this browser'; }
+addEventListener('storage', e => { if (e.key === KEY && !$('#layer').innerHTML) { doc = upgrade(lsGet(KEY)); render(); } });
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && store.known && store.live() && await store.refresh()) remoteIn(store.data);
+});
+
+/* ---------- Start ---------- */
+(async () => {
+  try { await loadKnowledge(); }
+  catch (e) { $('#main').innerHTML = `<div class="empty">Couldn’t load the app’s built-in lists (${esc(e.message)}). Check your connection and reload.</div>`; return; }
+  if (store.known && store.data) doc = mergeDocs(doc, store.data);
+  render(); showSaveState();
+  // Home-screen shortcuts: ?do=add-item, ?do=log-wear
+  const act = new URLSearchParams(location.search).get('do');
+  if (act) { history.replaceState(null, '', location.pathname); if (act === 'add-item') itemForm(newItem()); if (act === 'log-wear') wearForm(); }
+  if (store.known && store.live()) {
+    try { doc = mergeDocs(doc, await store.load(false)); lsSet(KEY, doc); store.save(doc); remoteIn(doc); } catch (e) { showSaveState(); }
+  }
+})();
+</script>
+<script src="../general/shared/hub-link.js" defer></script>
+<script src="../general/shared/theme-switch.js" defer></script>
+<script>if('serviceWorker' in navigator&&/^(petravanta\.github\.io|localhost|127\.0\.0\.1|[a-z0-9-]+\.[a-z0-9-]+\.ts\.net)$/.test(location.hostname))navigator.serviceWorker.register('sw.js').catch(function(){})</script>
+</body>
+</html>

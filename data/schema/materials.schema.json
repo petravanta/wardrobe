@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/materials.schema.json",
+  "title": "Wardrobe materials",
+  "description": "Materials an item can be made of.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "Stable id: lowercase letters, digits and hyphens. Saved wardrobes refer to it, so it is never renamed or reused once shipped."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Name shown in the app."
+      },
+      "spicy": {
+        "type": "boolean",
+        "description": "True when items of this kind are usually spicy: the app suggests the spicy flag when one is added, and hides the entry while the spicy switch is off."
+      }
+    }
+  }
+}

@@ -1,0 +1,12 @@
+[
+  { "id": "letter", "name": "Letter", "values": ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL"] },
+  { "id": "eu", "name": "EU" },
+  { "id": "uk", "name": "UK" },
+  { "id": "us", "name": "US" },
+  { "id": "waist", "name": "Waist (cm or in)" },
+  { "id": "waist-inseam", "name": "Waist / inseam" },
+  { "id": "shoe-eu", "name": "Shoe EU" },
+  { "id": "shoe-uk", "name": "Shoe UK" },
+  { "id": "shoe-us", "name": "Shoe US" },
+  { "id": "bra", "name": "Bra (band and cup)" }
+]

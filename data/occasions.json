@@ -1,0 +1,11 @@
+[
+  { "id": "everyday", "name": "Everyday" },
+  { "id": "work", "name": "Work" },
+  { "id": "date", "name": "Date" },
+  { "id": "party", "name": "Party" },
+  { "id": "club-night", "name": "Club night" },
+  { "id": "formal", "name": "Formal" },
+  { "id": "sport", "name": "Sport" },
+  { "id": "travel", "name": "Travel" },
+  { "id": "lounge", "name": "Lounge" }
+]

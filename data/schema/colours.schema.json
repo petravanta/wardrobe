@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/colours.schema.json",
+  "title": "Wardrobe colours",
+  "description": "Colours an item can be tagged with. Items list colour ids, main colour first.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name",
+      "hex",
+      "family"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "Stable id: lowercase letters, digits and hyphens. Saved wardrobes refer to it, so it is never renamed or reused once shipped."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Name shown in the app."
+      },
+      "hex": {
+        "type": "string",
+        "pattern": "^#[0-9a-fA-F]{6}$",
+        "description": "Swatch colour shown in the app, as #rrggbb."
+      },
+      "family": {
+        "type": "string",
+        "enum": [
+          "black",
+          "grey",
+          "white",
+          "brown",
+          "red",
+          "pink",
+          "orange",
+          "yellow",
+          "green",
+          "blue",
+          "purple",
+          "metallic",
+          "pattern"
+        ],
+        "description": "Colour family, so people can filter by \"any red\" as well as by exact colour."
+      }
+    }
+  }
+}

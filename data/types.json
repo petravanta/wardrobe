@@ -1,0 +1,53 @@
+[
+  { "id": "tops", "name": "Tops", "region": "top", "sizeSystems": ["letter", "eu", "uk", "us"] },
+  { "id": "t-shirt", "name": "T-shirt", "parent": "tops" },
+  { "id": "shirt", "name": "Shirt", "parent": "tops" },
+  { "id": "blouse", "name": "Blouse", "parent": "tops" },
+  { "id": "tank-top", "name": "Tank top", "parent": "tops" },
+  { "id": "jumper", "name": "Jumper", "parent": "tops" },
+  { "id": "hoodie", "name": "Hoodie", "parent": "tops" },
+  { "id": "bodysuit", "name": "Bodysuit", "parent": "tops" },
+  { "id": "corset", "name": "Corset", "parent": "tops", "sizeSystems": ["waist", "letter"] },
+  { "id": "crop-top", "name": "Crop top", "parent": "tops" },
+
+  { "id": "bottoms", "name": "Bottoms", "region": "bottom", "sizeSystems": ["letter", "eu", "uk", "us", "waist-inseam"] },
+  { "id": "jeans", "name": "Jeans", "parent": "bottoms" },
+  { "id": "trousers", "name": "Trousers", "parent": "bottoms" },
+  { "id": "shorts", "name": "Shorts", "parent": "bottoms" },
+  { "id": "skirt", "name": "Skirt", "parent": "bottoms", "region": "skirt", "sizeSystems": ["letter", "eu", "uk", "us", "waist"] },
+  { "id": "leggings", "name": "Leggings", "parent": "bottoms" },
+
+  { "id": "dresses", "name": "Dresses and one-pieces", "region": "dress", "sizeSystems": ["letter", "eu", "uk", "us"] },
+  { "id": "dress", "name": "Dress", "parent": "dresses" },
+  { "id": "jumpsuit", "name": "Jumpsuit", "parent": "dresses" },
+  { "id": "catsuit", "name": "Catsuit", "parent": "dresses" },
+
+  { "id": "outerwear", "name": "Outerwear", "region": "top", "sizeSystems": ["letter", "eu", "uk", "us"] },
+  { "id": "jacket", "name": "Jacket", "parent": "outerwear" },
+  { "id": "coat", "name": "Coat", "parent": "outerwear" },
+  { "id": "blazer", "name": "Blazer", "parent": "outerwear" },
+  { "id": "cardigan", "name": "Cardigan", "parent": "outerwear" },
+
+  { "id": "shoes", "name": "Shoes", "region": "shoes", "sizeSystems": ["shoe-eu", "shoe-uk", "shoe-us"] },
+  { "id": "boots", "name": "Boots", "parent": "shoes" },
+  { "id": "sneakers", "name": "Sneakers", "parent": "shoes" },
+  { "id": "heels", "name": "Heels", "parent": "shoes" },
+  { "id": "flats", "name": "Flats", "parent": "shoes" },
+  { "id": "sandals", "name": "Sandals", "parent": "shoes" },
+
+  { "id": "underwear", "name": "Underwear and hosiery", "region": "other", "sizeSystems": ["letter", "bra"] },
+  { "id": "bra", "name": "Bra", "parent": "underwear", "sizeSystems": ["bra"] },
+  { "id": "briefs", "name": "Briefs", "parent": "underwear" },
+  { "id": "tights", "name": "Tights and stockings", "parent": "underwear" },
+  { "id": "lingerie-set", "name": "Lingerie set", "parent": "underwear", "spicy": true },
+
+  { "id": "accessories", "name": "Accessories", "region": "accessory", "sizeSystems": ["letter"] },
+  { "id": "bag", "name": "Bag", "parent": "accessories", "region": "bag" },
+  { "id": "hat", "name": "Hat", "parent": "accessories", "region": "hat" },
+  { "id": "belt", "name": "Belt", "parent": "accessories", "region": "belt", "sizeSystems": ["waist"] },
+  { "id": "scarf", "name": "Scarf", "parent": "accessories", "region": "scarf" },
+  { "id": "gloves", "name": "Gloves", "parent": "accessories" },
+  { "id": "jewellery", "name": "Jewellery", "parent": "accessories" },
+  { "id": "harness", "name": "Harness", "parent": "accessories", "spicy": true },
+  { "id": "collar", "name": "Collar", "parent": "accessories", "spicy": true }
+]

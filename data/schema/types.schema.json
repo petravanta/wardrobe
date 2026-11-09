@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/types.schema.json",
+  "title": "Wardrobe types",
+  "description": "Item types, in two levels: a group (no parent) and the types inside it. An item refers to one type by id.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "Stable id: lowercase letters, digits and hyphens. Saved wardrobes refer to it, so it is never renamed or reused once shipped."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Name shown in the app."
+      },
+      "parent": {
+        "type": "string",
+        "description": "Id of the group this type belongs to. Leave out for a group."
+      },
+      "region": {
+        "type": "string",
+        "enum": [
+          "top",
+          "bottom",
+          "skirt",
+          "dress",
+          "shoes",
+          "bag",
+          "hat",
+          "belt",
+          "scarf",
+          "accessory",
+          "other"
+        ],
+        "description": "Body region the photo recogniser looks for. A type without one uses its group’s. Only regions the code knows are allowed."
+      },
+      "sizeSystems": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "letter",
+            "eu",
+            "uk",
+            "us",
+            "waist",
+            "waist-inseam",
+            "shoe-eu",
+            "shoe-uk",
+            "shoe-us",
+            "bra"
+          ]
+        },
+        "uniqueItems": true,
+        "description": "Size systems offered when adding an item of this type, ids from size-systems.json. A type without one uses its group’s."
+      },
+      "spicy": {
+        "type": "boolean",
+        "description": "True when items of this kind are usually spicy: the app suggests the spicy flag when one is added, and hides the entry while the spicy switch is off."
+      }
+    }
+  }
+}

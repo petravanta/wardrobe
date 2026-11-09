@@ -1,0 +1,21 @@
+{
+  "name": "Wardrobe",
+  "short_name": "Wardrobe",
+  "description": "Your clothes, outfits and what you wore, kept in an open file in your own Google Drive.",
+  "id": "/wardrobe/",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef2f4",
+  "theme_color": "#ffffff",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+    {"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}
+  ],
+  "shortcuts": [
+    {"name": "Add item", "url": "./?do=add-item", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]},
+    {"name": "Log what I wore", "short_name": "Log wear", "url": "./?do=log-wear", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]}
+  ]
+}

@@ -1,0 +1,9 @@
+[
+  { "id": "machine-30", "name": "Machine wash 30°" },
+  { "id": "machine-40", "name": "Machine wash 40°" },
+  { "id": "hand-wash", "name": "Hand wash" },
+  { "id": "dry-clean", "name": "Dry clean only" },
+  { "id": "no-tumble", "name": "Do not tumble dry", "why": "Heat shrinks natural fibres and weakens elastane, so stretch pieces lose their shape." },
+  { "id": "latex-care", "name": "Rinse, dry and polish (latex)", "why": "Sweat and oils break latex down; rinsing it in lukewarm water and storing it polished, away from light and metal, makes it last years." },
+  { "id": "wash-inside-out", "name": "Wash inside out", "why": "Protects prints, dark dyes and surface finishes from rubbing in the drum." }
+]

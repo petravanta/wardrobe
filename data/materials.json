@@ -1,0 +1,22 @@
+[
+  { "id": "cotton", "name": "Cotton" },
+  { "id": "linen", "name": "Linen" },
+  { "id": "wool", "name": "Wool" },
+  { "id": "cashmere", "name": "Cashmere" },
+  { "id": "silk", "name": "Silk" },
+  { "id": "denim", "name": "Denim" },
+  { "id": "leather", "name": "Leather" },
+  { "id": "faux-leather", "name": "Faux leather" },
+  { "id": "suede", "name": "Suede" },
+  { "id": "polyester", "name": "Polyester" },
+  { "id": "viscose", "name": "Viscose" },
+  { "id": "nylon", "name": "Nylon" },
+  { "id": "elastane", "name": "Elastane" },
+  { "id": "velvet", "name": "Velvet" },
+  { "id": "lace", "name": "Lace" },
+  { "id": "mesh", "name": "Mesh" },
+  { "id": "sequins", "name": "Sequins" },
+  { "id": "latex", "name": "Latex", "spicy": true },
+  { "id": "pvc", "name": "PVC", "spicy": true },
+  { "id": "vinyl", "name": "Vinyl", "spicy": true }
+]

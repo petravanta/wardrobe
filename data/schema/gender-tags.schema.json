@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/gender-tags.schema.json",
+  "title": "Wardrobe gender-tags",
+  "description": "Suggested gender tags. They describe the garment’s cut or where it was sold, never the wearer; people can add their own.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "Stable id: lowercase letters, digits and hyphens. Saved wardrobes refer to it, so it is never renamed or reused once shipped."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Name shown in the app."
+      }
+    }
+  }
+}
