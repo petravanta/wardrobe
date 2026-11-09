@@ -2,6 +2,15 @@
 // them as "whering-scan.json" for Wardrobe's Settings → Import from Whering. Paste into the browser console.
 // It only reads the page you're on, from your own signed-in browser. It sends nothing anywhere.
 (async () => {
+  // Visible progress on the page itself, because some sites switch the console's output off
+  const say = (msg, bad) => {
+    try { console.log('[Whering tools] ' + msg); } catch (e) { }
+    let b = document.getElementById('wardrobe-say');
+    if (!b) { b = document.createElement('div'); b.id = 'wardrobe-say'; b.style.cssText = 'position:fixed;z-index:2147483647;left:50%;top:12px;transform:translateX(-50%);max-width:90vw;padding:10px 16px;border-radius:10px;font:600 14px system-ui,sans-serif;color:#fff;box-shadow:0 4px 18px rgba(0,0,0,.3);pointer-events:none'; document.body.appendChild(b); }
+    b.style.background = bad ? '#b3261e' : '#2e4a5e'; b.textContent = msg;
+  };
+  try {
+  say('Scanning: scrolling to load every item…');
   // Scroll to the bottom until nothing new loads, so the whole page (open "All items" for the full closet) is read
   const scroller = [document.scrollingElement, ...document.querySelectorAll('main,div')].filter(Boolean).reduce((b, e) => (e.scrollHeight - e.clientHeight > b.scrollHeight - b.clientHeight ? e : b), document.scrollingElement);
   for (let last = -1, still = 0; still < 3;) {
@@ -36,5 +45,6 @@
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }));
   a.download = 'whering-scan.json'; a.click();
-  console.log(`Whering scan: ${items.length} item(s) from "${heading}", ${items.filter(i => i.imageData).length} with a saved photo.`);
+  say(`Done: ${items.length} item(s) from "${heading}", ${items.filter(i => i.imageData).length} with a saved photo. whering-scan.json is in your Downloads.`);
+  } catch (e) { say('Scan failed: ' + (e && e.message || e), true); }
 })();
