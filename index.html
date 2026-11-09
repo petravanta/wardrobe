@@ -531,7 +531,7 @@ $('#backupIn').addEventListener('change', async e => {
 /* ---------- Import from a Whering scan ---------- */
 // tools/whering-scan.js reads a Whering category page in the person's own browser. Each scanned item becomes an
 // ordinary Wardrobe item flagged needsReview, with the original Whering link and image URL kept in item.whering.
-const WHERING_TYPES = [[/bag|purse|tote|clutch|backpack/, 'bag'], [/shoe|boot|sneaker|trainer|heel|sandal|flat/, 'shoes'], [/dress/, 'dress'], [/skirt/, 'skirt'],
+const WHERING_TYPES = [[/bag|purse|tote|clutch|backpack/, 'bag'], [/footwear|shoe|boot|sneaker|trainer|heel|sandal|flat/, 'shoes'], [/full|dress|jumpsuit|catsuit/, 'dresses'], [/skirt/, 'skirt'],
   [/trouser|pant|jean|short|legging/, 'bottoms'], [/coat|jacket|blazer|cardigan|outer/, 'outerwear'], [/top|shirt|tee|blouse|jumper|knit|hoodie/, 'tops'],
   [/hat|cap|beanie/, 'hat'], [/belt/, 'belt'], [/scarf/, 'scarf'], [/jewel|ring|necklace|earring|bracelet/, 'jewellery'], [/access/, 'accessories']];
 const guessType = text => { const t = (text || '').toLowerCase(); const m = WHERING_TYPES.find(([re]) => re.test(t)); return m ? m[1] : 'accessories'; };

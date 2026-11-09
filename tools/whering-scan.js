@@ -12,28 +12,29 @@
   try {
   say('Scanning: scrolling to load every item…');
   // Scroll to the bottom until nothing new loads, so the whole page (open "All items" for the full closet) is read
-  const scroller = [document.scrollingElement, ...document.querySelectorAll('main,div')].filter(Boolean).reduce((b, e) => (e.scrollHeight - e.clientHeight > b.scrollHeight - b.clientHeight ? e : b), document.scrollingElement);
-  for (let last = -1, still = 0; still < 3;) {
-    scroller.scrollTop = scroller.scrollHeight; await new Promise(r => setTimeout(r, 900));
-    const n = document.images.length; still = n === last ? still + 1 : 0; last = n;
-  }
-  scroller.scrollTop = 0;
-  const MIN = 90; // ignore icons and avatars smaller than this (px)
+  const MIN = 150; // item tiles are big photos; category icons and avatars are smaller
   const clean = s => (s || '').replace(/\s+/g, ' ').trim();
   const heading = clean((document.querySelector('h1') || {}).textContent) || clean(document.title);
   const seen = new Set(), items = [];
-  for (const img of document.querySelectorAll('img')) {
-    const r = img.getBoundingClientRect(), url = img.currentSrc || img.src;
-    if (!url || seen.has(url) || r.width < MIN || r.height < MIN || /avatar|logo|icon|sprite/i.test(url)) continue;
-    seen.add(url);
-    const a = img.closest('a'), card = img.closest('li,article,[role=listitem],a,div');
-    items.push({
-      name: clean(img.alt || img.title || img.getAttribute('aria-label')),
-      text: clean(card && card.innerText).slice(0, 200),
-      href: a ? a.href : '',
-      imageUrl: url
-    });
+  const collect = () => {
+    for (const img of document.querySelectorAll('img')) {
+      const r = img.getBoundingClientRect(), url = img.currentSrc || img.src;
+      if (!url || seen.has(url) || r.width < MIN || r.height < MIN || /avatar|logo|icon|sprite/i.test(url)) continue;
+      seen.add(url);
+      const a = img.closest('a'), card = img.closest('li,article,[role=listitem],a,div');
+      items.push({ name: clean(img.alt || img.title || img.getAttribute('aria-label')), text: clean(card && card.innerText).slice(0, 200), href: a ? a.href : '', imageUrl: url });
+    }
+  };
+  // Scroll a screen at a time and collect as we go: the page may only keep the tiles near the screen
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const sc = document.scrollingElement; sc.scrollTop = 0; await wait(600);
+  for (let dry = 0; dry < 4;) {
+    collect(); const before = items.length;
+    sc.scrollTop += innerHeight * 0.8; await wait(900); collect();
+    dry = items.length === before ? dry + 1 : 0;
+    say(`Scanning… ${items.length} item(s) so far`);
   }
+  sc.scrollTop = 0;
   // Keep a copy of each photo so it still exists if the link expires (skipped quietly if the site blocks it)
   for (const it of items) {
     try {

@@ -48,23 +48,31 @@
   //   await wheringWalk()               // then all of them (about 20 s per item)
   window.wheringWalk = async (o = {}) => { try {
     const every = o.every || 10000, pause = () => new Promise(r => setTimeout(r, every + Math.random() * 2000 - 1000));
-    const hrefs = [...new Set([...document.querySelectorAll('a[href*="/pieces/"]')].map(a => a.getAttribute('href')))].slice(0, o.limit || Infinity);
-    if (!hrefs.length) return say('No item links found on this page. Open the items list first (the page where each item is a tile).', true);
-    say(`Walking ${hrefs.length} item(s), about ${Math.round(hrefs.length * every * 2 / 60000)} minute(s). Don't reload or close the tab.`);
-    const listUrl = location.href; let n = 0;
-    for (const h of hrefs) {
-      let a = document.querySelector(`a[href="${h}"]`);
-      if (!a) { await window.wheringScroll(); a = document.querySelector(`a[href="${h}"]`); }
-      if (!a) { say('Could not find ' + h, true); continue; }
-      a.click(); await pause();
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    // An item tile is a big photo; the round category icons and avatars are smaller than this
+    const tiles = () => [...document.images].filter(i => { const r = i.getBoundingClientRect(); return r.width >= 150 && r.height >= 150 && (i.currentSrc || i.src) && !/avatar|logo|icon|sprite/i.test(i.currentSrc || i.src); });
+    const key = i => (i.currentSrc || i.src).split('?')[0];
+    const done = new Set(); let n = 0, dry = 0;
+    const listUrl = location.href;
+    say('Walking your items, one about every ' + Math.round(every / 1000) + ' s. Don\'t reload or close the tab.');
+    while (dry < 4 && n < (o.limit || Infinity)) {
+      const next = tiles().find(i => !done.has(key(i)));
+      if (!next) { // nothing new in view: scroll to load more, give up after a few empty scrolls
+        const before = document.images.length;
+        (document.scrollingElement).scrollTop += innerHeight * 0.8; await wait(1500);
+        dry = document.images.length === before ? dry + 1 : 0; continue;
+      }
+      dry = 0; done.add(key(next));
+      next.scrollIntoView({ block: 'center' }); await wait(400);
+      (next.closest('a,button,[role=button],[role=link]') || next).click(); await pause();
       const main = document.querySelector('main') || document.body;
-      got.set('detail:' + h, { url: h, at: new Date().toISOString(), page: location.href, title: document.title, text: main.innerText.slice(0, 4000),
+      got.set('detail:' + key(next), { tileImage: key(next), at: new Date().toISOString(), page: location.href, title: document.title, text: main.innerText.slice(0, 4000),
         fields: [...main.querySelectorAll('dt,label,[class*=label i],[class*=title i]')].map(e => e.innerText.trim()).filter(Boolean).slice(0, 60) });
-      say(`Read ${++n} of ${hrefs.length}…`);
-      if (location.href !== listUrl) history.back();
-      await pause();
+      say(`Read ${++n} of about 103…`);
+      if (location.href !== listUrl) { history.back(); await pause(); }
+      else { const x = document.querySelector('[aria-label*=close i],[aria-label*=back i],button[class*=close i]'); if (x) { x.click(); await pause(); } else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); }
     }
-    say('Walk finished: now run wheringSave()');
+    say(`Walk finished: read ${n} item(s). Now run wheringSave()`);
   } catch (e) { say('Walk failed: ' + (e && e.message || e), true); } };
   window.wheringSave = () => {
     const out = { format: 'whering-capture', formatVersion: 1, savedAt: new Date().toISOString(), page: location.href, responses: [...got.values()] };
