@@ -29,6 +29,20 @@ Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` f
 - Light and dark themes, the hub's *All apps* menu, and install as an app (shortcuts *Add item* and *Log
   what I wore*).
 
+## Importing from Whering
+
+Whering has no export, so the import reads the page in your own signed-in browser:
+
+1. Sign in to Whering, open a category (for example Bags) and scroll until every item has loaded.
+2. Open the browser console (F12), paste the contents of `tools/whering-scan.js` and press Enter
+   (Chrome may ask you to type `allow pasting` first). It downloads `whering-scan.json`.
+3. In Wardrobe, **Settings → Import Whering scan**, and pick that file.
+
+Each scanned item becomes a normal item flagged `needsReview`, with its type guessed from the category and
+name, the photo saved in this browser (when Whering allows the copy), and the original link and image URL kept
+in `item.whering`. Items already imported are skipped. The scanner is generic (it reads images and their
+nearby text), so Whering page changes may need a tweak. Photos move to Google Photos once that adapter exists.
+
 ## Next steps
 
 From the spec, roughly in order:

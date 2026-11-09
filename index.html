@@ -175,6 +175,7 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
 <div id="layer"></div>
 <input type="file" id="photoIn" accept="image/*" multiple hidden>
 <input type="file" id="backupIn" accept=".json,application/json" hidden>
+<input type="file" id="wheringIn" accept=".json,application/json" hidden>
 <script>
 'use strict';
 /* Wardrobe. A catalogue of the clothes you own, outfits made from them, and a log of what you wore.
@@ -384,6 +385,10 @@ function renderSettings() {
   <section class="panel stack"><h3>Backup</h3>
     <p class="small muted">The backup is the same open JSON as the Drive file. Importing merges it in; nothing is overwritten.</p>
     <div class="row"><button type="button" class="btn" data-act="export">Export backup</button><button type="button" class="btn" data-act="import">Import backup</button></div>
+  </section>
+  <section class="panel stack"><h3>Import from Whering</h3>
+    <p class="small muted">Run <code>tools/whering-scan.js</code> in your browser console on a Whering category page, then pick the <code>whering-scan.json</code> it downloads. Items already imported are skipped, and each keeps its original Whering link.</p>
+    <div class="row"><button type="button" class="btn" data-act="import-whering">Import Whering scan</button></div>
   </section></div>`;
 }
 
@@ -523,6 +528,37 @@ $('#backupIn').addEventListener('change', async e => {
   catch (err) { toast('That file isn’t a Wardrobe backup'); }
 });
 
+/* ---------- Import from a Whering scan ---------- */
+// tools/whering-scan.js reads a Whering category page in the person's own browser. Each scanned item becomes an
+// ordinary Wardrobe item flagged needsReview, with the original Whering link and image URL kept in item.whering.
+const WHERING_TYPES = [[/bag|purse|tote|clutch|backpack/, 'bag'], [/shoe|boot|sneaker|trainer|heel|sandal|flat/, 'shoes'], [/dress/, 'dress'], [/skirt/, 'skirt'],
+  [/trouser|pant|jean|short|legging/, 'bottoms'], [/coat|jacket|blazer|cardigan|outer/, 'outerwear'], [/top|shirt|tee|blouse|jumper|knit|hoodie/, 'tops'],
+  [/hat|cap|beanie/, 'hat'], [/belt/, 'belt'], [/scarf/, 'scarf'], [/jewel|ring|necklace|earring|bracelet/, 'jewellery'], [/access/, 'accessories']];
+const guessType = text => { const t = (text || '').toLowerCase(); const m = WHERING_TYPES.find(([re]) => re.test(t)); return m ? m[1] : 'accessories'; };
+async function importWhering(file) {
+  let scan; try { scan = JSON.parse(await file.text()); } catch (e) { scan = null; }
+  if (!scan || scan.format !== 'whering-scan' || !Array.isArray(scan.items)) return toast('That isn’t a Whering scan file');
+  const have = new Set(doc.items.map(i => i.whering && i.whering.imageUrl).filter(Boolean));
+  let added = 0, skipped = 0, photoless = 0;
+  for (const s of scan.items) {
+    if (!s.imageUrl || have.has(s.imageUrl)) { skipped++; continue; }
+    const it = newItem();
+    it.name = (s.name || '').trim(); it.type = guessType(`${scan.category} ${s.name}`); it.needsReview = true; it.photos = [];
+    it.whering = { imageUrl: s.imageUrl, href: s.href || undefined, category: scan.category || undefined, scannedAt: scan.scannedAt };
+    if (s.text && s.text !== s.name) it.notes = s.text;
+    try {
+      const blob = s.imageData ? await (await fetch(s.imageData)).blob() : null;
+      if (blob) it.photos = [{ id: await Photos.add(new File([blob], 'whering.' + (blob.type.split('/')[1] || 'jpg'), { type: blob.type })), role: 'main' }];
+    } catch (e) { /* keep the link only */ }
+    if (!it.photos.length) photoless++;
+    if (!it.name) it.name = kname('types', it.type);
+    put('items', it); have.add(s.imageUrl); added++;
+  }
+  tab = 'closet'; lsSet(TAB_KEY, tab); render();
+  toast(`Imported ${added} item${added === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} already here` : ''}${photoless ? `, ${photoless} without a saved photo` : ''}`, 5000);
+}
+$('#wheringIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importWhering(f); });
+
 /* ---------- Events ---------- */
 document.addEventListener('click', async e => {
   const t = e.target.closest('button,[data-close]'); if (!t) return;
@@ -536,6 +572,7 @@ document.addEventListener('click', async e => {
   if (d.act === 'log-wear') return wearForm();
   if (d.act === 'export') return exportBackup();
   if (d.act === 'import') return $('#backupIn').click();
+  if (d.act === 'import-whering') return $('#wheringIn').click();
   if (d.fam) { const s = new Set(F().families || []); s.has(d.fam) ? s.delete(d.fam) : s.add(d.fam); return setFilter('families', [...s]); }
   if (d.gender) { const s = new Set(F().gender || []); s.has(d.gender) ? s.delete(d.gender) : s.add(d.gender); return setFilter('gender', [...s]); }
   if (d.spicy !== undefined) return setFilter('spicyOnly', !F().spicyOnly);
