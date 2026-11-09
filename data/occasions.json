@@ -1,11 +1,11 @@
 [
-  { "id": "everyday", "name": "Everyday" },
-  { "id": "work", "name": "Work" },
-  { "id": "date", "name": "Date" },
-  { "id": "party", "name": "Party" },
-  { "id": "club-night", "name": "Club night" },
-  { "id": "formal", "name": "Formal" },
-  { "id": "sport", "name": "Sport" },
-  { "id": "travel", "name": "Travel" },
-  { "id": "lounge", "name": "Lounge" }
+  {"id": "everyday", "name": "Everyday", "whering": ["casual", "everyday-errands", "casual-lunch", "meet-up", "cinema"]},
+  {"id": "work", "name": "Work", "whering": ["wfh"]},
+  {"id": "date", "name": "Date", "whering": ["date-night", "dating", "date-lunch"]},
+  {"id": "party", "name": "Party", "whering": ["girls-night"]},
+  {"id": "club-night", "name": "Club night", "whering": ["night-out"]},
+  {"id": "formal", "name": "Formal", "whering": ["semi-formal", "special-occasion"]},
+  {"id": "sport", "name": "Sport"},
+  {"id": "travel", "name": "Travel", "whering": ["holiday"]},
+  {"id": "lounge", "name": "Lounge", "whering": ["night-in", "hangover"]}
 ]

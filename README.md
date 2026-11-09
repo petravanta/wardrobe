@@ -31,17 +31,28 @@ Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` f
 
 ## Importing from Whering
 
-Whering has no export, so the import reads the page in your own signed-in browser:
+Whering has no export, but its web page loads each item's full details (brand, type, colours, size, price,
+fabric, occasions, tags and photo links) 12 items at a time as you scroll. `tools/whering-capture.js` records
+that in your own signed-in browser and downloads it as a file:
 
-1. Sign in to Whering, open a category (for example Bags) and scroll until every item has loaded.
-2. Open the browser console (F12), paste the contents of `tools/whering-scan.js` and press Enter
-   (Chrome may ask you to type `allow pasting` first). It downloads `whering-scan.json`.
-3. In Wardrobe, **Settings → Import Whering scan**, and pick that file. Open "All items" instead of one category to scan the whole closet; the script scrolls to load everything.
+1. Sign in to Whering and open your items list (the page where every item is a tile). Don't reload from here on.
+2. Open the browser console (F12), paste the contents of `tools/whering-capture.js` and press Enter. A banner
+   appears at the top of the page. (Chrome may ask you to type `allow pasting` first.)
+3. Run `await wheringScroll()`. It scrolls to the end about every 10 seconds, so Whering loads each page at a
+   gentle pace (about two minutes for 100 items). Then run `wheringSave()`, which downloads `whering-capture.json`.
+4. In Wardrobe, **Settings → Import from Whering**, and pick that file.
 
-Each scanned item becomes a normal item flagged `needsReview`, with its type guessed from the category and
-name, the photo saved in this browser (when Whering allows the copy), and the original link and image URL kept
-in `item.whering`. Items already imported are skipped. The scanner is generic (it reads images and their
-nearby text), so Whering page changes may need a tweak. Photos move to Google Photos once that adapter exists.
+Each Whering item becomes a Wardrobe item: the type comes from Whering's own type (strappy heels, maxi dress,
+blazer…), colours, fabrics and occasions are matched to Wardrobe's lists, sizes become Wardrobe sizes, the
+size chart's gender becomes Masc or Fem, and the cut-out photo is saved in this browser. Everything Whering
+knows that has no Wardrobe field yet (tags, styles, raw colours, sizes, the original photo's link) stays on the
+item under `whering`. The mapping lives in the `whering` names in `data/types.json`, `colours.json`,
+`materials.json` and `occasions.json`, so adding a Whering name to an entry is how to teach the import a new one.
+Items already imported are skipped. An item whose Whering type has no match is filed by its category and flagged
+`needsReview`.
+
+`tools/whering-scan.js` is a photos-only fallback (it can't read the details). `wheringWalk()` in the capture
+script, which opens items one by one, is also there but isn't needed.
 
 ## Next steps
 

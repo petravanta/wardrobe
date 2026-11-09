@@ -25,6 +25,15 @@
       "spicy": {
         "type": "boolean",
         "description": "True when items of this kind are usually spicy: the app suggests the spicy flag when one is added, and hides the entry while the spicy switch is off."
+      },
+      "whering": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uniqueItems": true,
+        "description": "Names Whering uses for this entry, so a Whering import files items under it. The entry’s own id also matches."
       }
     }
   }

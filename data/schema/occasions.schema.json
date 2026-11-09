@@ -21,6 +21,15 @@
         "type": "string",
         "minLength": 1,
         "description": "Name shown in the app."
+      },
+      "whering": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uniqueItems": true,
+        "description": "Names Whering uses for this entry, so a Whering import files items under it. The entry’s own id also matches."
       }
     }
   }

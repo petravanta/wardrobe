@@ -39,8 +39,15 @@
   // Scrolls the current list to the bottom so everything in it loads (and gets recorded)
   window.wheringScroll = async () => {
     const el = [document.scrollingElement, ...document.querySelectorAll('main,div')].filter(Boolean).reduce((b, e) => (e.scrollHeight - e.clientHeight > b.scrollHeight - b.clientHeight ? e : b), document.scrollingElement);
-    for (let last = -1, still = 0; still < 3;) { el.scrollTop = el.scrollHeight; await new Promise(r => setTimeout(r, 900)); const n = document.images.length; still = n === last ? still + 1 : 0; last = n; }
-    say('Scrolled to the end of the list');
+    // One scroll about every 10 seconds, so Whering loads its next page of items (12 at a time) at a gentle pace
+    const gap = () => new Promise(r => setTimeout(r, 10000 + Math.random() * 2000 - 1000));
+    let n = 0;
+    for (let last = -1, still = 0; still < 2;) {
+      el.scrollTop = el.scrollHeight; await gap();
+      const c = document.images.length; still = c === last ? still + 1 : 0; last = c;
+      say(`Loading your items… step ${++n}, ${got.size} response(s) recorded so far`);
+    }
+    say('Reached the end of the list. Now run wheringSave()');
   };
   // Opens each item in turn like you would (one every ~10 seconds, a little random so it looks like a person browsing),
   // and records what its detail page shows plus the data it loads. Run on the list of items, WITHOUT reloading.
