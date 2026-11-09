@@ -397,6 +397,12 @@ function closeDrawer() { $('#layer').innerHTML = ''; editing = null; }
 let editing = null; // the item being edited in the drawer, if any (drops add photos to it)
 
 const checks = (name, set, list, sel = []) => `<fieldset><legend>${name}</legend><div class="checks">${list.map(x => `<label><input type="checkbox" name="${set}" value="${esc(x.id)}"${sel.includes(x.id) ? ' checked' : ''}> ${x.hex ? `<i class="swatch" style="background:${x.hex}"></i>` : ''}${esc(x.name)}</label>`).join('')}</div></fieldset>`;
+// Fem, Masc, Androgynous come built in; anything else people type becomes their own tag and is offered again
+function genderField(it) {
+  const ids = [...new Set([...K.genderTags.map(g => g.id), ...doc.items.flatMap(i => i.gender || []), ...(it.gender || [])])];
+  return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}> ${esc(K.byId.genderTags.has(g) ? kname('genderTags', g) : g)}</label>`).join('')}</div>
+    <input type="text" name="genderNew" placeholder="Add your own, separated by commas"></fieldset>`;
+}
 function itemForm(it) {
   editing = it;
   const types = K.types.filter(t => doc.settings.showSpicy || !t.spicy || t.id === it.type);
@@ -416,22 +422,15 @@ function itemForm(it) {
     <label class="field">Price<input type="number" name="price" min="0" step="0.01" value="${it.price == null ? '' : esc(it.price)}"></label></div>
     <label class="field">Bought<input type="text" name="purchased" value="${esc(it.purchased || '')}" placeholder="2025-03"></label>
     <label class="row"><input type="checkbox" name="spicy"${it.spicy ? ' checked' : ''}> Spicy <span class="small muted">(hidden unless "Show spicy items" is on)</span></label>
-    <details class="more"><summary>More details</summary><div class="form" style="margin-top:12px">
-      ${checks('Materials', 'materials', K.materials.filter(m => doc.settings.showSpicy || !m.spicy || (it.materials || []).includes(m.id)), it.materials)}
-      ${checks('Seasons', 'seasons', K.seasons, it.seasons)}
-      ${checks('Occasions', 'occasions', K.occasions, it.occasions)}
-      ${checks('Care', 'care', K.care, it.care)}
-      <label class="field">Gender tags (cut or where it was sold)<input type="text" name="gender" value="${esc((it.gender || []).join(', '))}" placeholder="${K.genderTags.map(g => g.id).join(', ')}"></label>
-      <label class="field">Notes<textarea name="notes" rows="3">${esc(it.notes || '')}</textarea></label>
-    </div></details>
+    ${genderField(it)}
     <div class="row"><button type="submit" class="btn primary">Save</button>${isNew ? '' : `<button type="button" class="btn" data-wear-item="${esc(it.id)}">Wore it today</button><span class="grow" style="flex:1"></span><button type="button" class="btn danger" data-del-item="${esc(it.id)}">Delete</button>`}</div>
   </form>`);
   // Suggest the spicy flag when a spicy-leaning type or material is picked
   $('#itemForm').addEventListener('change', e => {
     const fd = new FormData($('#itemForm')), sp = $('#itemForm [name=spicy]');
-    if (e.target.name === 'type' || e.target.name === 'materials') {
+    if (e.target.name === 'type') {
       const t = K.byId.types.get(fd.get('type')) || {};
-      if ((t.spicy || fd.getAll('materials').some(m => (K.byId.materials.get(m) || {}).spicy)) && !sp.checked) { sp.checked = true; toast('Marked as spicy. Untick it if you’d rather not.'); }
+      if (t.spicy && !sp.checked) { sp.checked = true; toast('Marked as spicy. Untick it if you’d rather not.'); }
     }
   });
 }
@@ -442,8 +441,7 @@ function readItemForm(it) {
     sizes: vals.map((v, i) => ({ system: sys[i], value: v.trim() })).filter(s => s.value),
     brand: fd.get('brand').trim() || undefined, price: fd.get('price') === '' ? undefined : +fd.get('price'),
     purchased: fd.get('purchased').trim() || undefined, spicy: fd.has('spicy') || undefined,
-    materials: fd.getAll('materials'), seasons: fd.getAll('seasons'), occasions: fd.getAll('occasions'), care: fd.getAll('care'),
-    gender: fd.get('gender').split(',').map(s => s.trim().toLowerCase()).filter(Boolean), notes: fd.get('notes').trim() || undefined
+    gender: [...new Set([...fd.getAll('gender'), ...fd.get('genderNew').split(',').map(s => s.trim().toLowerCase())].filter(Boolean))]
   };
 }
 const newItem = () => ({ id: uid(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });

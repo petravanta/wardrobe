@@ -1,6 +1,5 @@
 [
-  { "id": "womenswear", "name": "Womenswear" },
-  { "id": "menswear", "name": "Menswear" },
-  { "id": "unisex", "name": "Unisex" },
+  { "id": "masc", "name": "Masc" },
+  { "id": "fem", "name": "Fem" },
   { "id": "androgynous", "name": "Androgynous" }
 ]

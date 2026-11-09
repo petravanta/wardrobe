@@ -14,7 +14,9 @@ Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` f
 ## What works today
 
 - **Closet**: add items with photos, type (two levels, such as Tops › Corset), colours, size, brand,
-  price, purchase date, materials, seasons, occasions, care, gender tags and notes.
+  price, purchase date, spicy flag and gender (Masc, Fem, Androgynous, plus any tags you define).
+  The materials, seasons, occasions, care and notes fields are left out of the form for now; their data
+  files (and any values already on an item) are kept.
 - **Filters**: type, colour family, size and gender tags, AND across filters and OR within one; saved in
   your settings and synced.
 - **Spicy items**: hidden everywhere unless *Show spicy items* is on in Settings. Spicy-leaning types and
@@ -41,7 +43,7 @@ From the spec, roughly in order:
    IndexedDB), with a review screen before anything is logged.
 5. **Share export** for outfits (`format: "wardrobe-outfit"`), richer stats, wear calendar.
 
-Open questions from the spec (duplicate copies on Picker import, gender tags) still need Petra's answer.
+The open question from the spec about duplicate copies on Picker import still needs Petra's answer.
 
 ## User data
 
@@ -76,7 +78,7 @@ What the app knows is data, in `data/`. Each file has a JSON Schema in `data/sch
 | Occasions | `data/occasions.json` | `data/schema/occasions.schema.json` | Occasions for items and outfits |
 | Care | `data/care.json` | `data/schema/care.schema.json` | Care instructions, with an optional `why` |
 | Size systems | `data/size-systems.json` | `data/schema/size-systems.schema.json` | Size systems and, where closed, their values |
-| Gender tags | `data/gender-tags.json` | `data/schema/gender-tags.schema.json` | Suggested tags for the garment's cut; people can add their own |
+| Gender tags | `data/gender-tags.json` | `data/schema/gender-tags.schema.json` | Built-in tags (Masc, Fem, Androgynous); people add their own in the item form, and they are offered again |
 
 Check the data locally with `node scripts/check-data.js`.
 
