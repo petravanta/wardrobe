@@ -36,7 +36,7 @@ Whering has no export, so the import reads the page in your own signed-in browse
 1. Sign in to Whering, open a category (for example Bags) and scroll until every item has loaded.
 2. Open the browser console (F12), paste the contents of `tools/whering-scan.js` and press Enter
    (Chrome may ask you to type `allow pasting` first). It downloads `whering-scan.json`.
-3. In Wardrobe, **Settings → Import Whering scan**, and pick that file.
+3. In Wardrobe, **Settings → Import Whering scan**, and pick that file. Open "All items" instead of one category to scan the whole closet; the script scrolls to load everything.
 
 Each scanned item becomes a normal item flagged `needsReview`, with its type guessed from the category and
 name, the photo saved in this browser (when Whering allows the copy), and the original link and image URL kept

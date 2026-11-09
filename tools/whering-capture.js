@@ -1,6 +1,7 @@
 // Records the data Whering's own page loads (brand, colour, category, price… whatever it holds for each item),
-// so Wardrobe can import it with the photos. Paste into the console on any Whering page, then click around IN the
-// app (open the Bags category, open the item) WITHOUT reloading the page, then run:  wheringSave()
+// so Wardrobe can import it with the photos. Paste into the console on any Whering page, then, IN the app and WITHOUT
+// reloading, open the list of all your clothes, run  await wheringScroll()  to load every item, open an item or two
+// for their details, then run:  wheringSave()
 // It only watches your own browser while you use Whering, never records passwords or sign-in tokens (request headers
 // are not kept, and account/sign-in/profile calls are skipped), and sends nothing anywhere: it downloads a file.
 (() => {
@@ -24,6 +25,12 @@
     return open.call(this, m, url, ...rest);
   };
   window.__wheringCapture = got;
+  // Scrolls the current list to the bottom so everything in it loads (and gets recorded)
+  window.wheringScroll = async () => {
+    const el = [document.scrollingElement, ...document.querySelectorAll('main,div')].filter(Boolean).reduce((b, e) => (e.scrollHeight - e.clientHeight > b.scrollHeight - b.clientHeight ? e : b), document.scrollingElement);
+    for (let last = -1, still = 0; still < 3;) { el.scrollTop = el.scrollHeight; await new Promise(r => setTimeout(r, 900)); const n = document.images.length; still = n === last ? still + 1 : 0; last = n; }
+    console.log('Scrolled to the end of the list');
+  };
   window.wheringSave = () => {
     const out = { format: 'whering-capture', formatVersion: 1, savedAt: new Date().toISOString(), page: location.href, responses: [...got.values()] };
     const a = document.createElement('a');
