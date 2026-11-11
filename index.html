@@ -120,6 +120,9 @@ textarea{resize:vertical}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
 .bar select{padding:5px 10px;font-size:14px;border-radius:999px}
 .bar .grow{flex:1}
+.shelf{margin:0 0 20px}
+.shelf h3{display:flex;align-items:baseline;gap:8px;margin:0 0 10px}
+.shelf h3 .count{font-size:12px;font-weight:400;color:var(--muted)}
 .swatch{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid var(--line);vertical-align:-1px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;list-style:none;margin:0;padding:0}
 @media (max-width:420px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -136,6 +139,8 @@ textarea{resize:vertical}
 .thumbs figure{margin:0;position:relative;width:96px}
 .thumbs img{width:96px;height:128px;object-fit:cover;border-radius:8px;background:var(--sunk);display:block}
 .thumbs figcaption{font-size:11px;color:var(--muted);text-align:center}
+.thumbs img.cut{object-fit:contain;background:repeating-conic-gradient(var(--sunk) 0 25%,var(--surface) 0 50%) 0 0/16px 16px}
+.thumbs .clean{display:block;margin:4px auto 0;font-size:11px;padding:2px 8px}
 .thumbs .rm{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;line-height:1}
 .minis{display:flex;gap:4px;margin-top:6px}
 .minis img,.minis i{width:36px;height:48px;border-radius:4px;object-fit:cover;background:var(--sunk);display:block}
@@ -215,7 +220,7 @@ const typeGroup = id => { const t = K.byId.types.get(id); return t ? (t.parent |
 const typeSizeSystems = id => { const t = K.byId.types.get(id) || {}; return t.sizeSystems || (K.byId.types.get(t.parent) || {}).sizeSystems || ['letter']; };
 
 /* ---------- User data ---------- */
-function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {} }, items: [], outfits: [], wears: [], deleted: [] }; }
+function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {}, sort: 'added', sortReverse: false, groupBy: '' }, items: [], outfits: [], wears: [], deleted: [] }; }
 // Older or partial documents become the current shape; never write an older format
 function upgrade(d) {
   const b = blankDoc();
@@ -246,7 +251,7 @@ const visible = it => doc.settings.showSpicy || !it.spicy;
 const itemById = id => doc.items.find(i => i.id === id);
 
 /* ---------- Photos (this browser only, for now) ---------- */
-// Each item photo is {id, role:'main'|'cutout'|'label', mediaItemId?}. The bytes live in IndexedDB here; once the
+// Each item photo is {id, role:'main'|'cutout'|'label', from?, mediaItemId?}; a cut-out's `from` is the photo it was made from. The bytes live in IndexedDB here; once the
 // Google Photos adapter lands, mediaItemId points at the copy in the app's Wardrobe album and this becomes a cache.
 const Photos = (() => {
   let dbp;
@@ -272,6 +277,7 @@ const Photos = (() => {
       await tx('photos', 'readwrite', s => s.put(full, id)); await tx('thumbs', 'readwrite', s => s.put(thumb, id));
       return id;
     },
+    async full(id) { return tx('photos', 'readonly', s => s.get(id)).catch(() => null); },
     async thumb(id) {
       if (urls.has(id)) return urls.get(id);
       const b = await tx('thumbs', 'readonly', s => s.get(id)).catch(() => null);
@@ -284,6 +290,65 @@ const isImage = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif
 const coverPhoto = it => { const p = it.photos || []; return p.find(x => x.role === 'cutout') || p.find(x => x.role === 'main') || p[0]; };
 async function fillThumbs(root = document) {
   for (const img of $$('img[data-photo]', root)) if (!img.src) { const u = await Photos.thumb(img.dataset.photo); if (u) img.src = u; else img.remove(); }
+}
+
+/* ---------- Clean background (on this device) ---------- */
+// The cut-out is a second photo {role:'cutout', from: <the photo it came from>}; the original is always kept. The model
+// runs in cutout-worker.js (WebGPU where there is one, otherwise WebAssembly). Photos never leave the device: only the
+// model's files are downloaded, the first time, and sw.js keeps them. Whering imports come with their own cut-outs.
+const Cutout = (() => {
+  let worker = null, seq = 0, chain = Promise.resolve();
+  const waiting = new Map();
+  function w() {
+    if (worker) return worker;
+    worker = new Worker('cutout-worker.js', { type: 'module' });
+    worker.onmessage = e => {
+      const m = e.data, job = waiting.get(m.id); if (!job) return;
+      if (m.progress) return job.progress(m.progress);
+      waiting.delete(m.id);
+      if (m.error) { job.reject(new Error(m.error)); reset(); } else job.resolve(m.blob);
+    };
+    worker.onerror = e => { e.preventDefault(); waiting.forEach(j => j.reject(new Error(e.message || 'The model couldn’t load'))); waiting.clear(); reset(); };
+    return worker;
+  }
+  // A failed load stays failed inside the library, so the next try starts a fresh worker
+  function reset() { if (worker) worker.terminate(); worker = null; }
+  const run = (blob, progress) => new Promise((resolve, reject) => { const id = ++seq; waiting.set(id, { resolve, reject, progress }); w().postMessage({ id, blob }); });
+  return {
+    supported: typeof Worker === 'function' && typeof OffscreenCanvas === 'function',
+    pending: new Set(), // photo ids being cleaned now
+    // One at a time: the model is big, and a drop of many photos shouldn't run them all at once
+    make(blob, progress = () => {}) { const p = chain.then(() => run(blob, progress)); chain = p.catch(() => {}); return p; }
+  };
+})();
+const autoCutout = () => Cutout.supported && doc.settings.autoCutout !== false;
+const mb = n => (n / 1048576).toFixed(0);
+async function cleanBackground(itemId, photoId) {
+  if (!Cutout.supported || Cutout.pending.has(photoId)) return;
+  const src = await Photos.full(photoId); if (!src) return;
+  Cutout.pending.add(photoId); refreshThumbs(itemId);
+  try {
+    const out = await Cutout.make(src, p => {
+      if (p.key.startsWith('fetch:/models/') && p.total && p.current < p.total) toast(`Getting the clean-background model (first time only): ${mb(p.current)} of ${mb(p.total)} MB`, 60000);
+      else if (p.key === 'compute:inference') toast('Cleaning the background…', 60000);
+    });
+    const id = await Photos.add(new File([out], 'cutout.png', { type: 'image/png' }));
+    toast(attachCutout(itemId, { id, role: 'cutout', from: photoId }) ? 'Background cleaned' : 'Background cleaned, but the item was closed without saving');
+  } catch (err) {
+    const msg = String(err.message || err);
+    toast(`Couldn’t clean the background: ${/fetch|network/i.test(msg) ? 'the model didn’t download. Are you online?' : msg}`, 6000);
+  } finally { Cutout.pending.delete(photoId); refreshThumbs(itemId); }
+}
+// Adds the cut-out to the open form and the saved item, wherever the item is now; a newer cut-out of the same photo replaces the old
+function attachCutout(itemId, photo) {
+  const old = new Set(), swap = photos => { (photos || []).forEach(p => { if (p.role === 'cutout' && p.from === photo.from) old.add(p.id); }); return [...(photos || []).filter(p => !(p.role === 'cutout' && p.from === photo.from)), photo]; };
+  let used = false;
+  if (editing && editing.id === itemId) { editing.photos = swap(editing.photos); used = true; }
+  const saved = itemById(itemId);
+  if (saved) { put('items', { ...saved, photos: swap(saved.photos) }); used = true; render(); }
+  if (!used) Photos.drop(photo.id);
+  old.forEach(id => Photos.drop(id));
+  return used;
 }
 
 /* ---------- Filters ---------- */
@@ -305,6 +370,62 @@ function matches(it, f = F()) {
 }
 function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); }
 
+/* ---------- Sort and group ---------- */
+// The closet's order and shelves. Saved as settings.sort, settings.sortReverse and settings.groupBy, so they sync.
+// Each sort has a natural direction (newest, most worn, A to Z); Reverse flips it.
+const SORTS = { added: 'Date added', worn: 'Last worn', wears: 'Most worn', name: 'Name', colour: 'Colour', type: 'Type' };
+const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', size: 'Size' };
+const idx = (list, id) => { const i = list.findIndex(x => x.id === id); return i < 0 ? 1e6 : i; };
+// Whering keeps the date an item was first added there; items made before 'added' existed keep closet order
+const addedAt = it => (it.whering && it.whering.createdAt) || it.added || '';
+function wearStats() {
+  const m = new Map(doc.items.map(it => [it.id, { n: (it.whering && it.whering.wornCount) || 0, last: '' }]));
+  const bump = (id, at) => { const s = m.get(id); if (s) { s.n++; if ((at || '') > s.last) s.last = at || ''; } };
+  const outfits = new Map(doc.outfits.map(o => [o.id, o.items || []]));
+  doc.wears.forEach(w => { if (w.item) bump(w.item, w.at); if (w.outfit) (outfits.get(w.outfit) || []).forEach(id => bump(id, w.at)); });
+  return m;
+}
+function sortItems(items) {
+  const by = SORTS[doc.settings.sort] ? doc.settings.sort : 'added', ws = by === 'worn' || by === 'wears' ? wearStats() : null;
+  const name = it => (it.name || kname('types', it.type)).toLowerCase(), pos = new Map(doc.items.map((it, i) => [it.id, i]));
+  const key = {
+    added: (a, b) => addedAt(b).localeCompare(addedAt(a)) || pos.get(b.id) - pos.get(a.id),
+    worn: (a, b) => ws.get(b.id).last.localeCompare(ws.get(a.id).last),
+    wears: (a, b) => ws.get(b.id).n - ws.get(a.id).n,
+    name: () => 0,
+    colour: (a, b) => idx(K.colours, (a.colours || [])[0]) - idx(K.colours, (b.colours || [])[0]),
+    type: (a, b) => idx(K.types, a.type) - idx(K.types, b.type)
+  }[by];
+  const out = [...items].sort((a, b) => key(a, b) || name(a).localeCompare(name(b)));
+  return doc.settings.sortReverse ? out.reverse() : out;
+}
+// Returns [{key, label, items}] in a sensible order; items with several colours or gender tags sit on each matching shelf
+function groupItems(items) {
+  const g = GROUPS[doc.settings.groupBy] ? doc.settings.groupBy : '';
+  if (!g) return [{ key: '', label: '', items }];
+  const fams = [...new Set(K.colours.map(c => c.family))], letters = (K.byId.sizeSystems.get('letter') || {}).values || [];
+  const keysOf = {
+    category: it => [typeGroup(it.type) || ''],
+    type: it => [it.type || ''],
+    colour: it => [...new Set((it.colours || []).map(c => (K.byId.colours.get(c) || {}).family).filter(Boolean))],
+    gender: it => it.gender || [],
+    size: it => [...new Set((it.sizes || []).map(z => String(z.value).toUpperCase()))]
+  }[g];
+  const label = {
+    category: k => kname('types', k), type: k => kname('types', k), colour: k => k[0].toUpperCase() + k.slice(1),
+    gender: k => K.byId.genderTags.has(k) ? kname('genderTags', k) : k, size: k => k
+  }[g];
+  const rank = {
+    category: k => idx(K.types, k), type: k => idx(K.types, k), colour: k => fams.indexOf(k), gender: k => idx(K.genderTags, k),
+    size: k => { const l = letters.indexOf(k); return l >= 0 ? l : isNaN(parseFloat(k)) ? 2e6 : 1e3 + parseFloat(k); }
+  }[g];
+  const shelves = new Map();
+  items.forEach(it => { const ks = keysOf(it).filter(Boolean); (ks.length ? ks : ['']).forEach(k => { if (!shelves.has(k)) shelves.set(k, []); shelves.get(k).push(it); }); });
+  const none = { colour: 'No colour', gender: 'No gender tag', size: 'No size' }[g] || 'Other';
+  return [...shelves].map(([key, items]) => ({ key, label: key ? label(key) : none, items }))
+    .sort((a, b) => (!a.key) - (!b.key) || rank(a.key) - rank(b.key) || a.label.localeCompare(b.label));
+}
+
 /* ---------- Views ---------- */
 let tab = lsGet(TAB_KEY) || 'closet';
 const wearsOf = id => doc.wears.filter(w => w.item === id || (w.outfit && ((doc.outfits.find(o => o.id === w.outfit) || {}).items || []).includes(id)));
@@ -321,7 +442,7 @@ function card(it, pressed) {
   </button></li>`;
 }
 function renderCloset() {
-  const f = F(), items = doc.items.filter(it => matches(it));
+  const f = F(), items = sortItems(doc.items.filter(it => matches(it))), st = doc.settings;
   const groups = K.types.filter(t => !t.parent && (doc.settings.showSpicy || !t.spicy));
   const fams = [...new Set(K.colours.map(c => c.family))];
   const gtags = [...new Set([...K.genderTags.map(g => g.id), ...doc.items.flatMap(i => i.gender || [])])];
@@ -342,7 +463,16 @@ function renderCloset() {
     ${doc.settings.showSpicy ? `<button type="button" class="chip" data-spicy aria-pressed="${!!f.spicyOnly}">Spicy only</button>` : ''}
     ${Object.values(f).some(v => v && (!Array.isArray(v) || v.length)) ? '<button type="button" class="btn ghost sm" data-act="clear">Clear filters</button>' : ''}
   </div>
-  ${items.length ? `<ul class="grid">${items.map(it => card(it)).join('')}</ul>`
+  <div class="bar" role="group" aria-label="Sort and group">
+    <label class="small muted" for="sSort">Sort</label>
+    <select id="sSort">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}"${(st.sort || 'added') === k ? ' selected' : ''}>${v}</option>`).join('')}</select>
+    <button type="button" class="chip" data-act="reverse" aria-pressed="${!!st.sortReverse}" title="Reverse the order">⇅ Reverse</button>
+    <label class="small muted" for="sGroup">Group</label>
+    <select id="sGroup">${Object.entries(GROUPS).map(([k, v]) => `<option value="${k}"${(st.groupBy || '') === k ? ' selected' : ''}>${v}</option>`).join('')}</select>
+  </div>
+  ${items.length ? groupItems(items).map(s => s.label
+      ? `<section class="shelf"><h3>${esc(s.label)} <span class="count">${s.items.length}</span></h3><ul class="grid">${s.items.map(it => card(it)).join('')}</ul></section>`
+      : `<ul class="grid">${s.items.map(it => card(it)).join('')}</ul>`).join('')
     : `<div class="empty">${doc.items.length ? 'Nothing matches these filters.' : 'Your closet is empty. Add your first item, or drop a few photos here.'}</div>`}`;
 }
 function renderOutfits() {
@@ -386,6 +516,11 @@ function renderSettings() {
     <label class="row"><input type="checkbox" id="showSpicy"${doc.settings.showSpicy ? ' checked' : ''}> Show spicy items</label>
     <p class="small muted">When this is off, spicy items are hidden everywhere: the closet, outfits, stats and search.</p>
   </section>
+  <section class="panel stack"><h3>Clean background</h3>
+    ${Cutout.supported ? `<label class="row"><input type="checkbox" id="autoCutout"${autoCutout() ? ' checked' : ''}> Clean the background of new photos automatically</label>
+    <p class="small muted">Makes a cut-out of each item’s main photo, right here on your device: the photo is never uploaded anywhere. The first time, the browser downloads the model (tens of MB) and keeps it, so later cut-outs work offline. The original photo is always kept, and any photo has a <i>Clean background</i> button in the item form.</p>`
+    : '<p class="small muted">This browser can’t run the clean-background model (it needs Web Workers and OffscreenCanvas).</p>'}
+  </section>
   <section class="panel stack"><h3>Backup</h3>
     <p class="small muted">The backup is the same open JSON as the Drive file. Importing merges it in; nothing is overwritten.</p>
     <div class="row"><button type="button" class="btn" data-act="export">Export backup</button><button type="button" class="btn" data-act="import">Import backup</button></div>
@@ -412,6 +547,15 @@ function genderField(it) {
   return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}> ${esc(K.byId.genderTags.has(g) ? kname('genderTags', g) : g)}</label>`).join('')}</div>
     <input type="text" name="genderNew" placeholder="Add your own, separated by commas"></fieldset>`;
 }
+function thumbsHtml(it) {
+  const photos = it.photos || [], hasCut = id => photos.some(p => p.role === 'cutout' && p.from === id);
+  return photos.map(p => `<figure><img alt=""${p.role === 'cutout' ? ' class="cut"' : ''} data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
+}
+// Redraws the photo strip of the open form only, so whatever is typed in the form stays
+function refreshThumbs(itemId) {
+  const t = $('#thumbs'); if (!t || !editing || editing.id !== itemId) return;
+  t.innerHTML = thumbsHtml(editing); fillThumbs(t);
+}
 function itemForm(it) {
   editing = it;
   const types = K.types.filter(t => doc.settings.showSpicy || !t.spicy || t.id === it.type);
@@ -420,7 +564,7 @@ function itemForm(it) {
   const sizes = (it.sizes && it.sizes.length ? it.sizes : [{ system: typeSizeSystems(it.type)[0], value: '' }]);
   const isNew = !doc.items.some(x => x.id === it.id);
   openDrawer(`<h2>${isNew ? 'Add item' : esc(it.name || 'Item')}</h2>
-  <div class="thumbs" id="thumbs">${(it.photos || []).map(p => `<figure><img alt="" data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${esc(p.role)}</figcaption></figure>`).join('')}</div>
+  <div class="thumbs" id="thumbs">${thumbsHtml(it)}</div>
   <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button><span class="small muted fine-only">or drop one here</span></div>
   <form class="form" id="itemForm">
     <label class="field">Name<input type="text" name="name" value="${esc(it.name || '')}" placeholder="Black midi skirt"></label>
@@ -453,7 +597,7 @@ function readItemForm(it) {
     gender: [...new Set([...fd.getAll('gender'), ...fd.get('genderNew').split(',').map(s => s.trim().toLowerCase())].filter(Boolean))]
   };
 }
-const newItem = () => ({ id: uid(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
+const newItem = () => ({ id: uid(), added: now(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
 function outfitForm(o) {
   const items = doc.items.filter(visible), sel = new Set(o.items || []);
   openDrawer(`<h2>${doc.outfits.some(x => x.id === o.id) ? 'Edit outfit' : 'New outfit'}</h2>
@@ -494,15 +638,22 @@ function logWear(what, at = today()) { put('wears', { id: uid(), at, source: 'ma
 async function takePhotos(files, target) {
   const all = [...files], imgs = all.filter(isImage), skipped = all.length - imgs.length;
   if (!imgs.length) return toast('Only photos can be added (JPEG, PNG, WebP, HEIC).');
+  // A new main photo gets a cut-out made in the background, unless the item has one already (Whering imports do)
+  const clean = [];
   if (target) { // into the item being edited
-    for (const f of imgs) target.photos = [...(target.photos || []), { id: await Photos.add(f), role: (target.photos || []).length ? 'label' : 'main' }];
+    for (const f of imgs) {
+      const p = { id: await Photos.add(f), role: (target.photos || []).length ? 'label' : 'main' };
+      target.photos = [...(target.photos || []), p];
+      if (p.role === 'main' && !target.photos.some(x => x.role === 'cutout')) clean.push([target.id, p.id]);
+    }
     const cur = readItemForm(target); itemForm({ ...cur, photos: target.photos });
   } else { // one new item per photo; open the first to fill in
     const made = [];
-    for (const f of imgs) { const it = newItem(); it.photos = [{ id: await Photos.add(f), role: 'main' }]; it.name = ''; made.push(it); }
+    for (const f of imgs) { const it = newItem(); it.photos = [{ id: await Photos.add(f), role: 'main' }]; it.name = ''; made.push(it); clean.push([it.id, it.photos[0].id]); }
     if (made.length > 1) { made.forEach(it => put('items', it)); render(); }
     itemForm(made[0]);
   }
+  if (autoCutout()) clean.forEach(([item, photo]) => cleanBackground(item, photo));
   if (skipped) toast(`Skipped ${skipped} file${skipped > 1 ? 's' : ''} that ${skipped > 1 ? 'aren’t photos' : 'isn’t a photo'}`);
 }
 let dragDepth = 0;
@@ -618,6 +769,7 @@ document.addEventListener('click', async e => {
   if (d.act === 'add') return itemForm(newItem());
   if (d.act === 'photo') return $('#photoIn').click();
   if (d.act === 'clear') { setSetting('filters', {}); return render(); }
+  if (d.act === 'reverse') { setSetting('sortReverse', !doc.settings.sortReverse); return render(); }
   if (d.act === 'new-outfit') return outfitForm({ id: uid(), items: [] });
   if (d.act === 'log-wear') return wearForm();
   if (d.act === 'export') return exportBackup();
@@ -628,7 +780,12 @@ document.addEventListener('click', async e => {
   if (d.spicy !== undefined) return setFilter('spicyOnly', !F().spicyOnly);
   if (d.item && !t.closest('#layer')) return itemForm(structuredClone(itemById(d.item)));
   if (d.outfit) return outfitForm(structuredClone(doc.outfits.find(o => o.id === d.outfit)));
-  if (d.rmphoto && editing) { editing.photos = editing.photos.filter(p => p.id !== d.rmphoto); Photos.drop(d.rmphoto); return itemForm({ ...readItemForm(editing), photos: editing.photos }); }
+  if (d.rmphoto && editing) { // a photo's cut-out goes with it
+    const gone = editing.photos.filter(p => p.id === d.rmphoto || p.from === d.rmphoto);
+    editing.photos = editing.photos.filter(p => !gone.includes(p)); gone.forEach(p => Photos.drop(p.id));
+    return itemForm({ ...readItemForm(editing), photos: editing.photos });
+  }
+  if (d.cutout && editing) return cleanBackground(editing.id, d.cutout);
   if (d.wearItem) { logWear({ item: d.wearItem }); return closeDrawer(), render(); }
   if (d.wearOutfit) { logWear({ outfit: d.wearOutfit }); return closeDrawer(), render(); }
   if (d.unwear) { remove('wears', d.unwear); return render(); }
@@ -648,8 +805,11 @@ document.addEventListener('submit', e => {
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'showSpicy') { setSetting('showSpicy', e.target.checked); render(); }
+  if (e.target.id === 'autoCutout') setSetting('autoCutout', e.target.checked);
   if (e.target.id === 'fGroup') setFilter('group', e.target.value);
   if (e.target.id === 'fSize') setFilter('size', e.target.value.trim());
+  if (e.target.id === 'sSort') { setSetting('sort', e.target.value); render(); }
+  if (e.target.id === 'sGroup') { setSetting('groupBy', e.target.value); render(); }
 });
 let qTimer;
 document.addEventListener('input', e => { if (e.target.id === 'q') { clearTimeout(qTimer); qTimer = setTimeout(() => { setFilter('q', e.target.value); const q = $('#q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); } });

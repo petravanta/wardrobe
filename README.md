@@ -19,12 +19,17 @@ Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` f
   files (and any values already on an item) are kept.
 - **Filters**: type, colour family, size and gender tags, AND across filters and OR within one; saved in
   your settings and synced.
+- **Sort and group**: sort the closet by date added, last worn, most worn, name, colour or type (with
+  *Reverse*), and group it into shelves by category, type, colour family, gender tag or size. An item with
+  several colours or tags sits on each matching shelf. Saved in your settings and synced.
 - **Spicy items**: hidden everywhere unless *Show spicy items* is on in Settings. Spicy-leaning types and
   materials (latex, PVC, harness…) suggest the flag when you add an item.
 - **Outfits**: combine items, name them and tag occasions.
 - **Wear log**: log an outfit or items for a day; basic stats (never worn, least worn, cost per wear).
 - **Photos**: by button or by dropping them anywhere on the page; resized in the browser and kept in this
   browser's IndexedDB.
+- **Clean background** on this device: a new item's main photo gets a transparent cut-out next to the
+  original, and any photo can be cleaned from the item form (see *Clean background* below).
 - **Google Drive sync** of `Wardrobe data.json`, **Export backup** and **Import backup** (merge).
 - Light and dark themes, the hub's *All apps* menu, and install as an app (shortcuts *Add item* and *Log
   what I wore*).
@@ -54,6 +59,38 @@ Items already imported are skipped. An item whose Whering type has no match is f
 `tools/whering-scan.js` is a photos-only fallback (it can't read the details). `wheringWalk()` in the capture
 script, which opens items one by one, is also there but isn't needed.
 
+## Clean background
+
+Cut-outs are made in the browser, on your device. The photo is never uploaded anywhere.
+
+- **When**: adding a photo to an item that has no cut-out yet (by button or drop, one item or many) starts a
+  cut-out of its main photo in the background, while you fill in the form. Every photo in the item form also has a
+  *Clean background* (or *Clean again*) button. *Settings → Clean background* turns the automatic part off. Whering
+  imports already come with Whering's cut-out, so they're left alone.
+- **What's stored**: the original stays as it was. The cut-out is a second photo on the item,
+  `{ "id": "…", "role": "cutout", "from": "<id of the photo it was made from>" }`, a transparent PNG trimmed to the
+  garment with a little margin, kept in IndexedDB like every other photo. The closet shows the cut-out when there is
+  one. Removing a photo removes its cut-out too. When the Google Photos adapter lands, a cut-out uploads like any
+  other photo (it gets its own `mediaItemId`); nothing about it is specific to this browser.
+- **How**: [`@imgly/background-removal`](https://github.com/imgly/background-removal-js) 1.7.0 (an ISNet
+  segmentation model on ONNX Runtime Web) runs in `cutout-worker.js`, a Web Worker, so the page stays responsive. It
+  uses WebGPU when the browser has it and falls back to WebAssembly. Jobs run one at a time.
+- **Loading**: nothing is loaded until the first cut-out. The library is self-hosted in `vendor/background-removal.js`
+  (about 860 KB). The model and the ONNX Runtime WebAssembly come from IMG.LY's CDN (`staticimgly.com`), under a path
+  versioned to the library, as a one-off download of tens of MB; only these files are downloaded, never your photos.
+  `sw.js` keeps them cache-first (unlike other CDNs, which the shared worker leaves to the network), so after the
+  first cut-out it also works offline and in the installed app. To self-host the model as well, copy the
+  `dist/` folder of `@imgly/background-removal-data` 1.7.0 into the app and point `PUBLIC_PATH` in
+  `cutout-worker.js` at it.
+- **Speed**: GitHub Pages can't turn on cross-origin isolation, so WebAssembly runs single-threaded (ONNX Runtime
+  says so in the console; it's harmless). WebGPU is much faster where available.
+- **Licence**: `@imgly/background-removal` is AGPL-3.0. Wardrobe is published as open source, which that licence asks for.
+- **Updating the library**: in an empty folder,
+  `npm i @imgly/background-removal@<version> onnxruntime-web@<its peer version> esbuild`, then bundle
+  `export { removeBackground, preload } from '@imgly/background-removal'` with
+  `npx esbuild entry.mjs --bundle --format=esm --minify --target=es2020 --legal-comments=eof --outfile=background-removal.js`,
+  keep the header comment, and change the version in `PUBLIC_PATH` (`cutout-worker.js`) and `CUTOUT_CACHE` (`sw.js`).
+
 ## Next steps
 
 From the spec, roughly in order:
@@ -62,11 +99,9 @@ From the spec, roughly in order:
    `mediaItemId` on each photo, and the local copy as a thumbnail cache. Needs its own sign-in with the
    Photos scopes (append-only, app-created read, Picker), kept apart from the shared Drive token.
 2. **Picker import** of existing photos (a copy is re-uploaded to the album).
-3. **Clean background** on device (`@imgly/background-removal`, self-hosted model, WebGPU first). The
-   cut-out is a second photo with `role: "cutout"`.
-4. **What I wore, from a photo** on device (clothes segmentation + CLIP matching, embeddings in
+3. **What I wore, from a photo** on device (clothes segmentation + CLIP matching, embeddings in
    IndexedDB), with a review screen before anything is logged.
-5. **Share export** for outfits (`format: "wardrobe-outfit"`), richer stats, wear calendar.
+4. **Share export** for outfits (`format: "wardrobe-outfit"`), richer stats, wear calendar.
 
 The open question from the spec about duplicate copies on Picker import still needs Petra's answer.
 
@@ -77,10 +112,11 @@ One document, the same shape as the other apps (see STANDARDS.md, *User data*):
 ```json
 {
   "version": 1,
-  "settings": { "updatedAt": "…", "showSpicy": false, "filters": {} },
+  "settings": { "updatedAt": "…", "showSpicy": false, "filters": {}, "sort": "added", "sortReverse": false, "groupBy": "" },
   "items":   [ { "id": "…", "u": "…", "name": "Black midi skirt", "type": "skirt", "colours": ["black"],
                  "sizes": [ { "system": "letter", "value": "M" } ], "spicy": true,
-                 "photos": [ { "id": "…", "role": "main", "mediaItemId": "(later)" } ] } ],
+                 "photos": [ { "id": "…", "role": "main", "mediaItemId": "(later)" },
+                             { "id": "…", "role": "cutout", "from": "…" } ] } ],
   "outfits": [ { "id": "…", "u": "…", "name": "Club night", "items": ["…"], "occasions": ["club-night"] } ],
   "wears":   [ { "id": "…", "u": "…", "at": "2026-11-09", "outfit": "…", "source": "manual" } ],
   "deleted": [ "…" ]
