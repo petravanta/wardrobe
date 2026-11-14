@@ -76,8 +76,11 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
   cut-outs, at the 1600 px size the app stores), and gets the album copy's `mediaItemId`, which syncs through Drive.
   New photos upload a couple of seconds after they're saved. Photos are only in the browser where they were added, so
   that browser does their first upload.
-- **Download**: a browser that shows a photo it doesn't have (another device, or the app on another address such as
-  localhost and GitHub Pages) fetches it from the album by `mediaItemId` and caches it.
+- **Showing them elsewhere**: a browser that doesn't have a photo's bytes (another device, or the app on another
+  address such as localhost and GitHub Pages) asks the album for it by `mediaItemId` and shows Google's image address,
+  which lasts an hour and is then asked for again. Google sends no CORS headers for album images, so they can be shown
+  but not copied into that browser's IndexedDB: there they need a connection and a Photos sign-in, and *Clean
+  background* only works where the photo was added.
 - **Removing** a photo in the app takes it out of the album. Google doesn't let apps delete photos, so it stays in
   your library until you delete it there.
 - **Spicy** photos go to the same album, and Google Photos also shows album photos in the main library. *Show spicy
