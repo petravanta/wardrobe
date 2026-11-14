@@ -1038,7 +1038,10 @@ const GPhotos = (() => {
   const st = () => lsGet(KEYP) || {};
   const set = v => lsSet(KEYP, { ...st(), ...v });
   const S = { busy: false, err: null, ask: 0, timer: null, done: 0, todo: 0 };
-  const direct = new Map(); // photo id -> Google's own URL, when the image can be shown but not copied into this browser
+  // photo id -> {url, exp}: Google's own address for an album photo this browser doesn't have. Google sends no CORS
+  // headers for album images, so another site can show them in <img> but can't copy them into its own storage; the
+  // address lasts an hour (Google's baseUrl), after which it is asked for again.
+  const direct = new Map();
   const fetching = new Set();
   const known = () => !!st().known && !!GOOGLE_CLIENT_ID;
   const live = () => { const s = st(); return known() && !!s.token && s.exp > Date.now(); };
@@ -1121,18 +1124,17 @@ const GPhotos = (() => {
       if (e.code === 'http' && e.status === 400 && /album/i.test(e.msg || '')) setSetting('photosAlbum', '');
     } finally { S.busy = false; S.todo = 0; note(); }
   }
-  // Photos added elsewhere: download from the album into this browser. pairs: [[photoId, mediaItemId]]
+  // Photos added elsewhere: shown from the album. pairs: [[photoId, mediaItemId]]
   async function fetchMissing(pairs) {
     pairs = pairs.filter(([id]) => !fetching.has(id)); pairs.forEach(([id]) => fetching.add(id));
     let got = 0;
     for (let i = 0; i < pairs.length; i += 50) {
       const chunk = pairs.slice(i, i + 50);
-      let j; try { j = await (await call('/mediaItems:batchGet?' + chunk.map(([, m]) => 'mediaItemIds=' + encodeURIComponent(m)).join('&'))).json(); } catch (e) { break; }
+      let j; try { j = await (await call('/mediaItems:batchGet?' + chunk.map(([, m]) => 'mediaItemIds=' + encodeURIComponent(m)).join('&'))).json(); }
+      catch (e) { pairs.slice(i).forEach(([id]) => fetching.delete(id)); break; } // try again on a later render
       for (const [k, r] of (j.mediaItemResults || []).entries()) {
         const m = r.mediaItem; if (!m) continue;
-        try { const b = await (await fetch(m.baseUrl + '=d')).blob(); await Photos.put(chunk[k][0], new File([b], m.filename || 'photo', { type: b.type || m.mimeType })); }
-        catch (e) { direct.set(chunk[k][0], m.baseUrl + '=w400-h400'); } // shown straight from Google, not kept here
-        got++;
+        direct.set(chunk[k][0], { url: m.baseUrl + '=w800-h800', exp: Date.now() + 50 * 60000 }); got++;
       }
     }
     return got;
@@ -1148,7 +1150,11 @@ const GPhotos = (() => {
   addEventListener('online', () => sync());
   return {
     known, live, sync, fetchMissing,
-    direct: id => direct.get(id) || '',
+    direct(id) {
+      const d = direct.get(id); if (!d) return '';
+      if (d.exp > Date.now()) return d.url;
+      direct.delete(id); fetching.delete(id); return '';
+    },
     soon() { if (!live()) return; clearTimeout(S.timer); S.timer = setTimeout(sync, 2000); },
     async connect() {
       const email = await signIn(true), was = doc.settings.photosAccount;
