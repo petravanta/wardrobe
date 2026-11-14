@@ -6,7 +6,7 @@ open JSON file in your own Google Drive.
 
 Part of [petravanta's apps](https://petravanta.github.io/general/); it follows the shared
 [STANDARDS.md](https://github.com/petravanta/general/blob/main/STANDARDS.md). The design is in the
-Wardrobe app spec (open Whering alternative).
+Wardrobe app spec.
 
 Live at **https://petravanta.github.io/wardrobe/** once published (see *Publishing to GitHub* below).
 Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` folder.
@@ -34,39 +34,14 @@ Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` f
 - Light and dark themes, the hub's *All apps* menu, and install as an app (shortcuts *Add item* and *Log
   what I wore*).
 
-## Importing from Whering
-
-Whering has no export, but its web page loads each item's full details (brand, type, colours, size, price,
-fabric, occasions, tags and photo links) 12 items at a time as you scroll. `tools/whering-capture.js` records
-that in your own signed-in browser and downloads it as a file:
-
-1. Sign in to Whering and open your items list (the page where every item is a tile). Don't reload from here on.
-2. Open the browser console (F12), paste the contents of `tools/whering-capture.js` and press Enter. A banner
-   appears at the top of the page. (Chrome may ask you to type `allow pasting` first.)
-3. Run `await wheringScroll()`. It scrolls to the end about every 10 seconds, so Whering loads each page at a
-   gentle pace (about two minutes for 100 items). Then run `wheringSave()`, which downloads `whering-capture.json`.
-4. In Wardrobe, **Settings → Import from Whering**, and pick that file.
-
-Each Whering item becomes a Wardrobe item: the type comes from Whering's own type (strappy heels, maxi dress,
-blazer…), colours, fabrics and occasions are matched to Wardrobe's lists, sizes become Wardrobe sizes, the
-size chart's gender becomes Masc or Fem, and the cut-out photo is saved in this browser. Everything Whering
-knows that has no Wardrobe field yet (tags, styles, raw colours, sizes, the original photo's link) stays on the
-item under `whering`. The mapping lives in the `whering` names in `data/types.json`, `colours.json`,
-`materials.json` and `occasions.json`, so adding a Whering name to an entry is how to teach the import a new one.
-Items already imported are skipped. An item whose Whering type has no match is filed by its category and flagged
-`needsReview`.
-
-`tools/whering-scan.js` is a photos-only fallback (it can't read the details). `wheringWalk()` in the capture
-script, which opens items one by one, is also there but isn't needed.
-
 ## Clean background
 
 Cut-outs are made in the browser, on your device. The photo is never uploaded anywhere.
 
 - **When**: adding a photo to an item that has no cut-out yet (by button or drop, one item or many) starts a
   cut-out of its main photo in the background, while you fill in the form. Every photo in the item form also has a
-  *Clean background* (or *Clean again*) button. *Settings → Clean background* turns the automatic part off. Whering
-  imports already come with Whering's cut-out, so they're left alone.
+  *Clean background* (or *Clean again*) button. *Settings → Clean background* turns the automatic part off. Imported
+  items that already come with a cut-out are left alone.
 - **What's stored**: the original stays as it was. The cut-out is a second photo on the item,
   `{ "id": "…", "role": "cutout", "from": "<id of the photo it was made from>" }`, a transparent PNG trimmed to the
   garment with a little margin, kept in IndexedDB like every other photo. The closet shows the cut-out when there is

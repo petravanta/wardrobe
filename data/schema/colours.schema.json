@@ -48,14 +48,14 @@
         ],
         "description": "Colour family, so people can filter by \"any red\" as well as by exact colour."
       },
-      "whering": {
+      "aliases": {
         "type": "array",
         "items": {
           "type": "string",
           "minLength": 1
         },
         "uniqueItems": true,
-        "description": "Names Whering uses for this entry, so a Whering import files items under it. The entry’s own id also matches."
+        "description": "Other names for this entry, so an imported item that uses one is filed under it. The entry’s own id also matches."
       }
     }
   }

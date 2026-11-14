@@ -35,11 +35,11 @@ data.types.forEach(t => {
   if (!t.sizeSystems && !g.sizeSystems) errors.push(`types.json: "${t.id}" has no sizeSystems, and neither has its group`);
 });
 
-// Whering names: each may point at only one entry in a dataset (otherwise an import can't tell where an item goes)
+// Aliases: each may point at only one entry in a dataset (otherwise an import can't tell where an item goes)
 for (const set of ['types', 'colours', 'materials', 'occasions']) {
   const owner = new Map(data[set].map(r => [r.id, r.id]));
-  data[set].forEach(r => (r.whering || []).forEach(w => {
-    if (owner.has(w) && owner.get(w) !== r.id) errors.push(`${set}.json: "${r.id}" lists whering name "${w}", which already belongs to "${owner.get(w)}"`);
+  data[set].forEach(r => (r.aliases || []).forEach(w => {
+    if (owner.has(w) && owner.get(w) !== r.id) errors.push(`${set}.json: "${r.id}" lists alias "${w}", which already belongs to "${owner.get(w)}"`);
     owner.set(w, r.id);
   }));
 }

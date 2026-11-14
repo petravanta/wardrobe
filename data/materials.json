@@ -6,7 +6,7 @@
   {"id": "silk", "name": "Silk"},
   {"id": "denim", "name": "Denim"},
   {"id": "leather", "name": "Leather"},
-  {"id": "faux-leather", "name": "Faux leather", "whering": ["vegan-leather"]},
+  {"id": "faux-leather", "name": "Faux leather", "aliases": ["vegan-leather"]},
   {"id": "suede", "name": "Suede"},
   {"id": "polyester", "name": "Polyester"},
   {"id": "viscose", "name": "Viscose"},

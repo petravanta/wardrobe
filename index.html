@@ -180,7 +180,7 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
 <div id="layer"></div>
 <input type="file" id="photoIn" accept="image/*" multiple hidden>
 <input type="file" id="backupIn" accept=".json,application/json" hidden>
-<input type="file" id="wheringIn" accept=".json,application/json" hidden>
+<input type="file" id="closetIn" accept=".json,application/json" hidden>
 <script>
 'use strict';
 /* Wardrobe. A catalogue of the clothes you own, outfits made from them, and a log of what you wore.
@@ -227,6 +227,8 @@ function upgrade(d) {
   if (!d || typeof d !== 'object') return b;
   const out = { ...b, ...d, version: 1, settings: { ...b.settings, ...(d.settings || {}) } };
   LISTS.forEach(l => { out[l] = Array.isArray(d[l]) ? d[l].filter(r => r && r.id) : []; });
+  // Imported items once kept their source details under an older field name; move them to item.source
+  out.items = out.items.map(r => { if (!r.whering || r.source) return r; const { whering, ...rest } = r; return { ...rest, source: whering }; });
   out.deleted = Array.isArray(d.deleted) ? d.deleted : [];
   return out;
 }
@@ -295,7 +297,7 @@ async function fillThumbs(root = document) {
 /* ---------- Clean background (on this device) ---------- */
 // The cut-out is a second photo {role:'cutout', from: <the photo it came from>}; the original is always kept. The model
 // runs in cutout-worker.js (WebGPU where there is one, otherwise WebAssembly). Photos never leave the device: only the
-// model's files are downloaded, the first time, and sw.js keeps them. Whering imports come with their own cut-outs.
+// model's files are downloaded, the first time, and sw.js keeps them. Imported items may come with their own cut-outs.
 const Cutout = (() => {
   let worker = null, seq = 0, chain = Promise.resolve();
   const waiting = new Map();
@@ -376,10 +378,10 @@ function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); 
 const SORTS = { added: 'Date added', worn: 'Last worn', wears: 'Most worn', name: 'Name', colour: 'Colour', type: 'Type' };
 const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', size: 'Size' };
 const idx = (list, id) => { const i = list.findIndex(x => x.id === id); return i < 0 ? 1e6 : i; };
-// Whering keeps the date an item was first added there; items made before 'added' existed keep closet order
-const addedAt = it => (it.whering && it.whering.createdAt) || it.added || '';
+// An imported item keeps the date it was first added in its source; items made before 'added' existed keep closet order
+const addedAt = it => (it.source && it.source.createdAt) || it.added || '';
 function wearStats() {
-  const m = new Map(doc.items.map(it => [it.id, { n: (it.whering && it.whering.wornCount) || 0, last: '' }]));
+  const m = new Map(doc.items.map(it => [it.id, { n: (it.source && it.source.wornCount) || 0, last: '' }]));
   const bump = (id, at) => { const s = m.get(id); if (s) { s.n++; if ((at || '') > s.last) s.last = at || ''; } };
   const outfits = new Map(doc.outfits.map(o => [o.id, o.items || []]));
   doc.wears.forEach(w => { if (w.item) bump(w.item, w.at); if (w.outfit) (outfits.get(w.outfit) || []).forEach(id => bump(id, w.at)); });
@@ -525,9 +527,9 @@ function renderSettings() {
     <p class="small muted">The backup is the same open JSON as the Drive file. Importing merges it in; nothing is overwritten.</p>
     <div class="row"><button type="button" class="btn" data-act="export">Export backup</button><button type="button" class="btn" data-act="import">Import backup</button></div>
   </section>
-  <section class="panel stack"><h3>Import from Whering</h3>
-    <p class="small muted">Run <code>tools/whering-capture.js</code> in your browser console on your Whering items list, scroll to the end, run <code>wheringSave()</code>, then pick the file it downloads. Brand, type, colours, size, price, fabric and tags come across, with the cut-out photo and the original Whering links. Items already imported are skipped.</p>
-    <div class="row"><button type="button" class="btn" data-act="import-whering">Import from Whering</button></div>
+  <section class="panel stack"><h3>Import closet file</h3>
+    <p class="small muted">Pick a closet capture file. Brand, type, colours, size, price, fabric and tags come across, with the cut-out photo and the original photo links. Items already imported are skipped.</p>
+    <div class="row"><button type="button" class="btn" data-act="import-closet">Import closet file</button></div>
   </section></div>`;
 }
 
@@ -638,7 +640,7 @@ function logWear(what, at = today()) { put('wears', { id: uid(), at, source: 'ma
 async function takePhotos(files, target) {
   const all = [...files], imgs = all.filter(isImage), skipped = all.length - imgs.length;
   if (!imgs.length) return toast('Only photos can be added (JPEG, PNG, WebP, HEIC).');
-  // A new main photo gets a cut-out made in the background, unless the item has one already (Whering imports do)
+  // A new main photo gets a cut-out made in the background, unless the item has one already (some imports do)
   const clean = [];
   if (target) { // into the item being edited
     for (const f of imgs) {
@@ -683,12 +685,11 @@ $('#backupIn').addEventListener('change', async e => {
   catch (err) { toast('That file isn’t a Wardrobe backup'); }
 });
 
-/* ---------- Import from Whering ---------- */
-// Whering has no export, so two small scripts in tools/ read the person's own closet in their own browser:
-// whering-capture.js records the item details Whering's page loads (brand, type, colours, size, price, fabric, tags…),
-// whering-scan.js saves photos. Items get Wardrobe's own types, colours, materials and occasions, found through the
-// "whering" names in data/*.json; what has no match stays untouched in item.whering, so nothing is lost.
-const whFind = (set, name) => { const n = String(name || '').toLowerCase(); return K[set].find(x => x.id === n || (x.whering || []).includes(n) || x.name.toLowerCase() === n); };
+/* ---------- Import closet file ---------- */
+// Reads a closet capture file (item details: brand, type, colours, size, price, fabric, tags…) or a photos-only
+// scan file of the person's own closet. Items get Wardrobe's own types, colours, materials and occasions, found through the
+// aliases in data/*.json; what has no match stays untouched in item.source, so nothing is lost.
+const whFind = (set, name) => { const n = String(name || '').toLowerCase(); return K[set].find(x => x.id === n || (x.aliases || []).includes(n) || x.name.toLowerCase() === n); };
 const whSlot = { tops: 'tops', bottoms: 'bottoms', full: 'dresses', outerwear: 'outerwear', footwear: 'shoes', bags: 'bag', accessories: 'accessories' };
 const prettyTax = t => String(t || '').replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());
 function whSize(sz, footwear) {
@@ -715,24 +716,24 @@ function whItem(p) {
   it.occasions = uniq(occ.filter(o => !K.byId.seasons.has(o)).map(o => (whFind('occasions', o) || {}).id));
   if (p.comments) it.notes = p.comments;
   if (!known) it.needsReview = true;
-  it.whering = { id: p.id, tax: p.tax, imageUrl: p.image_url || undefined, cutoutUrl: p.nobg_image_url || undefined, attributes: p.attributes, styles: p.styles,
+  it.source = { id: p.id, tax: p.tax, imageUrl: p.image_url || undefined, cutoutUrl: p.nobg_image_url || undefined, attributes: p.attributes, styles: p.styles,
     fabric: p.fabric, occasions: p.occasions, colours: (p.colours || []).map(c => c.id), size: p.size, careDetails: p.care_details, favorite: p.is_favorite || undefined,
     wornCount: p.worn_count || undefined, createdAt: p.created_at ? new Date(p.created_at).toISOString() : undefined };
   return it;
 }
-// The cut-out is fetched straight from Whering's image host; the original photo's link is kept, since its host won't allow a copy from here
+// The cut-out is fetched straight from the source's image host; the original photo's link is kept, since its host won't allow a copy from here
 async function whPhoto(it) {
-  const u = it.whering.cutoutUrl; if (!u) return;
+  const u = it.source.cutoutUrl; if (!u) return;
   try { const r = await fetch(u); if (!r.ok) throw 0; const b = await r.blob(); it.photos = [{ id: await Photos.add(new File([b], 'cutout.png', { type: b.type || 'image/png' })), role: 'cutout' }]; } catch (e) { /* link only */ }
 }
-async function importWhering(file) {
+async function importCloset(file) {
   let d; try { d = JSON.parse(await file.text()); } catch (e) { d = null; }
-  if (d && d.format === 'whering-scan' && Array.isArray(d.items)) return importWheringScan(d);
-  if (!d || d.format !== 'whering-capture' || !Array.isArray(d.responses)) return toast('That isn’t a Whering capture or scan file');
+  if (d && d.format === 'closet-scan' && Array.isArray(d.items)) return importClosetScan(d);
+  if (!d || d.format !== 'closet-capture' || !Array.isArray(d.responses)) return toast('That isn’t a closet capture or scan file');
   const pieces = new Map();
   d.responses.forEach(r => { const b = r.body; if (!b) return; (b.pieces || []).forEach(p => p.id && pieces.set(p.id, { ...pieces.get(p.id), ...p })); if (b.id && b.tax !== undefined) pieces.set(b.id, { ...pieces.get(b.id), ...b }); });
-  if (!pieces.size) return toast('No Whering items in that file. Scroll your items list to the end before saving.');
-  const have = new Set(doc.items.map(i => i.whering && i.whering.id).filter(Boolean));
+  if (!pieces.size) return toast('No items in that file. Scroll your items list to the end before saving.');
+  const have = new Set(doc.items.map(i => i.source && i.source.id).filter(Boolean));
   const todo = [...pieces.values()].filter(p => !have.has(p.id)), skipped = pieces.size - todo.length;
   let added = 0, photoless = 0, review = 0;
   for (let i = 0; i < todo.length; i += 4) {
@@ -745,20 +746,20 @@ async function importWhering(file) {
   toast(`Imported ${added} item${added === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} already here` : ''}${photoless ? `, ${photoless} without a saved photo` : ''}${review ? `, ${review} with a type to check` : ''}`, 7000);
 }
 // A scan only has photos and links (no details); kept for pages where the details can't be read
-async function importWheringScan(scan) {
-  const have = new Set(doc.items.map(i => i.whering && i.whering.imageUrl).filter(Boolean));
+async function importClosetScan(scan) {
+  const have = new Set(doc.items.map(i => i.source && i.source.imageUrl).filter(Boolean));
   let added = 0, skipped = 0;
   for (const s of scan.items) {
     if (!s.imageUrl || have.has(s.imageUrl)) { skipped++; continue; }
     const it = newItem(); it.type = whSlot[String(scan.category || '').toLowerCase()] || 'accessories'; it.needsReview = true; it.photos = [];
-    it.name = kname('types', it.type); it.whering = { imageUrl: s.imageUrl, href: s.href || undefined, scannedAt: scan.scannedAt };
-    try { const blob = s.imageData ? await (await fetch(s.imageData)).blob() : null; if (blob) it.photos = [{ id: await Photos.add(new File([blob], 'whering.png', { type: blob.type })), role: 'cutout' }]; } catch (e) { }
+    it.name = kname('types', it.type); it.source = { imageUrl: s.imageUrl, href: s.href || undefined, scannedAt: scan.scannedAt };
+    try { const blob = s.imageData ? await (await fetch(s.imageData)).blob() : null; if (blob) it.photos = [{ id: await Photos.add(new File([blob], 'photo.png', { type: blob.type })), role: 'cutout' }]; } catch (e) { }
     put('items', it); have.add(s.imageUrl); added++;
   }
   tab = 'closet'; lsSet(TAB_KEY, tab); render();
   toast(`Imported ${added} photo${added === 1 ? '' : 's'}${skipped ? `, skipped ${skipped} already here` : ''}`, 5000);
 }
-$('#wheringIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importWhering(f); });
+$('#closetIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) importCloset(f); });
 
 /* ---------- Events ---------- */
 document.addEventListener('click', async e => {
@@ -774,7 +775,7 @@ document.addEventListener('click', async e => {
   if (d.act === 'log-wear') return wearForm();
   if (d.act === 'export') return exportBackup();
   if (d.act === 'import') return $('#backupIn').click();
-  if (d.act === 'import-whering') return $('#wheringIn').click();
+  if (d.act === 'import-closet') return $('#closetIn').click();
   if (d.fam) { const s = new Set(F().families || []); s.has(d.fam) ? s.delete(d.fam) : s.add(d.fam); return setFilter('families', [...s]); }
   if (d.gender) { const s = new Set(F().gender || []); s.has(d.gender) ? s.delete(d.gender) : s.add(d.gender); return setFilter('gender', [...s]); }
   if (d.spicy !== undefined) return setFilter('spicyOnly', !F().spicyOnly);
