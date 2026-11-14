@@ -83,11 +83,14 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
 - **Spicy** photos go to the same album, and Google Photos also shows album photos in the main library. *Show spicy
   items* only hides them in this app.
 - **Sign-in**: its own token under `localStorage` key `wardrobe.photos`, never the shared Drive token (adding Photos
-  scopes there would change what every app asks for). It lasts an hour and renews on a tap, like Drive; when both
+  scopes there would change what every app asks for). *Connect* asks which Google account to use, which can be a different one
+  from Drive; it is kept in `settings.photosAccount` (and on each uploaded photo as `mediaAccount`), and renewals stay on it. Switching to another account (*Use
+  another account*) starts a new album there and this browser uploads its photos again; nothing is deleted from the
+  old one. It lasts an hour and renews on a tap, like Drive; when both
   need renewing, Drive takes the first tap and Photos the next. The album's id is `settings.photosAlbum`.
 - **Scopes**: `photoslibrary.appendonly`, `photoslibrary.readonly.appcreateddata`,
   `photoslibrary.edit.appcreateddata` (to take photos out of the album) and `photospicker.mediaitems.readonly` (for the
-  Picker import, next). The Library API only sees photos this app uploaded.
+  Picker import, next), plus `userinfo.email` to show which account is connected. The Library API only sees photos this app uploaded.
 
 **One-off setup** in Google Cloud Console, in the project of the shared OAuth client: enable the **Photos Library API**
 and the **Google Photos Picker API** (*APIs & Services → Library*), and add the four scopes above under *Google Auth
