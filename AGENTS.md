@@ -10,7 +10,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   changing data. Item records refer to entries by id; ids are never renamed or reused.
 - **User data**: `localStorage` key `wardrobe.data`; Drive file `Wardrobe data.json` (app id `wardrobe`, key prefix
   `wardrobe.drive`). Lists: `items`, `outfits`, `wears`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
-  `groupBy`, `autoCutout` (unset means on) and `photosAlbum`. Merge rules are
+  `groupBy`, `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
   `mergeDocs()`.
 - **Photos**: bytes live in IndexedDB database `wardrobe` (`photos` full size, `thumbs` 400 px), keyed by the photo
   id stored on the item. Every way of adding a photo goes through `Photos.add()` / `takePhotos()`.

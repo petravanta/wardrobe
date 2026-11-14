@@ -246,8 +246,8 @@ function mergeDocs(a, b) {
 }
 // A photo's link to its Google Photos copy is never lost to an older edit made before the upload finished, so it isn't uploaded twice
 function keepMedia(win, lose) {
-  const ids = new Map((lose.photos || []).filter(p => p.mediaItemId).map(p => [p.id, p.mediaItemId]));
-  return ids.size ? { ...win, photos: (win.photos || []).map(p => p.mediaItemId || !ids.has(p.id) ? p : { ...p, mediaItemId: ids.get(p.id) }) } : win;
+  const ids = new Map((lose.photos || []).filter(p => p.mediaItemId).map(p => [p.id, p]));
+  return ids.size ? { ...win, photos: (win.photos || []).map(p => p.mediaItemId || !ids.has(p.id) ? p : { ...p, mediaItemId: ids.get(p.id).mediaItemId, mediaAccount: ids.get(p.id).mediaAccount }) } : win;
 }
 let doc = upgrade(lsGet(KEY));
 function save() { lsSet(KEY, doc); if (store.known) store.save(doc); showSaveState(); GPhotos.soon(); }
@@ -306,7 +306,9 @@ async function fillThumbs(root = document) {
   }
   if (missing.length && await GPhotos.fetchMissing(missing)) fillThumbs(root);
 }
-const mediaIdOf = id => { for (const it of [...doc.items, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id && p.mediaItemId) return p.mediaItemId; return null; };
+// A photo's album copy, in the Google account Photos is connected to now (mediaAccount says which account it went to)
+const inAlbum = p => !!(p && p.mediaItemId && p.mediaAccount && p.mediaAccount === doc.settings.photosAccount);
+const mediaIdOf = id => { for (const it of [...doc.items, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id && inAlbum(p)) return p.mediaItemId; return null; };
 
 /* ---------- Clean background (on this device) ---------- */
 // The cut-out is a second photo {role:'cutout', from: <the photo it came from>}; the original is always kept. The model
@@ -529,8 +531,8 @@ function renderSettings() {
     <div class="row">${store.configured ? (conn ? '<button type="button" class="btn" data-drive="off">Disconnect</button>' : '<button type="button" class="btn primary" data-drive="on">Connect Google Drive</button>') : '<span class="muted">Drive sync is turned off in this copy.</span>'}</div>
   </section>
   <section class="panel stack"><h3>Google Photos</h3>
-    <p>${GPhotos.known() ? `Item photos are saved to the <b>Wardrobe</b> album in your Google Photos, so they show on your other devices too. ${esc(GPhotos.status())}` : 'Item photos are saved in this browser. Connect Google Photos to keep them in a <b>Wardrobe</b> album in your own Google Photos, so they show on your other devices too.'}</p>
-    <div class="row">${GPhotos.known() ? '<button type="button" class="btn" data-gphotos="off">Disconnect</button>' : '<button type="button" class="btn primary" data-gphotos="on">Connect Google Photos</button>'}</div>
+    <p>${GPhotos.known() ? `Item photos are saved to the <b>Wardrobe</b> album in the Google Photos of <b>${esc(GPhotos.email || 'your account')}</b>, so they show on your other devices too. ${esc(GPhotos.status())}` : 'Item photos are saved in this browser. Connect Google Photos to keep them in a <b>Wardrobe</b> album in your own Google Photos, so they show on your other devices too. You choose the account when you connect; it can be a different one from Google Drive.'}</p>
+    <div class="row">${GPhotos.known() ? '<button type="button" class="btn" data-gphotos="on">Use another account</button><button type="button" class="btn" data-gphotos="off">Disconnect</button>' : '<button type="button" class="btn primary" data-gphotos="on">Connect Google Photos</button>'}</div>
     <p class="small muted">Photos of spicy items go to the same album, and Google Photos also shows them in your main photo library: <i>Show spicy items</i> only hides them in this app. Removing a photo here takes it out of the album; Google doesn’t let apps delete photos, so it stays in your library until you delete it there.</p>
   </section>
   <section class="panel stack"><h3>Privacy</h3>
@@ -814,7 +816,7 @@ document.addEventListener('click', async e => {
   if (d.gphotos === 'off') { GPhotos.signOut(); render(); return toast('Disconnected from Google Photos. The album and its photos stay in your Google Photos.'); }
   if (d.gphotos === 'on') {
     try { await GPhotos.connect(); render(); toast('Connected to Google Photos'); }
-    catch (err) { toast(err && err.code === 'offline' ? 'You’re offline' : err && err.code === 'scopes' ? 'Google Photos needs all the permissions it asked for. Try again and leave them ticked.' : 'Couldn’t connect to Google Photos'); render(); }
+    catch (err) { if (err && err.code === 'cancelled') return render(); toast(err && err.code === 'offline' ? 'You’re offline' : err && err.code === 'scopes' ? 'Google Photos needs all the permissions it asked for. Try again and leave them ticked.' : 'Couldn’t connect to Google Photos'); render(); }
     return;
   }
   if (d.drive === 'off') { store.signOut(); render(); return toast('Disconnected. Your wardrobe stays in this browser.'); }
@@ -1032,7 +1034,7 @@ const GPhotos = (() => {
   const API = 'https://photoslibrary.googleapis.com/v1', KEYP = 'wardrobe.photos';
   const G = s => 'https://www.googleapis.com/auth/' + s;
   const NEED = [G('photoslibrary.appendonly'), G('photoslibrary.readonly.appcreateddata')];
-  const SCOPES = [...NEED, G('photoslibrary.edit.appcreateddata'), G('photospicker.mediaitems.readonly')].join(' ');
+  const SCOPES = [...NEED, G('photoslibrary.edit.appcreateddata'), G('photospicker.mediaitems.readonly'), G('userinfo.email')].join(' ');
   const st = () => lsGet(KEYP) || {};
   const set = v => lsSet(KEYP, { ...st(), ...v });
   const S = { busy: false, err: null, ask: 0, timer: null, done: 0, todo: 0 };
@@ -1043,18 +1045,27 @@ const GPhotos = (() => {
   const note = () => { if (tab === 'settings' && !$('#layer').innerHTML) render(); };
   if (known()) GoogleToken.gis().catch(() => {});
 
-  // Opens Google's window, so call this from a tap. Suggests the account Drive uses.
-  async function signIn(consent) {
+  // Opens Google's window, so call this from a tap. The Photos account can differ from the Drive one: connecting asks
+  // which account to use, and later renewals hint the account chosen then. Resolves the account's email.
+  async function signIn(choose) {
     await GoogleToken.gis();
-    const hint = lsGet('wardrobe.drive.email') || GoogleToken.lastEmail || undefined;
-    await new Promise((res, rej) => google.accounts.oauth2.initTokenClient({
-      client_id: GOOGLE_CLIENT_ID, scope: SCOPES, login_hint: hint, include_granted_scopes: false, error_callback: rej,
-      callback: r => {
-        if (r.error) return rej(r);
-        if (!google.accounts.oauth2.hasGrantedAllScopes(r, ...NEED)) return rej({ code: 'scopes' });
-        set({ token: r.access_token, exp: Date.now() + (Number(r.expires_in || 3600) - 60) * 1000, known: true }); res();
-      }
-    }).requestAccessToken({ prompt: consent ? 'consent' : '' }));
+    const r = await new Promise((res, rej) => google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID, scope: SCOPES, login_hint: choose ? undefined : st().email || undefined, include_granted_scopes: false, error_callback: rej,
+      callback: r => r.error ? rej(r) : google.accounts.oauth2.hasGrantedAllScopes(r, ...NEED) ? res(r) : rej({ code: 'scopes' })
+    }).requestAccessToken({ prompt: choose ? 'select_account consent' : '' }));
+    const t = { token: r.access_token, exp: Date.now() + (Number(r.expires_in || 3600) - 60) * 1000 };
+    let email = '';
+    try { email = (await (await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: 'Bearer ' + t.token } })).json()).email || ''; } catch (e) { }
+    if (!choose && st().email && email && email !== st().email) throw { code: 'account' }; // a renewal must stay on the chosen account
+    set({ ...t, known: true, email: email || st().email || '' });
+    return email;
+  }
+  // Photos already uploaded belong to the account they went to (photo.mediaAccount). A different account starts a new
+  // album, and this browser uploads its photos again there; nothing is removed from the old one.
+  function useAccount(email) {
+    if (!email || doc.settings.photosAccount === email) return;
+    set({ remove: [] });
+    doc.settings = { ...doc.settings, photosAccount: email, photosAlbum: '', updatedAt: now() }; save();
   }
   async function call(path, opt = {}) {
     if (!live()) throw { code: 'expired' };
@@ -1071,12 +1082,12 @@ const GPhotos = (() => {
     setSetting('photosAlbum', a.id); return a.id;
   }
   function setMediaId(itemId, photoId, mediaItemId) {
-    const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId } : p);
+    const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId, mediaAccount: doc.settings.photosAccount } : p);
     const it = itemById(itemId); if (it) put('items', { ...it, photos: mark(it.photos) });
     if (editing && editing.id === itemId) editing.photos = mark(editing.photos);
   }
-  // Saved photos not in the album yet
-  const waiting = () => doc.items.flatMap(it => (it.photos || []).filter(p => !p.mediaItemId).map(p => [it.id, p]));
+  // Saved photos not in this account's album yet
+  const waiting = () => doc.items.flatMap(it => (it.photos || []).filter(p => !inAlbum(p)).map(p => [it.id, p]));
   async function sync() {
     clearTimeout(S.timer);
     if (!live() || S.busy) return;
@@ -1139,10 +1150,15 @@ const GPhotos = (() => {
     known, live, sync, fetchMissing,
     direct: id => direct.get(id) || '',
     soon() { if (!live()) return; clearTimeout(S.timer); S.timer = setTimeout(sync, 2000); },
-    async connect() { await signIn(!st().known); await sync(); },
+    async connect() {
+      const email = await signIn(true), was = doc.settings.photosAccount;
+      if (was && email && email !== was && !confirm(`Your photos are in the Wardrobe album of ${was}. Switch to ${email}? A new Wardrobe album is made there, and this browser uploads its photos again. Nothing is deleted from ${was}.`)) { lsSet(KEYP, null); throw { code: 'cancelled' }; }
+      useAccount(email); await sync();
+    },
+    get email() { return st().email || ''; },
     // Photos removed in the app leave the album on the next sync
     unlink(photos) {
-      const ids = photos.map(p => p && p.mediaItemId).filter(Boolean); if (!ids.length || !known()) return;
+      const ids = photos.filter(inAlbum).map(p => p.mediaItemId); if (!ids.length || !known()) return;
       set({ remove: [...new Set([...(st().remove || []), ...ids])] }); this.soon();
     },
     signOut() { lsSet(KEYP, null); direct.clear(); },
