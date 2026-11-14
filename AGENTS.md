@@ -10,7 +10,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   changing data. Item records refer to entries by id; ids are never renamed or reused.
 - **User data**: `localStorage` key `wardrobe.data`; Drive file `Wardrobe data.json` (app id `wardrobe`, key prefix
   `wardrobe.drive`). Lists: `items`, `outfits`, `wears`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
-  `groupBy` and `autoCutout` (unset means on). Merge rules are
+  `groupBy`, `autoCutout` (unset means on) and `photosAlbum`. Merge rules are
   `mergeDocs()`.
 - **Photos**: bytes live in IndexedDB database `wardrobe` (`photos` full size, `thumbs` 400 px), keyed by the photo
   id stored on the item. Every way of adding a photo goes through `Photos.add()` / `takePhotos()`.
@@ -20,6 +20,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   on purpose. Photos never leave the device for this.
 - **Spicy**: anything with `spicy: true` must stay out of every view, stat, search and share export while
   `settings.showSpicy` is off. Use `visible(item)`.
-- **Google Photos**: needs its own token with the Photos scopes, under its own key. Never add Photos scopes to the
-  shared `google-token.js`: that would change consent for every app.
+- **Google Photos**: `GPhotos` in `index.html` (README, *Google Photos*). Its own token with the Photos scopes under
+  `localStorage` key `wardrobe.photos`. Never add Photos scopes to the shared `google-token.js`: that would change
+  consent for every app. A photo's `mediaItemId` is never dropped by a merge (`keepMedia()`), so nothing uploads twice.
 - The design and roadmap are in the README (*Next steps*).
