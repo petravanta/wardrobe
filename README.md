@@ -59,7 +59,7 @@ Cut-outs are made in the browser, on your device. The photo is never uploaded an
   `cutout-worker.js` at it.
 - **Speed**: GitHub Pages can't turn on cross-origin isolation, so WebAssembly runs single-threaded (ONNX Runtime
   says so in the console; it's harmless). WebGPU is much faster where available.
-- **Licence**: `@imgly/background-removal` is AGPL-3.0. Wardrobe is published as open source, which that licence asks for.
+- **Licence**: `@imgly/background-removal` is AGPL-3.0, so Wardrobe as a whole is shared under AGPL terms while its own code stays MIT. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - **Updating the library**: in an empty folder,
   `npm i @imgly/background-removal@<version> onnxruntime-web@<its peer version> esbuild`, then bundle
   `export { removeBackground, preload } from '@imgly/background-removal'` with
@@ -145,3 +145,7 @@ anywhere yet. When the `petravanta` GitHub account is back:
 
 Paths to the hub's shared files are relative (`../general/shared/...`), which works both on
 `petravanta.github.io` and locally.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The bundled background-removal library is AGPL-3.0; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
