@@ -187,7 +187,7 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
    Built-in knowledge (types, colours, materials, sizes…) comes from data/*.json; items refer to it by id.
    User data follows the "User data" section of petravanta/general STANDARDS.md: one JSON document, a working copy in
    localStorage, optional sync to "Wardrobe data.json" in the user's Google Drive.
-   Photos live in this browser (IndexedDB) for now; the Google Photos album adapter is the next step (see README). */
+   Photos live in this browser (IndexedDB) and, if connected, in a Wardrobe album in the user's Google Photos (GPhotos below). */
 
 /* Google Drive sync: the shared OAuth client for petravanta.github.io (see README). Leave empty to turn Drive off. */
 const GOOGLE_CLIENT_ID = '326863468616-4hf2conk0ks0s4qdva9tphphdo7ht7eh.apps.googleusercontent.com';
@@ -239,22 +239,27 @@ function mergeDocs(a, b) {
   const out = { version: 1, settings: (b.settings.updatedAt || '') > (a.settings.updatedAt || '') ? b.settings : a.settings, deleted };
   LISTS.forEach(l => {
     const m = new Map();
-    [...a[l], ...b[l]].forEach(r => { const o = m.get(r.id); if (!o || (r.u || '') > (o.u || '')) m.set(r.id, r); });
+    [...a[l], ...b[l]].forEach(r => { const o = m.get(r.id); if (!o || (r.u || '') > (o.u || '')) m.set(r.id, o ? keepMedia(r, o) : r); else m.set(r.id, keepMedia(o, r)); });
     out[l] = [...m.values()].filter(r => !gone.has(r.id));
   });
   return out;
 }
+// A photo's link to its Google Photos copy is never lost to an older edit made before the upload finished, so it isn't uploaded twice
+function keepMedia(win, lose) {
+  const ids = new Map((lose.photos || []).filter(p => p.mediaItemId).map(p => [p.id, p.mediaItemId]));
+  return ids.size ? { ...win, photos: (win.photos || []).map(p => p.mediaItemId || !ids.has(p.id) ? p : { ...p, mediaItemId: ids.get(p.id) }) } : win;
+}
 let doc = upgrade(lsGet(KEY));
-function save() { lsSet(KEY, doc); if (store.known) store.save(doc); showSaveState(); }
+function save() { lsSet(KEY, doc); if (store.known) store.save(doc); showSaveState(); GPhotos.soon(); }
 function put(list, rec) { rec.u = now(); const i = doc[list].findIndex(r => r.id === rec.id); i < 0 ? doc[list].push(rec) : doc[list][i] = rec; save(); }
 function remove(list, id) { doc[list] = doc[list].filter(r => r.id !== id); doc.deleted.push(id); save(); }
 function setSetting(k, v) { doc.settings = { ...doc.settings, [k]: v, updatedAt: now() }; save(); }
 const visible = it => doc.settings.showSpicy || !it.spicy;
 const itemById = id => doc.items.find(i => i.id === id);
 
-/* ---------- Photos (this browser only, for now) ---------- */
-// Each item photo is {id, role:'main'|'cutout'|'label', from?, mediaItemId?}; a cut-out's `from` is the photo it was made from. The bytes live in IndexedDB here; once the
-// Google Photos adapter lands, mediaItemId points at the copy in the app's Wardrobe album and this becomes a cache.
+/* ---------- Photos (this browser's copy) ---------- */
+// Each item photo is {id, role:'main'|'cutout'|'label', from?, mediaItemId?}; a cut-out's `from` is the photo it was made from. The bytes live in IndexedDB here;
+// once uploaded, mediaItemId points at the copy in the Wardrobe album in Google Photos and this is a cache of it.
 const Photos = (() => {
   let dbp;
   const db = () => dbp || (dbp = new Promise((res, rej) => {
@@ -273,11 +278,13 @@ const Photos = (() => {
   }
   return {
     // Every way in (button, drop, later the Picker and camera) goes through here: same resizing, same storage
-    async add(file) {
-      const id = uid(), png = file.type === 'image/png';
+    async add(file) { const id = uid(); await this.put(id, file); return id; },
+    // Also how a photo downloaded from the Google Photos album comes back into this browser's cache
+    async put(id, file) {
+      const png = file.type === 'image/png';
       const [full, thumb] = await Promise.all([resize(file, 1600, png ? 'image/png' : 'image/jpeg'), resize(file, 400, png ? 'image/png' : 'image/jpeg', .8)]);
       await tx('photos', 'readwrite', s => s.put(full, id)); await tx('thumbs', 'readwrite', s => s.put(thumb, id));
-      return id;
+      urls.delete(id);
     },
     async full(id) { return tx('photos', 'readonly', s => s.get(id)).catch(() => null); },
     async thumb(id) {
@@ -290,9 +297,16 @@ const Photos = (() => {
 })();
 const isImage = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name);
 const coverPhoto = it => { const p = it.photos || []; return p.find(x => x.role === 'cutout') || p.find(x => x.role === 'main') || p[0]; };
+// A photo this browser doesn't have yet (added on another device) comes down from the Google Photos album
 async function fillThumbs(root = document) {
-  for (const img of $$('img[data-photo]', root)) if (!img.src) { const u = await Photos.thumb(img.dataset.photo); if (u) img.src = u; else img.remove(); }
+  const missing = [];
+  for (const img of $$('img[data-photo]', root)) if (!img.getAttribute('src')) {
+    const id = img.dataset.photo, u = await Photos.thumb(id) || GPhotos.direct(id), m = mediaIdOf(id);
+    if (u) img.src = u; else if (m && GPhotos.live()) missing.push([id, m]); else img.remove();
+  }
+  if (missing.length && await GPhotos.fetchMissing(missing)) fillThumbs(root);
 }
+const mediaIdOf = id => { for (const it of [...doc.items, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id && p.mediaItemId) return p.mediaItemId; return null; };
 
 /* ---------- Clean background (on this device) ---------- */
 // The cut-out is a second photo {role:'cutout', from: <the photo it came from>}; the original is always kept. The model
@@ -343,13 +357,14 @@ async function cleanBackground(itemId, photoId) {
 }
 // Adds the cut-out to the open form and the saved item, wherever the item is now; a newer cut-out of the same photo replaces the old
 function attachCutout(itemId, photo) {
-  const old = new Set(), swap = photos => { (photos || []).forEach(p => { if (p.role === 'cutout' && p.from === photo.from) old.add(p.id); }); return [...(photos || []).filter(p => !(p.role === 'cutout' && p.from === photo.from)), photo]; };
+  const old = new Map(), swap = photos => { (photos || []).forEach(p => { if (p.role === 'cutout' && p.from === photo.from) old.set(p.id, { ...old.get(p.id), ...p }); }); return [...(photos || []).filter(p => !(p.role === 'cutout' && p.from === photo.from)), photo]; };
   let used = false;
   if (editing && editing.id === itemId) { editing.photos = swap(editing.photos); used = true; }
   const saved = itemById(itemId);
   if (saved) { put('items', { ...saved, photos: swap(saved.photos) }); used = true; render(); }
   if (!used) Photos.drop(photo.id);
-  old.forEach(id => Photos.drop(id));
+  GPhotos.unlink([...old.values()]);
+  old.forEach((p, id) => Photos.drop(id));
   return used;
 }
 
@@ -512,7 +527,11 @@ function renderSettings() {
   <section class="panel stack"><h3>Google Drive</h3>
     <p>${conn ? `Syncing to <b>${esc(store.file)}</b> in your Google Drive. ${esc(store.status())}` : 'Your wardrobe is saved in this browser. Connect Google Drive to keep it in an open JSON file in your own Drive and use it on other devices.'}</p>
     <div class="row">${store.configured ? (conn ? '<button type="button" class="btn" data-drive="off">Disconnect</button>' : '<button type="button" class="btn primary" data-drive="on">Connect Google Drive</button>') : '<span class="muted">Drive sync is turned off in this copy.</span>'}</div>
-    <p class="small muted">Photos stay in this browser for now. Saving them to a Wardrobe album in Google Photos is coming next.</p>
+  </section>
+  <section class="panel stack"><h3>Google Photos</h3>
+    <p>${GPhotos.known() ? `Item photos are saved to the <b>Wardrobe</b> album in your Google Photos, so they show on your other devices too. ${esc(GPhotos.status())}` : 'Item photos are saved in this browser. Connect Google Photos to keep them in a <b>Wardrobe</b> album in your own Google Photos, so they show on your other devices too.'}</p>
+    <div class="row">${GPhotos.known() ? '<button type="button" class="btn" data-gphotos="off">Disconnect</button>' : '<button type="button" class="btn primary" data-gphotos="on">Connect Google Photos</button>'}</div>
+    <p class="small muted">Photos of spicy items go to the same album, and Google Photos also shows them in your main photo library: <i>Show spicy items</i> only hides them in this app. Removing a photo here takes it out of the album; Google doesn’t let apps delete photos, so it stays in your library until you delete it there.</p>
   </section>
   <section class="panel stack"><h3>Privacy</h3>
     <label class="row"><input type="checkbox" id="showSpicy"${doc.settings.showSpicy ? ' checked' : ''}> Show spicy items</label>
@@ -520,7 +539,7 @@ function renderSettings() {
   </section>
   <section class="panel stack"><h3>Clean background</h3>
     ${Cutout.supported ? `<label class="row"><input type="checkbox" id="autoCutout"${autoCutout() ? ' checked' : ''}> Clean the background of new photos automatically</label>
-    <p class="small muted">Makes a cut-out of each item’s main photo, right here on your device: the photo is never uploaded anywhere. The first time, the browser downloads the model (tens of MB) and keeps it, so later cut-outs work offline. The original photo is always kept, and any photo has a <i>Clean background</i> button in the item form.</p>`
+    <p class="small muted">Makes a cut-out of each item’s main photo, right here on your device: the photo is never sent anywhere for this. The first time, the browser downloads the model (tens of MB) and keeps it, so later cut-outs work offline. The original photo is always kept, and any photo has a <i>Clean background</i> button in the item form.</p>`
     : '<p class="small muted">This browser can’t run the clean-background model (it needs Web Workers and OffscreenCanvas).</p>'}
   </section>
   <section class="panel stack"><h3>Backup</h3>
@@ -783,15 +802,21 @@ document.addEventListener('click', async e => {
   if (d.outfit) return outfitForm(structuredClone(doc.outfits.find(o => o.id === d.outfit)));
   if (d.rmphoto && editing) { // a photo's cut-out goes with it
     const gone = editing.photos.filter(p => p.id === d.rmphoto || p.from === d.rmphoto);
-    editing.photos = editing.photos.filter(p => !gone.includes(p)); gone.forEach(p => Photos.drop(p.id));
+    editing.photos = editing.photos.filter(p => !gone.includes(p)); gone.forEach(p => Photos.drop(p.id)); GPhotos.unlink(gone);
     return itemForm({ ...readItemForm(editing), photos: editing.photos });
   }
   if (d.cutout && editing) return cleanBackground(editing.id, d.cutout);
   if (d.wearItem) { logWear({ item: d.wearItem }); return closeDrawer(), render(); }
   if (d.wearOutfit) { logWear({ outfit: d.wearOutfit }); return closeDrawer(), render(); }
   if (d.unwear) { remove('wears', d.unwear); return render(); }
-  if (d.delItem && confirm('Delete this item? Outfits and the wear log keep their other items.')) { const it = itemById(d.delItem); remove('items', d.delItem); (it.photos || []).forEach(p => Photos.drop(p.id)); closeDrawer(); return render(); }
+  if (d.delItem && confirm('Delete this item? Outfits and the wear log keep their other items.')) { const it = itemById(d.delItem); remove('items', d.delItem); (it.photos || []).forEach(p => Photos.drop(p.id)); GPhotos.unlink(it.photos || []); closeDrawer(); return render(); }
   if (d.delOutfit && confirm('Delete this outfit? Its items stay in your closet.')) { remove('outfits', d.delOutfit); closeDrawer(); return render(); }
+  if (d.gphotos === 'off') { GPhotos.signOut(); render(); return toast('Disconnected from Google Photos. The album and its photos stay in your Google Photos.'); }
+  if (d.gphotos === 'on') {
+    try { await GPhotos.connect(); render(); toast('Connected to Google Photos'); }
+    catch (err) { toast(err && err.code === 'offline' ? 'You’re offline' : err && err.code === 'scopes' ? 'Google Photos needs all the permissions it asked for. Try again and leave them ticked.' : 'Couldn’t connect to Google Photos'); render(); }
+    return;
+  }
   if (d.drive === 'off') { store.signOut(); render(); return toast('Disconnected. Your wardrobe stays in this browser.'); }
   if (d.drive === 'on') {
     try { doc = mergeDocs(doc, await store.load(true)); save(); render(); toast('Connected to Google Drive'); }
@@ -997,6 +1022,140 @@ const store = DriveStore({
   onChange: () => showSaveState(),
   onRemote: data => remoteIn(data)
 });
+/* ---------- Google Photos album ---------- */
+// Item photos go to an app-created "Wardrobe" album in the user's own Google Photos, and each photo keeps the album
+// copy's mediaItemId, which syncs with the rest of the data. Another browser (another device, or the app on its other
+// address) downloads what it doesn't have and caches it in IndexedDB. The Library API only sees what this app uploaded.
+// Its own token under its own key (wardrobe.photos): the Photos scopes never go into the shared petravanta.google token,
+// which would change what every app asks for. Like Drive, a token lasts an hour and renews on a tap.
+const GPhotos = (() => {
+  const API = 'https://photoslibrary.googleapis.com/v1', KEYP = 'wardrobe.photos';
+  const G = s => 'https://www.googleapis.com/auth/' + s;
+  const NEED = [G('photoslibrary.appendonly'), G('photoslibrary.readonly.appcreateddata')];
+  const SCOPES = [...NEED, G('photoslibrary.edit.appcreateddata'), G('photospicker.mediaitems.readonly')].join(' ');
+  const st = () => lsGet(KEYP) || {};
+  const set = v => lsSet(KEYP, { ...st(), ...v });
+  const S = { busy: false, err: null, ask: 0, timer: null, done: 0, todo: 0 };
+  const direct = new Map(); // photo id -> Google's own URL, when the image can be shown but not copied into this browser
+  const fetching = new Set();
+  const known = () => !!st().known && !!GOOGLE_CLIENT_ID;
+  const live = () => { const s = st(); return known() && !!s.token && s.exp > Date.now(); };
+  const note = () => { if (tab === 'settings' && !$('#layer').innerHTML) render(); };
+  if (known()) GoogleToken.gis().catch(() => {});
+
+  // Opens Google's window, so call this from a tap. Suggests the account Drive uses.
+  async function signIn(consent) {
+    await GoogleToken.gis();
+    const hint = lsGet('wardrobe.drive.email') || GoogleToken.lastEmail || undefined;
+    await new Promise((res, rej) => google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID, scope: SCOPES, login_hint: hint, include_granted_scopes: false, error_callback: rej,
+      callback: r => {
+        if (r.error) return rej(r);
+        if (!google.accounts.oauth2.hasGrantedAllScopes(r, ...NEED)) return rej({ code: 'scopes' });
+        set({ token: r.access_token, exp: Date.now() + (Number(r.expires_in || 3600) - 60) * 1000, known: true }); res();
+      }
+    }).requestAccessToken({ prompt: consent ? 'consent' : '' }));
+  }
+  async function call(path, opt = {}) {
+    if (!live()) throw { code: 'expired' };
+    let r; try { r = await fetch(API + path, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + st().token } }); } catch (e) { throw { code: 'offline' }; }
+    if (r.status === 401) { set({ token: null, exp: 0 }); throw { code: 'expired' }; }
+    if (!r.ok) { let msg = ''; try { msg = (await r.json()).error.message; } catch (e) { } throw { code: 'http', status: r.status, msg }; }
+    return r;
+  }
+  const json = (path, body) => call(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(r => r.json());
+  // The album's id is in the synced settings, so every device uses the same album
+  async function album() {
+    if (doc.settings.photosAlbum) return doc.settings.photosAlbum;
+    const a = await json('/albums', { album: { title: 'Wardrobe' } });
+    setSetting('photosAlbum', a.id); return a.id;
+  }
+  function setMediaId(itemId, photoId, mediaItemId) {
+    const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId } : p);
+    const it = itemById(itemId); if (it) put('items', { ...it, photos: mark(it.photos) });
+    if (editing && editing.id === itemId) editing.photos = mark(editing.photos);
+  }
+  // Saved photos not in the album yet
+  const waiting = () => doc.items.flatMap(it => (it.photos || []).filter(p => !p.mediaItemId).map(p => [it.id, p]));
+  async function sync() {
+    clearTimeout(S.timer);
+    if (!live() || S.busy) return;
+    S.busy = true; S.err = null; note();
+    try {
+      // Removed in the app: out of the album (Google doesn't let apps delete a photo from the library)
+      const gone = st().remove || [];
+      if (gone.length && doc.settings.photosAlbum) {
+        for (let i = 0; i < gone.length; i += 50) await json(`/albums/${doc.settings.photosAlbum}:batchRemoveMediaItems`, { mediaItemIds: gone.slice(i, i + 50) }).catch(e => { if (e.code !== 'http') throw e; });
+      }
+      set({ remove: [] });
+      // Only photos whose bytes are in this browser; the rest were added on another device that uploads them
+      const todo = []; for (const [itemId, p] of waiting()) { const blob = await Photos.full(p.id); if (blob) todo.push([itemId, p, blob]); }
+      S.todo = todo.length; S.done = 0;
+      if (todo.length) {
+        const albumId = await album();
+        for (let i = 0; i < todo.length; i += 20) { // upload the bytes one by one, then add them to the album 20 at a time
+          const chunk = todo.slice(i, i + 20), items = [];
+          for (const [, p, blob] of chunk) {
+            const token = await (await call('/uploads', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-Goog-Upload-Content-Type': blob.type || 'image/jpeg', 'X-Goog-Upload-Protocol': 'raw' }, body: blob })).text();
+            items.push({ simpleMediaItem: { uploadToken: token, fileName: `wardrobe-${p.id}.${blob.type === 'image/png' ? 'png' : 'jpg'}` } });
+          }
+          const r = await json('/mediaItems:batchCreate', { albumId, newMediaItems: items });
+          (r.newMediaItemResults || []).forEach((m, k) => { if (m.mediaItem) { setMediaId(chunk[k][0], chunk[k][1].id, m.mediaItem.id); S.done++; } });
+          note();
+        }
+      }
+    } catch (e) {
+      S.err = e.code === 'expired' ? null : e.code === 'offline' ? 'offline' : (e.msg || 'error');
+      // The album was deleted in Google Photos: make a new one next time
+      if (e.code === 'http' && e.status === 400 && /album/i.test(e.msg || '')) setSetting('photosAlbum', '');
+    } finally { S.busy = false; S.todo = 0; note(); }
+  }
+  // Photos added elsewhere: download from the album into this browser. pairs: [[photoId, mediaItemId]]
+  async function fetchMissing(pairs) {
+    pairs = pairs.filter(([id]) => !fetching.has(id)); pairs.forEach(([id]) => fetching.add(id));
+    let got = 0;
+    for (let i = 0; i < pairs.length; i += 50) {
+      const chunk = pairs.slice(i, i + 50);
+      let j; try { j = await (await call('/mediaItems:batchGet?' + chunk.map(([, m]) => 'mediaItemIds=' + encodeURIComponent(m)).join('&'))).json(); } catch (e) { break; }
+      for (const [k, r] of (j.mediaItemResults || []).entries()) {
+        const m = r.mediaItem; if (!m) continue;
+        try { const b = await (await fetch(m.baseUrl + '=d')).blob(); await Photos.put(chunk[k][0], new File([b], m.filename || 'photo', { type: b.type || m.mimeType })); }
+        catch (e) { direct.set(chunk[k][0], m.baseUrl + '=w400-h400'); } // shown straight from Google, not kept here
+        got++;
+      }
+    }
+    return got;
+  }
+  // Tokens last an hour. Renew on a tap when close to running out, unless Drive needs this tap (one Google window per tap).
+  document.addEventListener('click', e => {
+    if (!known() || e.target.closest('[data-gphotos],[data-drive]')) return;
+    if ((st().exp || 0) - Date.now() > 10 * 60000 || Date.now() - S.ask < 60000) return;
+    const d = GoogleToken.get(lsGet('wardrobe.drive.email'));
+    if (store.known && !(d && d.exp - Date.now() > 10 * 60000)) return;
+    S.ask = Date.now(); signIn().then(() => { sync(); if (!$('#layer').innerHTML) render(); }).catch(() => note());
+  }, true);
+  addEventListener('online', () => sync());
+  return {
+    known, live, sync, fetchMissing,
+    direct: id => direct.get(id) || '',
+    soon() { if (!live()) return; clearTimeout(S.timer); S.timer = setTimeout(sync, 2000); },
+    async connect() { await signIn(!st().known); await sync(); },
+    // Photos removed in the app leave the album on the next sync
+    unlink(photos) {
+      const ids = photos.map(p => p && p.mediaItemId).filter(Boolean); if (!ids.length || !known()) return;
+      set({ remove: [...new Set([...(st().remove || []), ...ids])] }); this.soon();
+    },
+    signOut() { lsSet(KEYP, null); direct.clear(); },
+    status() {
+      const left = waiting().length;
+      if (S.busy) return S.todo ? `Uploading photos: ${S.done} of ${S.todo}…` : 'Checking the album…';
+      if (S.err === 'offline') return 'Offline · photos upload when you’re back online';
+      if (S.err) return `Couldn’t reach Google Photos (${S.err}) · will retry`;
+      if (!live()) return left ? `${left} photo${left > 1 ? 's' : ''} waiting · tap anywhere to reconnect` : 'Tap anywhere to reconnect';
+      return left ? `${left} photo${left > 1 ? 's' : ''} not in the album yet (added on another device, or still uploading)` : 'All photos are in the album.';
+    }
+  };
+})();
 function remoteIn(data) { doc = mergeDocs(doc, data); lsSet(KEY, doc); if (!$('#layer').innerHTML) render(); }
 function showSaveState() { $('#saveState').textContent = store.known ? store.status() || 'Saved in this browser' : 'Saved in this browser'; }
 addEventListener('storage', e => { if (e.key === KEY && !$('#layer').innerHTML) { doc = upgrade(lsGet(KEY)); render(); } });
@@ -1016,6 +1175,7 @@ document.addEventListener('visibilitychange', async () => {
   if (store.known && store.live()) {
     try { doc = mergeDocs(doc, await store.load(false)); lsSet(KEY, doc); store.save(doc); remoteIn(doc); } catch (e) { showSaveState(); }
   }
+  GPhotos.sync();
 })();
 </script>
 <script src="../general/shared/hub-link.js" defer></script>

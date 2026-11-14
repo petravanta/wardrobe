@@ -27,7 +27,8 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 - **Outfits**: combine items, name them and tag occasions.
 - **Wear log**: log an outfit or items for a day; basic stats (never worn, least worn, cost per wear).
 - **Photos**: by button or by dropping them anywhere on the page; resized in the browser and kept in this
-  browser's IndexedDB.
+  browser's IndexedDB, and (optional) in a *Wardrobe* album in your own Google Photos, so they show on every device
+  (see *Google Photos* below).
 - **Clean background** on this device: a new item's main photo gets a transparent cut-out next to the
   original, and any photo can be cleaned from the item form (see *Clean background* below).
 - **Google Drive sync** of `Wardrobe data.json`, **Export backup** and **Import backup** (merge).
@@ -36,7 +37,7 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 
 ## Clean background
 
-Cut-outs are made in the browser, on your device. The photo is never uploaded anywhere.
+Cut-outs are made in the browser, on your device. The photo is never sent anywhere to be cut out.
 
 - **When**: adding a photo to an item that has no cut-out yet (by button or drop, one item or many) starts a
   cut-out of its main photo in the background, while you fill in the form. Every photo in the item form also has a
@@ -45,8 +46,8 @@ Cut-outs are made in the browser, on your device. The photo is never uploaded an
 - **What's stored**: the original stays as it was. The cut-out is a second photo on the item,
   `{ "id": "…", "role": "cutout", "from": "<id of the photo it was made from>" }`, a transparent PNG trimmed to the
   garment with a little margin, kept in IndexedDB like every other photo. The closet shows the cut-out when there is
-  one. Removing a photo removes its cut-out too. When the Google Photos adapter lands, a cut-out uploads like any
-  other photo (it gets its own `mediaItemId`); nothing about it is specific to this browser.
+  one. Removing a photo removes its cut-out too. With Google Photos connected, a cut-out uploads like any other photo
+  (it gets its own `mediaItemId`); nothing about it is specific to this browser.
 - **How**: [`@imgly/background-removal`](https://github.com/imgly/background-removal-js) 1.7.0 (an ISNet
   segmentation model on ONNX Runtime Web) runs in `cutout-worker.js`, a Web Worker, so the page stays responsive. It
   uses WebGPU when the browser has it and falls back to WebAssembly. Jobs run one at a time.
@@ -66,17 +67,40 @@ Cut-outs are made in the browser, on your device. The photo is never uploaded an
   `npx esbuild entry.mjs --bundle --format=esm --minify --target=es2020 --legal-comments=eof --outfile=background-removal.js`,
   keep the header comment, and change the version in `PUBLIC_PATH` (`cutout-worker.js`) and `CUTOUT_CACHE` (`sw.js`).
 
+## Google Photos
+
+*Settings → Google Photos → Connect* keeps item photos in a *Wardrobe* album that the app creates in your own Google
+Photos. The browser keeps its copy in IndexedDB as a cache.
+
+- **Upload**: every saved photo without a `mediaItemId` whose bytes are in this browser uploads (originals and
+  cut-outs, at the 1600 px size the app stores), and gets the album copy's `mediaItemId`, which syncs through Drive.
+  New photos upload a couple of seconds after they're saved. Photos are only in the browser where they were added, so
+  that browser does their first upload.
+- **Download**: a browser that shows a photo it doesn't have (another device, or the app on another address such as
+  localhost and GitHub Pages) fetches it from the album by `mediaItemId` and caches it.
+- **Removing** a photo in the app takes it out of the album. Google doesn't let apps delete photos, so it stays in
+  your library until you delete it there.
+- **Spicy** photos go to the same album, and Google Photos also shows album photos in the main library. *Show spicy
+  items* only hides them in this app.
+- **Sign-in**: its own token under `localStorage` key `wardrobe.photos`, never the shared Drive token (adding Photos
+  scopes there would change what every app asks for). It lasts an hour and renews on a tap, like Drive; when both
+  need renewing, Drive takes the first tap and Photos the next. The album's id is `settings.photosAlbum`.
+- **Scopes**: `photoslibrary.appendonly`, `photoslibrary.readonly.appcreateddata`,
+  `photoslibrary.edit.appcreateddata` (to take photos out of the album) and `photospicker.mediaitems.readonly` (for the
+  Picker import, next). The Library API only sees photos this app uploaded.
+
+**One-off setup** in Google Cloud Console, in the project of the shared OAuth client: enable the **Photos Library API**
+and the **Google Photos Picker API** (*APIs & Services → Library*), and add the four scopes above under *Google Auth
+Platform → Data Access*. While the app is in *Testing*, your account must be a test user (*Audience*).
+
 ## Next steps
 
 From the spec, roughly in order:
 
-1. **Google Photos album adapter**: upload item photos to an app-created *Wardrobe* album, keep the
-   `mediaItemId` on each photo, and the local copy as a thumbnail cache. Needs its own sign-in with the
-   Photos scopes (append-only, app-created read, Picker), kept apart from the shared Drive token.
-2. **Picker import** of existing photos (a copy is re-uploaded to the album).
-3. **What I wore, from a photo** on device (clothes segmentation + CLIP matching, embeddings in
+1. **Picker import** of existing photos (a copy is re-uploaded to the album).
+2. **What I wore, from a photo** on device (clothes segmentation + CLIP matching, embeddings in
    IndexedDB), with a review screen before anything is logged.
-4. **Share export** for outfits (`format: "wardrobe-outfit"`), richer stats, wear calendar.
+3. **Share export** for outfits (`format: "wardrobe-outfit"`), richer stats, wear calendar.
 
 The open question from the spec about duplicate copies on Picker import still needs Petra's answer.
 
@@ -98,7 +122,7 @@ One document, the same shape as the other apps (see STANDARDS.md, *User data*):
 }
 ```
 
-Photo bytes are not in this file: they stay in the browser (and later in the Google Photos album).
+Photo bytes are not in this file: they stay in the browser and, if connected, in the Google Photos album.
 
 ## Extending the app
 
