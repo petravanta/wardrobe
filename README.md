@@ -8,8 +8,8 @@ Part of [petravanta's apps](https://petravanta.github.io/general/); it follows t
 [STANDARDS.md](https://github.com/petravanta/general/blob/main/STANDARDS.md). The design is in the
 Wardrobe app spec.
 
-Live at **https://petravanta.github.io/wardrobe/** once published (see *Publishing to GitHub* below).
-Until then it runs locally at http://localhost:8765/wardrobe/ from the `site/` folder.
+Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localhost:8765/wardrobe/ from the
+`site/` folder.
 
 ## What works today
 
@@ -123,28 +123,17 @@ Check the data locally with `node scripts/check-data.js`.
 Uses the shared OAuth client for petravanta's apps. For local use, `http://localhost:8765` must be an
 Authorized JavaScript origin on that client (see the README one folder up from `site/`).
 
-## Publishing to GitHub
+## Publishing
 
-This folder is its own git repository (like every app in the suite), committed locally and not pushed
-anywhere yet. When the `petravanta` GitHub account is back:
-
-1. Create an empty public repository named `wardrobe` under `petravanta` (no README, no licence, so the
-   first push doesn't conflict).
-2. From this folder:
-
-   ```sh
-   git remote add origin https://github.com/petravanta/wardrobe.git
-   git push -u origin main
-   ```
-
-3. In the repo, **Settings → Pages**: deploy from branch `main`, folder `/ (root)`.
-4. From the `general` repo: add `wardrobe` to `repos` in `github/apply-ruleset.sh` and run
-   `./github/apply-ruleset.sh wardrobe` (Protect main ruleset, auto-merge settings).
-5. The hub card and `shared/apps.json` entry already exist in the local `site/general` copy; carry them
-   into the `general` repo too, and add a **Source** link to the card.
+The repository is [petravanta/wardrobe](https://github.com/petravanta/wardrobe). GitHub Pages deploys it from
+branch `main`, folder `/ (root)`, at https://petravanta.github.io/wardrobe/. It is listed on the hub and in the
+*All apps* menu, and `general/github/apply-ruleset.sh` covers it.
 
 Paths to the hub's shared files are relative (`../general/shared/...`), which works both on
-`petravanta.github.io` and locally.
+`petravanta.github.io` and locally from the `site/` folder at http://localhost:8765/wardrobe/.
+
+Google sign-in needs both origins (`https://petravanta.github.io` and `http://localhost:8765`) in the shared OAuth
+client's *Authorized JavaScript origins*.
 
 ## License
 
