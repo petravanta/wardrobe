@@ -74,7 +74,9 @@ p{margin:0}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip .swatch{margin-right:5px}
+.chip .swatch,.chip .wemoji{margin-right:5px}
+.wemoji{font-style:normal}
+.word-row input.emoji{width:52px;text-align:center;font-size:18px;padding-inline:4px}
 .word-row input[type=text]{max-width:220px}
 .word-row input[type=color]{width:34px;height:30px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
@@ -271,7 +273,12 @@ const wordById = id => doc.words.find(w => w.id === id);
 const wordByName = n => doc.words.find(w => w.name.toLowerCase() === n.toLowerCase());
 const sortedWords = () => [...doc.words].sort((a, b) => a.name.localeCompare(b.name));
 const wordsOf = it => (it.words || []).map(wordById).filter(Boolean);
-const wordChip = w => `<i class="swatch" style="background:${esc(w.colour || '#888')}"></i>${esc(w.name)}`;
+// A word shows its emoji when it has one, otherwise its colour dot
+const wordMark = w => w.emoji ? `<i class="wemoji" aria-hidden="true">${esc(w.emoji)}</i>` : `<i class="swatch" style="background:${esc(w.colour || '#888')}"></i>`;
+const wordChip = w => `${wordMark(w)}${esc(w.name)}`;
+const WORD_EMOJI = ['🖤', '🦇', '🕸️', '💀', '🌹', '⛓️', '🌙', '✨', '🔥', '💜', '🏳️‍⚧️', '🧸', '☕', '🍂', '❄️', '☀️', '🌸', '💼', '🎉', '👠', '🧥', '🌿', '💎', '🚀'];
+// Keeps one short emoji (or a few characters) so a pasted sentence can't end up on every chip
+const cleanEmoji = v => { const t = String(v || '').trim().split(/\s+/)[0]; if (!t) return ''; const seg = typeof Intl !== 'undefined' && Intl.Segmenter ? [...new Intl.Segmenter().segment(t)].map(x => x.segment) : [...t]; return seg.slice(0, 2).join(''); };
 // Returns the word with this name, making it if it's new
 function addWord(name) {
   name = String(name || '').trim().replace(/\s+/g, ' '); if (!name) return null;
@@ -469,7 +476,7 @@ function groupItems(items) {
   }[g];
   const label = {
     category: k => kname('types', k), type: k => kname('types', k), colour: k => k[0].toUpperCase() + k.slice(1),
-    gender: k => K.byId.genderTags.has(k) ? kname('genderTags', k) : k, words: k => (wordById(k) || { name: k }).name, size: k => k
+    gender: k => K.byId.genderTags.has(k) ? kname('genderTags', k) : k, words: k => { const w = wordById(k); return w ? [w.emoji, w.name].filter(Boolean).join(' ') : k; }, size: k => k
   }[g];
   const rank = {
     category: k => idx(K.types, k), type: k => idx(K.types, k), colour: k => fams.indexOf(k), gender: k => idx(K.genderTags, k), words: () => 0,
@@ -494,7 +501,7 @@ function card(it, pressed) {
   const p = coverPhoto(it), sub = [kname('types', it.type), it.brand].filter(Boolean).join(' · ');
   return `<li><button type="button" class="card" data-item="${esc(it.id)}"${pressed == null ? '' : ` aria-pressed="${pressed}"`}>
     <span class="ph">${p ? `<img alt="" data-photo="${esc(p.id)}"${p.role === 'cutout' ? ' class="cut"' : ''}>` : 'No photo'}</span>
-    <span class="cap"><b>${esc(it.name || kname('types', it.type))}</b><span>${(it.colours || []).slice(0, 3).map(c => `<i class="swatch" style="background:${esc((K.byId.colours.get(c) || {}).hex || '#888')}"></i>`).join(' ')} ${esc(sub)}${it.spicy ? ' <span class="spicy-tag">· spicy</span>' : ''}</span></span>
+    <span class="cap"><b>${esc(it.name || kname('types', it.type))}${wordsOf(it).some(w => w.emoji) ? ` <span class="wemoji" title="${esc(wordsOf(it).map(w => w.name).join(', '))}">${esc(wordsOf(it).map(w => w.emoji).filter(Boolean).join(''))}</span>` : ''}</b><span>${(it.colours || []).slice(0, 3).map(c => `<i class="swatch" style="background:${esc((K.byId.colours.get(c) || {}).hex || '#888')}"></i>`).join(' ')} ${esc(sub)}${it.spicy ? ' <span class="spicy-tag">· spicy</span>' : ''}</span></span>
   </button></li>`;
 }
 function renderCloset() {
@@ -569,10 +576,13 @@ function renderSettings() {
     <p class="small muted">Your own words for your clothes, like goth, cozy or capsule. Tag items with them in the item form or with <i>Tag items</i> here, then filter or group the closet by them.</p>
     ${sortedWords().map(w => `<div class="row word-row">
       <label class="sr-only" for="wc-${esc(w.id)}">Colour of ${esc(w.name)}</label><input type="color" id="wc-${esc(w.id)}" data-word-colour="${esc(w.id)}" value="${esc(w.colour || '#888888')}">
+      <label class="sr-only" for="we-${esc(w.id)}">Emoji for ${esc(w.name)}</label><input type="text" class="emoji" id="we-${esc(w.id)}" data-word-emoji="${esc(w.id)}" value="${esc(w.emoji || '')}" list="wordEmoji" placeholder="＋" autocomplete="off">
       <label class="sr-only" for="wn-${esc(w.id)}">Name</label><input type="text" id="wn-${esc(w.id)}" data-word-name="${esc(w.id)}" value="${esc(w.name)}">
       <span class="small muted">${used(w.id)} item${used(w.id) === 1 ? '' : 's'}</span><span class="grow"></span>
       <button type="button" class="btn sm" data-word-items="${esc(w.id)}">Tag items</button><button type="button" class="btn ghost sm" data-del-word="${esc(w.id)}" aria-label="Delete ${esc(w.name)}">×</button>
     </div>`).join('')}
+    <datalist id="wordEmoji">${WORD_EMOJI.map(x => `<option value="${x}">`).join('')}</datalist>
+    <p class="small muted">Give a word an emoji in the small box: pick a suggestion, or use your keyboard’s emoji picker (Windows + . or Ctrl + Cmd + Space). Clear it to go back to the colour dot.</p>
     <div class="row"><label class="sr-only" for="newWord">New word</label><input type="text" id="newWord" placeholder="New word"><button type="button" class="btn" data-act="add-word">Add</button></div>
   </section>
   <section class="panel stack"><h3>Google Drive</h3>
@@ -914,6 +924,7 @@ document.addEventListener('change', e => {
   if (e.target.id === 'sSort') { setSetting('sort', e.target.value); render(); }
   if (e.target.id === 'sGroup') { setSetting('groupBy', e.target.value); render(); }
   const wd = e.target.dataset || {};
+  if (wd.wordEmoji) { const w = wordById(wd.wordEmoji), v = cleanEmoji(e.target.value); if (w && v !== (w.emoji || '')) { const { emoji, ...rest } = w; put('words', v ? { ...rest, emoji: v } : rest); render(); } }
   if (wd.wordColour) { const w = wordById(wd.wordColour); if (w) { put('words', { ...w, colour: e.target.value }); render(); } }
   if (wd.wordName) {
     const w = wordById(wd.wordName), n = e.target.value.trim().replace(/\s+/g, ' '), other = n && wordByName(n);
@@ -927,7 +938,7 @@ document.addEventListener('input', e => { if (e.target.id === 'q') { clearTimeou
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && $('#layer').innerHTML) closeDrawer();
   if (e.key === 'Enter' && e.target.id === 'newWord') { e.preventDefault(); $('[data-act="add-word"]').click(); }
-  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.wordName) e.target.blur();
+  if (e.key === 'Enter' && e.target.dataset && (e.target.dataset.wordName || e.target.dataset.wordEmoji)) e.target.blur();
 });
 
 /* ---------- Toast ---------- */
