@@ -17,10 +17,13 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   price, purchase date, spicy flag and gender (Masc, Fem, Androgynous, plus any tags you define).
   The materials, seasons, occasions, care and notes fields are left out of the form for now; their data
   files (and any values already on an item) are kept.
-- **Filters**: type, colour family, size and gender tags, AND across filters and OR within one; saved in
+- **Wardrobe words**: your own words for your clothes (goth, cozy, capsule…), each with a colour. Add,
+  rename, recolour and delete them in Settings; tag items in the item form, or many at once with *Tag items*.
+  Deleting a word takes it off every item. Search finds items by their words too.
+- **Filters**: type, colour family, size, gender tags and wardrobe words, AND across filters and OR within one; saved in
   your settings and synced.
 - **Sort and group**: sort the closet by date added, last worn, most worn, name, colour or type (with
-  *Reverse*), and group it into shelves by category, type, colour family, gender tag or size. An item with
+  *Reverse*), and group it into shelves by category, type, colour family, gender tag, wardrobe word or size. An item with
   several colours or tags sits on each matching shelf. Saved in your settings and synced.
 - **Spicy items**: hidden everywhere unless *Show spicy items* is on in Settings. Spicy-leaning types and
   materials (latex, PVC, harness…) suggest the flag when you add an item.
@@ -119,11 +122,12 @@ One document, the same shape as the other apps (see STANDARDS.md, *User data*):
   "version": 1,
   "settings": { "updatedAt": "…", "showSpicy": false, "filters": {}, "sort": "added", "sortReverse": false, "groupBy": "" },
   "items":   [ { "id": "…", "u": "…", "name": "Black midi skirt", "type": "skirt", "colours": ["black"],
-                 "sizes": [ { "system": "letter", "value": "M" } ], "spicy": true,
+                 "sizes": [ { "system": "letter", "value": "M" } ], "spicy": true, "words": ["…"],
                  "photos": [ { "id": "…", "role": "main", "mediaItemId": "(later)" },
                              { "id": "…", "role": "cutout", "from": "…" } ] } ],
   "outfits": [ { "id": "…", "u": "…", "name": "Club night", "items": ["…"], "occasions": ["club-night"] } ],
   "wears":   [ { "id": "…", "u": "…", "at": "2026-11-09", "outfit": "…", "source": "manual" } ],
+  "words":   [ { "id": "…", "u": "…", "name": "Goth", "colour": "#7c3aed" } ],
   "deleted": [ "…" ]
 }
 ```

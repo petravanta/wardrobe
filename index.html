@@ -74,6 +74,9 @@ p{margin:0}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip .swatch{margin-right:5px}
+.word-row input[type=text]{max-width:220px}
+.word-row input[type=color]{width:34px;height:30px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 select,input[type=text],input[type=number],textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;min-width:0}
 textarea{resize:vertical}
@@ -192,7 +195,7 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
 /* Google Drive sync: the shared OAuth client for petravanta.github.io (see README). Leave empty to turn Drive off. */
 const GOOGLE_CLIENT_ID = '326863468616-4hf2conk0ks0s4qdva9tphphdo7ht7eh.apps.googleusercontent.com';
 const KEY = 'wardrobe.data', TAB_KEY = 'wardrobe.tab';
-const LISTS = ['items', 'outfits', 'wears'];
+const LISTS = ['items', 'outfits', 'wears', 'words'];
 const DATASETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags'];
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -220,7 +223,7 @@ const typeGroup = id => { const t = K.byId.types.get(id); return t ? (t.parent |
 const typeSizeSystems = id => { const t = K.byId.types.get(id) || {}; return t.sizeSystems || (K.byId.types.get(t.parent) || {}).sizeSystems || ['letter']; };
 
 /* ---------- User data ---------- */
-function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {}, sort: 'added', sortReverse: false, groupBy: '' }, items: [], outfits: [], wears: [], deleted: [] }; }
+function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {}, sort: 'added', sortReverse: false, groupBy: '' }, items: [], outfits: [], wears: [], words: [], deleted: [] }; }
 // Older or partial documents become the current shape; never write an older format
 function upgrade(d) {
   const b = blankDoc();
@@ -229,6 +232,7 @@ function upgrade(d) {
   LISTS.forEach(l => { out[l] = Array.isArray(d[l]) ? d[l].filter(r => r && r.id) : []; });
   // Imported items once kept their source details under an older field name; move them to item.source
   out.items = out.items.map(r => { if (!r.whering || r.source) return r; const { whering, ...rest } = r; return { ...rest, source: whering }; });
+  out.words = out.words.filter(w => typeof w.name === 'string' && w.name.trim());
   out.deleted = Array.isArray(d.deleted) ? d.deleted : [];
   return out;
 }
@@ -256,6 +260,35 @@ function remove(list, id) { doc[list] = doc[list].filter(r => r.id !== id); doc.
 function setSetting(k, v) { doc.settings = { ...doc.settings, [k]: v, updatedAt: now() }; save(); }
 const visible = it => doc.settings.showSpicy || !it.spicy;
 const itemById = id => doc.items.find(i => i.id === id);
+
+/* ---------- Wardrobe words ---------- */
+// Your own words for your clothes (goth, cozy, capsule…): records in doc.words {id, name, colour}, so a rename or a
+// new colour is one record and syncs by u. Items keep word ids in item.words. Deleting a word takes it off every item;
+// an id whose word was deleted on another device is skipped, and dropped when that item is next saved.
+const WORD_COLOURS = ['#7c3aed', '#db2777', '#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0d9488', '#2563eb', '#475569', '#1f2937'];
+const wordById = id => doc.words.find(w => w.id === id);
+const wordByName = n => doc.words.find(w => w.name.toLowerCase() === n.toLowerCase());
+const sortedWords = () => [...doc.words].sort((a, b) => a.name.localeCompare(b.name));
+const wordsOf = it => (it.words || []).map(wordById).filter(Boolean);
+const wordChip = w => `<i class="swatch" style="background:${esc(w.colour || '#888')}"></i>${esc(w.name)}`;
+// Returns the word with this name, making it if it's new
+function addWord(name) {
+  name = String(name || '').trim().replace(/\s+/g, ' '); if (!name) return null;
+  const have = wordByName(name); if (have) return have;
+  const w = { id: uid(), name, colour: WORD_COLOURS[doc.words.length % WORD_COLOURS.length] }; put('words', w); return w;
+}
+function deleteWord(id) {
+  const t = now();
+  doc.items.forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
+  const f = F(); if ((f.words || []).includes(id)) doc.settings = { ...doc.settings, filters: { ...f, words: f.words.filter(x => x !== id) }, updatedAt: t };
+  remove('words', id);
+}
+// Tags or untags many items at once; only the items shown in the picker change, so hidden spicy items keep their words
+function setWordOn(id, shown, on) {
+  const t = now();
+  shown.forEach(it => { const has = (it.words || []).includes(id); if (has === on.has(it.id)) return; it.words = has ? it.words.filter(x => x !== id) : [...(it.words || []), id]; it.u = t; });
+  save();
+}
 
 /* ---------- Photos (this browser's copy) ---------- */
 // Each item photo is {id, role:'main'|'cutout'|'label', from?, mediaItemId?}; a cut-out's `from` is the photo it was made from. The bytes live in IndexedDB here;
@@ -382,9 +415,11 @@ function matches(it, f = F()) {
     const want = new Set(f.gender); if (want.has('masc') || want.has('fem')) want.add('androgynous');
     if (!(it.gender || []).some(g => want.has(g))) return false;
   }
+  const fw = (f.words || []).filter(wordById);
+  if (fw.length && !(it.words || []).some(w => fw.includes(w))) return false;
   if (f.size && !(it.sizes || []).some(s => String(s.value).toLowerCase() === f.size.toLowerCase())) return false;
   if (f.spicyOnly && !it.spicy) return false;
-  if (f.q) { const q = f.q.toLowerCase(); if (![it.name, it.brand, it.notes, kname('types', it.type)].some(s => s && s.toLowerCase().includes(q))) return false; }
+  if (f.q) { const q = f.q.toLowerCase(); if (![it.name, it.brand, it.notes, kname('types', it.type), ...wordsOf(it).map(w => w.name)].some(s => s && s.toLowerCase().includes(q))) return false; }
   return true;
 }
 function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); }
@@ -393,7 +428,7 @@ function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); 
 // The closet's order and shelves. Saved as settings.sort, settings.sortReverse and settings.groupBy, so they sync.
 // Each sort has a natural direction (newest, most worn, A to Z); Reverse flips it.
 const SORTS = { added: 'Date added', worn: 'Last worn', wears: 'Most worn', name: 'Name', colour: 'Colour', type: 'Type' };
-const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', size: 'Size' };
+const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', words: 'Wardrobe word', size: 'Size' };
 const idx = (list, id) => { const i = list.findIndex(x => x.id === id); return i < 0 ? 1e6 : i; };
 // An imported item keeps the date it was first added in its source; items made before 'added' existed keep closet order
 const addedAt = it => (it.source && it.source.createdAt) || it.added || '';
@@ -428,19 +463,20 @@ function groupItems(items) {
     type: it => [it.type || ''],
     colour: it => [...new Set((it.colours || []).map(c => (K.byId.colours.get(c) || {}).family).filter(Boolean))],
     gender: it => it.gender || [],
+    words: it => wordsOf(it).map(w => w.id),
     size: it => [...new Set((it.sizes || []).map(z => String(z.value).toUpperCase()))]
   }[g];
   const label = {
     category: k => kname('types', k), type: k => kname('types', k), colour: k => k[0].toUpperCase() + k.slice(1),
-    gender: k => K.byId.genderTags.has(k) ? kname('genderTags', k) : k, size: k => k
+    gender: k => K.byId.genderTags.has(k) ? kname('genderTags', k) : k, words: k => (wordById(k) || { name: k }).name, size: k => k
   }[g];
   const rank = {
-    category: k => idx(K.types, k), type: k => idx(K.types, k), colour: k => fams.indexOf(k), gender: k => idx(K.genderTags, k),
+    category: k => idx(K.types, k), type: k => idx(K.types, k), colour: k => fams.indexOf(k), gender: k => idx(K.genderTags, k), words: () => 0,
     size: k => { const l = letters.indexOf(k); return l >= 0 ? l : isNaN(parseFloat(k)) ? 2e6 : 1e3 + parseFloat(k); }
   }[g];
   const shelves = new Map();
   items.forEach(it => { const ks = keysOf(it).filter(Boolean); (ks.length ? ks : ['']).forEach(k => { if (!shelves.has(k)) shelves.set(k, []); shelves.get(k).push(it); }); });
-  const none = { colour: 'No colour', gender: 'No gender tag', size: 'No size' }[g] || 'Other';
+  const none = { colour: 'No colour', gender: 'No gender tag', words: 'No wardrobe word', size: 'No size' }[g] || 'Other';
   return [...shelves].map(([key, items]) => ({ key, label: key ? label(key) : none, items }))
     .sort((a, b) => (!a.key) - (!b.key) || rank(a.key) - rank(b.key) || a.label.localeCompare(b.label));
 }
@@ -479,6 +515,7 @@ function renderCloset() {
     <input type="text" id="fSize" placeholder="Size" value="${esc(f.size || '')}" style="width:80px">
     <div class="chips">${fams.map(x => `<button type="button" class="chip" data-fam="${x}" aria-pressed="${(f.families || []).includes(x)}">${esc(x)}</button>`).join('')}</div>
     <div class="chips">${gtags.map(x => `<button type="button" class="chip" data-gender="${esc(x)}" aria-pressed="${(f.gender || []).includes(x)}">${esc(K.byId.genderTags.has(x) ? kname('genderTags', x) : x)}</button>`).join('')}</div>
+    ${doc.words.length ? `<div class="chips">${sortedWords().map(w => `<button type="button" class="chip" data-fword="${esc(w.id)}" aria-pressed="${(f.words || []).includes(w.id)}">${wordChip(w)}</button>`).join('')}</div>` : ''}
     ${doc.settings.showSpicy ? `<button type="button" class="chip" data-spicy aria-pressed="${!!f.spicyOnly}">Spicy only</button>` : ''}
     ${Object.values(f).some(v => v && (!Array.isArray(v) || v.length)) ? '<button type="button" class="btn ghost sm" data-act="clear">Clear filters</button>' : ''}
   </div>
@@ -525,7 +562,18 @@ function renderWorn() {
 }
 function renderSettings() {
   const conn = store.known;
+  const used = id => doc.items.filter(it => visible(it) && (it.words || []).includes(id)).length;
   $('#main').innerHTML = `<div class="stack">
+  <section class="panel stack"><h3>Wardrobe words</h3>
+    <p class="small muted">Your own words for your clothes, like goth, cozy or capsule. Tag items with them in the item form or with <i>Tag items</i> here, then filter or group the closet by them.</p>
+    ${sortedWords().map(w => `<div class="row word-row">
+      <label class="sr-only" for="wc-${esc(w.id)}">Colour of ${esc(w.name)}</label><input type="color" id="wc-${esc(w.id)}" data-word-colour="${esc(w.id)}" value="${esc(w.colour || '#888888')}">
+      <label class="sr-only" for="wn-${esc(w.id)}">Name</label><input type="text" id="wn-${esc(w.id)}" data-word-name="${esc(w.id)}" value="${esc(w.name)}">
+      <span class="small muted">${used(w.id)} item${used(w.id) === 1 ? '' : 's'}</span><span class="grow"></span>
+      <button type="button" class="btn sm" data-word-items="${esc(w.id)}">Tag items</button><button type="button" class="btn ghost sm" data-del-word="${esc(w.id)}" aria-label="Delete ${esc(w.name)}">×</button>
+    </div>`).join('')}
+    <div class="row"><label class="sr-only" for="newWord">New word</label><input type="text" id="newWord" placeholder="New word"><button type="button" class="btn" data-act="add-word">Add</button></div>
+  </section>
   <section class="panel stack"><h3>Google Drive</h3>
     <p>${conn ? `Syncing to <b>${esc(store.file)}</b> in your Google Drive. ${esc(store.status())}` : 'Your wardrobe is saved in this browser. Connect Google Drive to keep it in an open JSON file in your own Drive and use it on other devices.'}</p>
     <div class="row">${store.configured ? (conn ? '<button type="button" class="btn" data-drive="off">Disconnect</button>' : '<button type="button" class="btn primary" data-drive="on">Connect Google Drive</button>') : '<span class="muted">Drive sync is turned off in this copy.</span>'}</div>
@@ -570,6 +618,25 @@ function genderField(it) {
   return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}> ${esc(K.byId.genderTags.has(g) ? kname('genderTags', g) : g)}</label>`).join('')}</div>
     <input type="text" name="genderNew" placeholder="Add your own, separated by commas"></fieldset>`;
 }
+function wordsField(it) {
+  return `<fieldset><legend>Wardrobe words</legend>${doc.words.length ? `<div class="checks">${sortedWords().map(w => `<label><input type="checkbox" name="words" value="${esc(w.id)}"${(it.words || []).includes(w.id) ? ' checked' : ''}> ${wordChip(w)}</label>`).join('')}</div>` : ''}
+    <input type="text" name="wordsNew" placeholder="${doc.words.length ? 'Add new words' : 'Your own words, like goth or cozy'}, separated by commas"></fieldset>`;
+}
+// Ticks or unticks items for one word, across the closet
+function wordItemsForm(w) {
+  const items = sortItems(doc.items.filter(visible));
+  openDrawer(`<h2>Tag items: ${wordChip(w)}</h2>
+  <form class="form" id="wordForm">
+    <fieldset><legend>Items with this word</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, (it.words || []).includes(w.id))).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
+    <div class="row"><button type="submit" class="btn primary">Save</button></div>
+  </form>`);
+  $('#wordForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
+  $('#wordForm').addEventListener('submit', e => {
+    e.preventDefault();
+    setWordOn(w.id, items, new Set($$('#wordForm [data-item][aria-pressed="true"]').map(b => b.dataset.item)));
+    closeDrawer(); render(); toast('Saved');
+  });
+}
 function thumbsHtml(it) {
   const photos = it.photos || [], hasCut = id => photos.some(p => p.role === 'cutout' && p.from === id);
   return photos.map(p => `<figure><img alt=""${p.role === 'cutout' ? ' class="cut"' : ''} data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
@@ -599,6 +666,7 @@ function itemForm(it) {
     <label class="field">Bought<input type="text" name="purchased" value="${esc(it.purchased || '')}" placeholder="2025-03"></label>
     <label class="row"><input type="checkbox" name="spicy"${it.spicy ? ' checked' : ''}> Spicy <span class="small muted">(hidden unless "Show spicy items" is on)</span></label>
     ${genderField(it)}
+    ${wordsField(it)}
     <div class="row"><button type="submit" class="btn primary">Save</button>${isNew ? '' : `<button type="button" class="btn" data-wear-item="${esc(it.id)}">Wore it today</button><span class="grow" style="flex:1"></span><button type="button" class="btn danger" data-del-item="${esc(it.id)}">Delete</button>`}</div>
   </form>`);
   // Suggest the spicy flag when a spicy-leaning type or material is picked
@@ -617,7 +685,9 @@ function readItemForm(it) {
     sizes: vals.map((v, i) => ({ system: sys[i], value: v.trim() })).filter(s => s.value),
     brand: fd.get('brand').trim() || undefined, price: fd.get('price') === '' ? undefined : +fd.get('price'),
     purchased: fd.get('purchased').trim() || undefined, spicy: fd.has('spicy') || undefined,
-    gender: [...new Set([...fd.getAll('gender'), ...fd.get('genderNew').split(',').map(s => s.trim().toLowerCase())].filter(Boolean))]
+    gender: [...new Set([...fd.getAll('gender'), ...fd.get('genderNew').split(',').map(s => s.trim().toLowerCase())].filter(Boolean))],
+    // Words that only exist on another device stay on the item; new names become words
+    words: [...new Set([...(it.words || []).filter(id => !wordById(id) && !doc.deleted.includes(id)), ...fd.getAll('words'), ...(fd.get('wordsNew') || '').split(',').map(s => (addWord(s) || {}).id)].filter(Boolean))]
   };
 }
 const newItem = () => ({ id: uid(), added: now(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
@@ -797,6 +867,10 @@ document.addEventListener('click', async e => {
   if (d.act === 'export') return exportBackup();
   if (d.act === 'import') return $('#backupIn').click();
   if (d.act === 'import-closet') return $('#closetIn').click();
+  if (d.act === 'add-word') { const i = $('#newWord'), n = i.value.trim(); if (!n) return i.focus(); if (wordByName(n)) return toast(`You already have “${n}”`); addWord(n); render(); return $('#newWord').focus(); }
+  if (d.fword) { const s = new Set(F().words || []); s.has(d.fword) ? s.delete(d.fword) : s.add(d.fword); return setFilter('words', [...s]); }
+  if (d.wordItems) { const w = wordById(d.wordItems); return w && wordItemsForm(w); }
+  if (d.delWord) { const w = wordById(d.delWord), n = doc.items.filter(it => visible(it) && (it.words || []).includes(d.delWord)).length; if (w && confirm(`Delete “${w.name}”?${n ? ` It comes off ${n} item${n === 1 ? '' : 's'}; the items stay.` : ''}`)) { deleteWord(w.id); render(); } return; }
   if (d.fam) { const s = new Set(F().families || []); s.has(d.fam) ? s.delete(d.fam) : s.add(d.fam); return setFilter('families', [...s]); }
   if (d.gender) { const s = new Set(F().gender || []); s.has(d.gender) ? s.delete(d.gender) : s.add(d.gender); return setFilter('gender', [...s]); }
   if (d.spicy !== undefined) return setFilter('spicyOnly', !F().spicyOnly);
@@ -838,10 +912,22 @@ document.addEventListener('change', e => {
   if (e.target.id === 'fSize') setFilter('size', e.target.value.trim());
   if (e.target.id === 'sSort') { setSetting('sort', e.target.value); render(); }
   if (e.target.id === 'sGroup') { setSetting('groupBy', e.target.value); render(); }
+  const wd = e.target.dataset || {};
+  if (wd.wordColour) { const w = wordById(wd.wordColour); if (w) { put('words', { ...w, colour: e.target.value }); render(); } }
+  if (wd.wordName) {
+    const w = wordById(wd.wordName), n = e.target.value.trim().replace(/\s+/g, ' '), other = n && wordByName(n);
+    if (!w) return;
+    if (!n || (other && other.id !== w.id)) { e.target.value = w.name; return toast(n ? `You already have “${n}”` : 'A word needs a name'); }
+    if (n !== w.name) { put('words', { ...w, name: n }); render(); }
+  }
 });
 let qTimer;
 document.addEventListener('input', e => { if (e.target.id === 'q') { clearTimeout(qTimer); qTimer = setTimeout(() => { setFilter('q', e.target.value); const q = $('#q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); } });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#layer').innerHTML) closeDrawer(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#layer').innerHTML) closeDrawer();
+  if (e.key === 'Enter' && e.target.id === 'newWord') { e.preventDefault(); $('[data-act="add-word"]').click(); }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.wordName) e.target.blur();
+});
 
 /* ---------- Toast ---------- */
 let toastTimer;
