@@ -3,8 +3,12 @@
 Follow the shared standards in [petravanta/general STANDARDS.md](https://github.com/petravanta/general/blob/main/STANDARDS.md)
 (locally `../general/STANDARDS.md`). Only Wardrobe specifics are here.
 
-- **One static page**, `index.html`, no build step. The shared theme, `google-token.js` and `drive-store.js` are
-  inlined between their marker comments; when the canonical copies in `general/shared/` change, update them here.
+- **Static files, no build step**: `index.html` holds the markup and loads `css/theme.css` (the shared look, a copy of
+  `general/shared/theme.css` between its marker comments), `css/app.css`, then the `js/*.js` files with plain `<script>`
+  tags in the order listed there. They are classic scripts sharing one global scope, so a file may use functions from
+  any other at run time, but code that runs while a file loads can only use files above it. `js/start.js` comes last.
+  `js/shared/google-token.js` and `js/shared/drive-store.js` are unchanged copies of `general/shared/`; when those
+  change, copy them again. A new file needs its `<script>` tag and an entry in `sw.js` (`APP_SHELL`).
 - **Accent**: slate, `#475569` light / `#a5b4c8` dark.
 - **Built-in knowledge** is in `data/*.json` with schemas in `data/schema/`. Run `node scripts/check-data.js` after
   changing data. Item records refer to entries by id; ids are never renamed or reused.
@@ -14,11 +18,11 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   `mergeDocs()`.
 - **Photos**: bytes live in IndexedDB database `wardrobe` (`photos` full size, `thumbs` 400 px), keyed by the photo
   id stored on the item. Every way of adding a photo goes through `Photos.add()` / `takePhotos()`.
-- **Clean background**: `Cutout` / `cleanBackground()` in `index.html`, the model in `cutout-worker.js`, the library
+- **Clean background**: `Cutout` / `cleanBackground()` in `js/cutout.js`, the model in `cutout-worker.js`, the library
   bundled in `vendor/background-removal.js` (generated, don't edit; rebuild steps in the README). A cut-out is a
   photo with `role: 'cutout'` and `from`; the original is never replaced. `sw.js` caches `staticimgly.com` cache-first,
   on purpose. Photos never leave the device for this.
-- **What I wore**: `Recognise` / `woreFromPhoto()` / `saveWore()` in `index.html`, the models in `recognise-worker.js`
+- **What I wore**: `Recognise` / `woreFromPhoto()` / `saveWore()` in `js/wore.js`, the models in `recognise-worker.js`
   (transformers.js bundled unchanged in `vendor/transformers.min.js`). The confirm screen always comes before anything
   is saved. Photo vectors are `photo.vec` and `item.seen`, tagged with `EMBED_ID`; bump it whenever the embedding model
   or its precision changes. A piece's kind maps to `region`s in `data/types.json` through `KINDS`. Items made from a
@@ -40,7 +44,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   turns an older `filters.size` string into them.
 - **Spicy**: anything with `spicy: true` must stay out of every view, stat, search and share export while
   `settings.showSpicy` is off. Use `visible(item)`.
-- **Google Photos**: `GPhotos` in `index.html` (README, *Google Photos*). Its own token with the Photos scopes under
+- **Google Photos**: `GPhotos` in `js/gphotos.js` (README, *Google Photos*). Its own token with the Photos scopes under
   `localStorage` key `wardrobe.photos`. Never add Photos scopes to the shared `google-token.js`: that would change
   consent for every app. A photo's `mediaItemId` is never dropped by a merge (`keepMedia()`), so nothing uploads twice.
   `GPhotos.pick()` (Picker API) returns `File`s that go through `takePhotos()`, the same path as *Add photo*; it needs
@@ -48,7 +52,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   token-renewal tap listener leaves them alone.
 - **Wardrobe words**: records in `doc.words` (`id`, `name`, `colour`, optional `emoji`); items and outfits hold word ids in `.words`. Rename and
   colour live on the word only. `deleteWord()` strips the id from every item and outfit. Ids with no word are skipped (`wordsOf()`).
-- **Colour season**: `renderColour()` and the `cs…` functions in `index.html`, data in `data/colour-seasons.json` and
+- **Colour season**: `renderColour()` and the `cs…` functions in `js/colour.js`, data in `data/colour-seasons.json` and
   `data/colour-quiz.json`. Only `settings.colourSeason` (a season id) is saved. A photo used for sampling lives only on
   the sampler's canvas: never pass it to `Photos.add()`, IndexedDB, Drive or Google Photos, and never save answers or
   samples. On the Colour tab a drop goes to the sampler (capture-phase listener), never into the closet.

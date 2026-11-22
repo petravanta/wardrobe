@@ -126,7 +126,7 @@ runs in the browser, on your device: the photo is never sent anywhere to be reco
   go to them. A step shows the piece's category and kind (changing the kind ranks it again), its crop, the closest
   items with their score, *More …, with pictures* (a grid of every item of that kind, then the other categories),
   *Add as a new item* and *Leave it out*. When the best match is clearly ahead (`MATCH.clear` and `MATCH.margin` in
-  `index.html`, first guesses to tune on real photos) it is picked already. *Next* needs an answer; *Back*, the step
+  `js/wore.js`, first guesses to tune on real photos) it is picked already. *Next* needs an answer; *Back*, the step
   chips and the arrow keys move freely, and answers are kept. The last step, *Review*, has the date (the day the photo
   was taken, or today), the outfit name, each piece's answer (tap to change it) and *Add something it missed*, grouped
   by category. When nothing is found it opens straight on Review. Nothing is saved until *Log it*; cancelling drops the
@@ -160,7 +160,7 @@ runs in the browser, on your device: the photo is never sent anywhere to be reco
   copies of ONNX Runtime, which can't clash. Recognition does use the cut-outs: they're the cleanest closet photos to
   compare with.
 - **Updating the library**: `npm i @huggingface/transformers@<version>`, copy `dist/transformers.min.js` to
-  `vendor/`, and change the version in `RECOGNISE_CACHE` / `RECOGNISE_PATH` (`sw.js`) and the footer line in `index.html`.
+  `vendor/`, and change the version in `RECOGNISE_CACHE` / `RECOGNISE_PATH` (`sw.js`).
 
 ## Google Photos
 
@@ -279,6 +279,19 @@ What the app knows is data, in `data/`. Each file has a JSON Schema in `data/sch
 | Colour questions | `data/colour-quiz.json` | `data/schema/colour-quiz.schema.json` | The *Colour* tab's questions and answers, how each answer scores, and which ones a photo sample can suggest |
 
 Check the data locally with `node scripts/check-data.js`.
+
+## Files
+
+There is no build step: GitHub Pages serves the files as they are.
+
+| File | What it holds |
+| --- | --- |
+| `index.html` | The page's markup; loads the styles and scripts below |
+| `css/theme.css`, `css/app.css` | The shared look of petravanta's apps (a copy), then Wardrobe's own styles |
+| `js/core.js` … `js/start.js` | The app, one file per area (closet, outfits, worn, colour, zoom, arrange, photos, Drive, Google Photos…), loaded in the order `index.html` lists them |
+| `js/shared/` | Unchanged copies of the hub's Google sign-in and Drive store |
+| `cutout-worker.js`, `recognise-worker.js` | Background workers for *Clean background* and *What I wore* |
+| `sw.js` | The service worker: what is kept for offline use |
 
 ## Google Drive sign-in
 
