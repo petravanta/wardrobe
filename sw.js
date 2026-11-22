@@ -22,3 +22,21 @@ self.addEventListener('fetch', function (e) {
     });
   }));
 });
+
+// What I wore (README): transformers.js keeps the recognition models in its own Cache Storage; this keeps the ONNX Runtime
+// WebAssembly it loads from jsDelivr, under a versioned path that never changes, so recognition also works offline.
+var RECOGNISE_CACHE = 'wardrobe-recognise-3.8.1', RECOGNISE_PATH = '/npm/@huggingface/transformers@3.8.1/';
+self.addEventListener('activate', function (e) {
+  e.waitUntil(caches.keys().then(function (keys) {
+    return Promise.all(keys.filter(function (k) { return k.indexOf('wardrobe-recognise-') === 0 && k !== RECOGNISE_CACHE; }).map(function (k) { return caches.delete(k); }));
+  }));
+});
+self.addEventListener('fetch', function (e) {
+  var req = e.request, url = new URL(req.url);
+  if (req.method !== 'GET' || url.hostname !== 'cdn.jsdelivr.net' || url.pathname.indexOf(RECOGNISE_PATH) !== 0) return;
+  e.respondWith(caches.open(RECOGNISE_CACHE).then(function (c) {
+    return c.match(req).then(function (hit) {
+      return hit || fetch(req).then(function (res) { if (res.ok) c.put(req, res.clone()); return res; });
+    });
+  }));
+});

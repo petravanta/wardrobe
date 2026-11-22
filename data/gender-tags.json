@@ -1,5 +1,5 @@
 [
-  { "id": "masc", "name": "Masc" },
-  { "id": "fem", "name": "Fem" },
-  { "id": "androgynous", "name": "Androgynous" }
+  { "id": "masc", "name": "Masc", "emoji": "♂️" },
+  { "id": "fem", "name": "Fem", "emoji": "♀️" },
+  { "id": "androgynous", "name": "Androgynous", "emoji": "⚧️" }
 ]

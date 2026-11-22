@@ -74,13 +74,24 @@ p{margin:0}
 .chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
+.szpick{position:relative}
+.szpop{position:absolute;z-index:30;top:calc(100% + 6px);left:0;width:max-content;min-width:220px;max-width:min(380px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px 12px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.szpop h4{margin:8px 0 6px}
+.szpop .chip .n{font-weight:500;opacity:.7;margin-left:4px;font-size:11px}
+@media (max-width:520px){.szpop{position:fixed;left:16px;right:16px;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:auto;max-width:none}}
+.chip.fam{background:var(--fill);color:var(--on);border-color:transparent}
+.chip.fam-light{border-color:#9aa3ab}
+.chip.fam[aria-pressed="true"]{background:var(--fill);color:var(--on);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+.chip.fam[aria-pressed="true"]::before{content:"✓ ";font-weight:800}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.fam-dark{border-color:#5b6670}}
+:root[data-theme="dark"] .chip.fam-dark{border-color:#5b6670}
 .chip .swatch,.chip .wemoji{margin-right:5px}
 .wemoji{font-style:normal}
 .word-row input.emoji{width:52px;text-align:center;font-size:18px;padding-inline:4px}
 .word-row input[type=text]{max-width:220px}
 .word-row input[type=color]{width:34px;height:30px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
 label.field{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-select,input[type=text],input[type=number],textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;min-width:0}
+select,input[type=text],input[type=number],input[type=date],textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:15px;text-transform:none;letter-spacing:0;font-weight:500;min-width:0}
 textarea{resize:vertical}
 .ctx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
 @media (max-width:720px){.ctx{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -112,6 +123,7 @@ textarea{resize:vertical}
 .checks label{display:inline-flex;align-items:center;gap:5px;font-size:13px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--sunk)}
 .entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:8px 0;border-top:1px solid var(--line)}
 .entry .meta{font-size:12px;color:var(--muted)}
+.foot{color:var(--faint);font-size:12px;padding-top:24px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:14px;font-weight:600;z-index:60;max-width:calc(100% - 32px)}
 .empty{padding:28px 16px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.4}}}
@@ -146,7 +158,7 @@ textarea{resize:vertical}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;text-align:left;padding:0;width:100%}
 .card:hover{border-color:var(--muted)}
 .card .ph{aspect-ratio:3/4;background:var(--sunk);display:grid;place-items:center;color:var(--faint);overflow:hidden}
-.card .ph img{width:100%;height:100%;object-fit:cover}
+.card .ph img{width:100%;height:100%;object-fit:contain}
 .card .ph img.cut{object-fit:contain;padding:8px}
 .card .cap{padding:8px 10px;display:flex;flex-direction:column;gap:2px}
 .card .cap b{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -154,13 +166,168 @@ textarea{resize:vertical}
 .card[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:-3px}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap}
 .thumbs figure{margin:0;position:relative;width:96px}
-.thumbs img{width:96px;height:128px;object-fit:cover;border-radius:8px;background:var(--sunk);display:block}
+.thumbs img{width:96px;height:128px;object-fit:contain;border-radius:8px;background:var(--sunk);display:block}
 .thumbs figcaption{font-size:11px;color:var(--muted);text-align:center}
 .thumbs img.cut{object-fit:contain;background:repeating-conic-gradient(var(--sunk) 0 25%,var(--surface) 0 50%) 0 0/16px 16px}
 .thumbs .clean{display:block;margin:4px auto 0;font-size:11px;padding:2px 8px}
 .thumbs .rm{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;line-height:1}
 .minis{display:flex;gap:4px;margin-top:6px}
-.minis img,.minis i{width:36px;height:48px;border-radius:4px;object-fit:cover;background:var(--sunk);display:block}
+.minis img.worn{outline:2px solid var(--accent);outline-offset:1px}
+.follow-tag{color:var(--lv-learn)}
+.miss-tag{display:block;font-size:11px;font-weight:600;color:var(--danger);margin-top:2px}
+.review-bar{border:1px dashed var(--accent);border-radius:12px;padding:8px 10px}
+.review-bar .chip .n{font-weight:500;opacity:.7;margin-left:4px;font-size:11px}
+.wore-top{display:flex;gap:12px;align-items:flex-start}
+.wore-top>img{width:96px;height:128px;object-fit:contain;border-radius:8px;background:var(--sunk);flex:none}
+.piece{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+.piece-body{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:start}
+.piece-body img.crop{width:72px;height:96px;object-fit:contain;border-radius:8px;background:repeating-conic-gradient(var(--sunk) 0 25%,var(--surface) 0 50%) 0 0/16px 16px}
+.opts{display:flex;flex-direction:column;gap:2px;min-width:0}
+.opt{display:flex;align-items:center;gap:8px;padding:4px 6px;border-radius:8px;font-size:14px;cursor:pointer}
+.opt:has(input:checked){background:var(--accent-soft)}
+.opt img,.opt i.ph{width:30px;height:40px;object-fit:contain;border-radius:4px;background:var(--sunk);flex:none;display:block}
+.opt img.cut{object-fit:contain}
+.opt .nm{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.opt .pc{margin-left:auto;font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.piece legend .cat{font-weight:700}
+.piece select{max-width:100%}
+.opts details.more{margin:2px 0}
+.opts details.more summary{font-size:13px;padding:4px 6px}
+.shelf-h{margin:10px 0 6px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px;list-style:none;margin:6px 0 0;padding:0}
+.tile{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:8px;padding:4px;cursor:pointer;font-size:11px;position:relative;background:var(--surface)}
+.tile input{position:absolute;opacity:0;pointer-events:none}
+.tile:has(input:checked){outline:3px solid var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.tile:has(input:focus-visible){outline:2px solid var(--accent)}
+.tile img,.tile i.ph{width:100%;aspect-ratio:3/4;object-fit:contain;border-radius:4px;background:var(--sunk);display:block}
+.tile img.cut{object-fit:contain}
+.tile .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .pc{font-family:var(--f-mono);color:var(--muted)}
+.minis img,.minis i{width:36px;height:48px;border-radius:4px;object-fit:contain;background:var(--sunk);display:block}
+/* What I wore: a large panel, the outfit on one side (on top on a phone), one piece at a time on the other */
+.drawer.wore-panel{padding:0;gap:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,460px);left:max(2vw,calc(50% - 580px));right:max(2vw,calc(50% - 580px));top:4vh;bottom:4vh;width:auto;max-height:none;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.wore-panel .x{z-index:3}
+.wore-stage{position:relative;background:var(--sunk);display:flex;align-items:center;justify-content:center;padding:12px;min-height:0;min-width:0;--stage-h:calc(92vh - 28px)}
+.wore-frame{position:relative;line-height:0;overflow:hidden;border-radius:8px;max-width:100%}
+.wore-frame>img{display:block;max-width:100%;max-height:var(--stage-h);width:auto;height:auto}
+.wore-hl{position:absolute;border-radius:6px;outline:3px solid var(--accent);box-shadow:0 0 0 9999px rgba(8,12,16,.55);pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.wore-hl{transition:left .3s ease,top .3s ease,width .3s ease,height .3s ease}}
+.wore-box{position:absolute;padding:0;background:transparent;border:2px dashed rgba(255,255,255,.7);border-radius:6px;cursor:pointer;display:none}
+.wore-box.on{display:block}
+.wore-box:hover,.wore-box:focus-visible{border-style:solid;border-color:#fff;outline:2px solid var(--accent)}
+.wore-stage .wore-zoom{top:auto;bottom:18px;right:18px}
+.wore-cropbtn{position:absolute;left:18px;bottom:18px;z-index:2;box-shadow:0 1px 6px rgba(0,0,0,.25)}
+.wore-cropbar{position:absolute;left:12px;right:12px;top:12px;z-index:4;display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.wore-cropbar[hidden]{display:none}
+.wore-cropbar .grow{flex:1}
+.wore-frame.cropping{cursor:crosshair;touch-action:none;user-select:none;-webkit-user-select:none}
+.wore-frame.cropping .wore-box{display:none}
+.wore-crop{position:absolute;border:2px dashed #fff;outline:2px solid var(--accent);border-radius:4px;box-shadow:0 0 0 9999px rgba(8,12,16,.55);cursor:move;touch-action:none}
+.wore-crop:focus-visible{outline:3px solid var(--accent)}
+.wore-side{overflow-y:auto;min-height:0;padding:18px 18px 0;display:flex;flex-direction:column;gap:14px}
+.wore-dots{display:flex;flex-wrap:wrap;gap:6px}
+.wdot{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
+.wdot.done{background:var(--accent-soft);color:var(--ink)}
+.wdot[aria-current="step"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--ink);font-weight:600}
+.wore-nav{position:sticky;bottom:0;background:var(--surface);padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 14px);border-top:1px solid var(--line);margin-top:auto}
+.wore-nav .grow{flex:1}
+.wore-panel .wore-sum{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.wore-sumrow{width:100%;border:0;background:none;color:inherit;text-align:left;font:inherit}
+.wore-sumrow:hover{background:var(--sunk)}
+.warn{color:var(--danger)}
+.wore-style{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.wore-style .lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-right:2px}
+.wore-style .chip{padding:4px 10px;font-size:12px}
+.wore-style .n{font-size:12px;color:var(--muted)}
+.out-style{color:var(--muted);font-size:12px}
+@media (max-width:760px){
+  .drawer.wore-panel{inset:0;border-radius:0;border:0;display:flex;flex-direction:column}
+  .wore-stage{flex:none;height:40vh;padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px;--stage-h:calc(40vh - 16px - env(safe-area-inset-top,0px))}
+  .wore-side{flex:1;padding:14px 14px 0}
+  .wore-stage .wore-zoom{bottom:14px;right:14px}
+}
+/* Outfits: the figure (items laid out roughly where they're worn) and the outfit view */
+.fig{position:relative;flex:none;aspect-ratio:3/4;background:var(--sunk);border-radius:var(--r);overflow:hidden;width:100%}
+.fig>span{position:absolute;display:grid;place-items:center}
+.fig img{width:100%;height:100%;object-fit:contain;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.18))}
+.fig .fig-ph{width:100%;height:100%;display:grid;place-items:center;text-align:center;overflow:hidden;padding:2px;font-size:11px;color:var(--muted);border:1px dashed var(--line);border-radius:6px;background:var(--surface)}
+.fig-lg{max-width:300px;margin:0 auto}
+.fig>span.lay{height:auto}
+.fig>span.lay img{height:auto}
+.fig>span.lay .fig-ph{height:auto;aspect-ratio:3/4}
+.fig.arranging{touch-action:none;outline:2px dashed var(--accent);outline-offset:3px}
+.fig.arranging>span{cursor:grab;user-select:none;-webkit-user-select:none}
+.fig.arranging>span:active{cursor:grabbing}
+.fig.arranging>span.sel{outline:2px solid var(--accent);outline-offset:1px}
+.fig.arranging>span:focus-visible{outline:3px solid var(--accent)}
+.fig-handle{position:absolute;right:-9px;bottom:-9px;width:22px;height:22px;border-radius:50%;background:var(--accent);border:3px solid var(--surface);cursor:nwse-resize;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.fig-tools{justify-content:center;margin-top:-6px}
+.fig-tools .grow{flex:1}
+.fig-hint{text-align:center}
+.owords.center{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:-6px}
+.fig-lg:not(.arranging)>span[data-lay-item]{cursor:pointer}
+.fig-lg:not(.arranging)>span[data-lay-item]:focus-visible{outline:3px solid var(--accent);outline-offset:1px;z-index:50!important}
+.fig-sm{width:60px;flex:none;border-radius:8px}
+.fig-sm .fig-ph{font-size:0}
+.fig-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--faint);font-size:13px}
+.ogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;list-style:none;margin:0;padding:0}
+@media (max-width:420px){.ogrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}}
+.ocard-wrap{position:relative;min-width:0}
+.card.ocard{height:100%;cursor:pointer}
+.ocard .fig-md{border-radius:0}
+.ocard .txt{display:flex;flex-direction:column;gap:2px;padding:8px 10px 10px;min-width:0}
+.ocard .txt b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard .owords{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.wtag{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 7px}
+.wtag .swatch{width:8px;height:8px}
+.fig-md .fig-ph{font-size:10px}
+button.worn-mini{position:absolute;top:8px;right:8px;z-index:2;padding:0;border:2px solid var(--surface);border-radius:8px;width:42px;height:56px;background:var(--sunk);cursor:zoom-in;box-shadow:0 1px 6px rgba(0,0,0,.3);outline:2px solid var(--accent)}
+button.worn-mini img{width:100%;height:100%;object-fit:cover;border-radius:6px;display:block}
+button.worn-mini:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.title-edit{font:inherit;font-size:22px;font-weight:700;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:8px;padding:4px 6px;margin:-4px 34px -4px -6px;width:calc(100% - 34px)}
+.title-edit:hover{border-color:var(--line)}
+.title-edit:focus{border-color:var(--accent);outline:none;background:var(--surface)}
+.drawer .wear-hist ul{list-style:none;padding:0;margin:0}
+.wear-hist .entry{align-items:center}
+.wear-hist .when{display:flex;align-items:center;gap:10px}
+.wear-hist img{width:42px;height:56px;object-fit:contain;border-radius:6px;background:var(--sunk);display:block}
+.wear-hist .add-ph{cursor:pointer}
+/* Wear log: one block per day, each wear with its items' pictures */
+.wlog-day{display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid var(--line)}
+.wlog-day h4{margin:0;font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--muted)}
+.wentry{display:flex;flex-direction:column;gap:6px}
+.wentry .wtop{display:flex;align-items:center;gap:8px}
+.wentry .wname{flex:1;min-width:0;text-align:left;background:none;border:0;padding:0;font:inherit;font-weight:600;color:var(--ink);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wentry .wname:hover{text-decoration:underline}
+.wthumbs{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.wthumb{padding:0;border:0;background:var(--sunk);border-radius:4px;width:36px;height:48px;cursor:zoom-in;display:block;flex:none}
+.wthumb img{width:100%;height:100%;object-fit:contain;display:block;border-radius:4px}
+i.wthumb{cursor:default;border:1px dashed var(--line)}
+.wthumbs img.worn-ph{width:36px;height:48px;object-fit:contain;border-radius:4px;background:var(--sunk);outline:2px solid var(--accent);outline-offset:1px;margin-right:8px;display:block;flex:none}
+.wthumbs .more-n{font-size:12px;color:var(--muted);padding:0 4px}
+/* Close-up of any photo */
+li:has(>.card){position:relative}
+.zoom-btn{position:absolute;top:6px;right:6px;width:32px;height:32px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;display:grid;place-items:center;padding:0;cursor:zoom-in}
+.zoom-btn svg{width:16px;height:16px}
+.tile .zoom-btn{top:7px;right:7px;width:26px;height:26px}
+.opt .zoom-btn{position:static;width:26px;height:26px;flex:none;background:var(--sunk);color:var(--ink)}
+img.zoomable{cursor:zoom-in}
+.zoom{position:fixed;inset:0;z-index:80;background:rgba(8,10,12,.94);display:flex;flex-direction:column;color:#fff}
+.zoom-view{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;padding:8px;overscroll-behavior:contain}
+.zoom-view img{max-width:100%;max-height:100%;object-fit:contain;cursor:zoom-in;user-select:none;-webkit-user-drag:none}
+.zoom-view img.cut{background:repeating-conic-gradient(#3a3f44 0 25%,#2a2e32 0 50%) 0 0/20px 20px}
+.zoom-view.big{display:block;padding:0}
+.zoom-view.big img{max-width:none;max-height:none;display:block;margin:0 auto;cursor:zoom-out}
+.zoom-bar{display:flex;align-items:center;gap:8px;padding:8px max(12px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.zoom-cap{flex:1;min-width:0;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zoom-bar button{min-width:44px;height:44px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;font-size:20px;line-height:1;cursor:pointer}
+.zoom-bar button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.zoom-x{position:absolute;z-index:2;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px 0 14px;border-radius:999px;border:0;background:#fff;color:#111;font:inherit;font-size:15px;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.45);cursor:pointer}
+.zoom-x svg{width:18px;height:18px}
+.zoom-x:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.zoom-hint{font-size:12px;color:rgba(255,255,255,.6);white-space:nowrap}
+.zoom-hint .touch{display:none}
+@media (pointer:coarse){.zoom-hint .fine{display:none}.zoom-hint .touch{display:inline}}
 .drop{position:fixed;inset:0;z-index:70;background:color-mix(in srgb,var(--accent) 22%,transparent);border:4px dashed var(--accent);display:grid;place-items:center;pointer-events:none}
 .drop p{background:var(--surface);color:var(--ink);border-radius:999px;padding:12px 22px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18)}
 .fine-only{display:none}
@@ -200,6 +367,7 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
 <input type="file" id="photoIn" accept="image/*" multiple hidden>
 <input type="file" id="backupIn" accept=".json,application/json" hidden>
 <input type="file" id="closetIn" accept=".json,application/json" hidden>
+<input type="file" id="woreIn" accept="image/*" hidden>
 <input type="file" id="csIn" accept="image/*" hidden>
 <script>
 'use strict';
@@ -220,7 +388,9 @@ const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const now = () => new Date().toISOString();
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
-const today = () => new Date().toISOString().slice(0, 10);
+// A timestamp's calendar day where you are (not UTC, which is already tomorrow on a US evening)
+const localDay = (t = Date.now()) => { const d = new Date(t); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const today = () => localDay();
 const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } };
 const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
 
@@ -266,9 +436,15 @@ function mergeDocs(a, b) {
   return out;
 }
 // A photo's link to its Google Photos copy is never lost to an older edit made before the upload finished, so it isn't uploaded twice
+// The same goes for a photo's matching vector (What I wore), which is slow to make again
 function keepMedia(win, lose) {
-  const ids = new Map((lose.photos || []).filter(p => p.mediaItemId).map(p => [p.id, p]));
-  return ids.size ? { ...win, photos: (win.photos || []).map(p => p.mediaItemId || !ids.has(p.id) ? p : { ...p, mediaItemId: ids.get(p.id).mediaItemId, mediaAccount: ids.get(p.id).mediaAccount }) } : win;
+  const ids = new Map((lose.photos || []).filter(p => p.mediaItemId || p.vec).map(p => [p.id, p]));
+  return ids.size ? { ...win, photos: (win.photos || []).map(p => {
+    const o = ids.get(p.id); if (!o) return p;
+    if (!p.mediaItemId && o.mediaItemId) p = { ...p, mediaItemId: o.mediaItemId, mediaAccount: o.mediaAccount };
+    if (!p.vec && o.vec) p = { ...p, vec: o.vec };
+    return p;
+  }) } : win;
 }
 let doc = upgrade(lsGet(KEY));
 function save() { lsSet(KEY, doc); if (store.known) store.save(doc); showSaveState(); GPhotos.soon(); }
@@ -301,7 +477,7 @@ function addWord(name) {
 }
 function deleteWord(id) {
   const t = now();
-  doc.items.forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
+  [...doc.items, ...doc.outfits].forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
   const f = F(); if ((f.words || []).includes(id)) doc.settings = { ...doc.settings, filters: { ...f, words: f.words.filter(x => x !== id) }, updatedAt: t };
   remove('words', id);
 }
@@ -313,7 +489,8 @@ function setWordOn(id, shown, on) {
 }
 
 /* ---------- Photos (this browser's copy) ---------- */
-// Each item photo is {id, role:'main'|'cutout'|'label', from?, mediaItemId?}; a cut-out's `from` is the photo it was made from. The bytes live in IndexedDB here;
+// Each item photo is {id, role:'main'|'cutout'|'label'|'crop', from?, mediaItemId?, vec?}; a cut-out's `from` is the photo it was made from,
+// a crop is cut from an outfit photo (What I wore), and vec is its matching vector. Outfits keep their outfit photos ({id, role:'worn'}) the same way. The bytes live in IndexedDB here;
 // once uploaded, mediaItemId points at the copy in the Wardrobe album in Google Photos and this is a cache of it.
 const Photos = (() => {
   let dbp;
@@ -363,7 +540,7 @@ async function fillThumbs(root = document) {
 }
 // A photo's album copy, in the Google account Photos is connected to now (mediaAccount says which account it went to)
 const inAlbum = p => !!(p && p.mediaItemId && p.mediaAccount && p.mediaAccount === doc.settings.photosAccount);
-const mediaIdOf = id => { for (const it of [...doc.items, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id && inAlbum(p)) return p.mediaItemId; return null; };
+const mediaIdOf = id => { for (const it of [...doc.items, ...doc.outfits, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id && inAlbum(p)) return p.mediaItemId; return null; };
 
 /* ---------- Clean background (on this device) ---------- */
 // The cut-out is a second photo {role:'cutout', from: <the photo it came from>}; the original is always kept. The model
@@ -425,9 +602,476 @@ function attachCutout(itemId, photo) {
   return used;
 }
 
+/* ---------- What I wore, from a photo (on this device) ---------- */
+// See README, "What I wore, from a photo". recognise-worker.js finds the garments in an outfit photo (a clothes-parsing
+// model) and turns each one into a vector (CLIP); the closet's photos get vectors too, and the closest items are offered.
+// Nothing is logged until the confirm screen is saved. Photos never leave the device for this: only the models download.
+const EMBED_ID = 'clip-b32-q8'; // the model and precision recognise-worker.js uses; vectors with another id are made again
+const MATCH = { clear: 0.82, margin: 0.04, shown: 5, seen: 6 }; // first guesses, to tune on real photos
+// What the clothes model finds -> the body regions of data/types.json it can be, the type a new item starts as, and its label
+const KINDS = {
+  hat: { regions: ['hat'], type: 'hat', name: 'Hat' },
+  sunglasses: { regions: ['accessory'], type: 'accessories', name: 'Sunglasses' },
+  scarf: { regions: ['scarf'], type: 'scarf', name: 'Scarf' },
+  top: { regions: ['top'], type: 'tops', name: 'Top' },
+  dress: { regions: ['dress'], type: 'dress', name: 'Dress or one-piece' },
+  belt: { regions: ['belt'], type: 'belt', name: 'Belt' },
+  skirt: { regions: ['skirt', 'bottom'], type: 'skirt', name: 'Skirt' },
+  pants: { regions: ['bottom'], type: 'trousers', name: 'Trousers or shorts' },
+  bag: { regions: ['bag'], type: 'bag', name: 'Bag' },
+  shoes: { regions: ['shoes'], type: 'shoes', name: 'Shoes' }
+};
+const regionOf = typeId => { const t = K.byId.types.get(typeId) || {}; return t.region || (K.byId.types.get(t.parent) || {}).region || 'other'; };
+// Vectors are kept on the photo record ({m: EMBED_ID, d: base64}), 8 bits a number, so they sync with the data and every
+// device can match against photos it can't read itself (another site's Google Photos images can be shown but not read)
+function packVec(v) {
+  let m = 0; for (const x of v) m = Math.max(m, Math.abs(x)); m = m || 1;
+  const q = new Int8Array(v.length); for (let i = 0; i < v.length; i++) q[i] = Math.round(v[i] / m * 127);
+  let s = ''; new Uint8Array(q.buffer).forEach(b => { s += String.fromCharCode(b); }); return { m: EMBED_ID, d: btoa(s) };
+}
+const vecCache = new Map();
+function unpackVec(p) {
+  if (!p || p.m !== EMBED_ID || !p.d) return null;
+  if (vecCache.has(p.d)) return vecCache.get(p.d);
+  const b = atob(p.d), v = new Float32Array(b.length); let n = 0;
+  for (let i = 0; i < b.length; i++) { const x = (b.charCodeAt(i) << 24) >> 24; v[i] = x; n += x * x; }
+  n = Math.sqrt(n) || 1; for (let i = 0; i < v.length; i++) v[i] /= n;
+  vecCache.set(p.d, v); return v;
+}
+const cosine = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += a[i] * b[i]; return s; };
+// An item's vectors: its cut-out and main photo, plus the crops it was confirmed from before (item.seen), so it gets
+// easier to recognise each time it's logged
+const itemVecs = it => [...(it.photos || []).map(p => p.vec), ...(it.seen || [])].map(unpackVec).filter(Boolean);
+const toIndex = it => (it.photos || []).filter(p => p.role === 'cutout' || p.role === 'main' || p.role === 'crop');
+
+const Recognise = (() => {
+  let worker = null, seq = 0, chain = Promise.resolve(), onProgress = () => {};
+  const waiting = new Map(), files = new Map();
+  function w() {
+    if (worker) return worker;
+    worker = new Worker('recognise-worker.js', { type: 'module' });
+    worker.onmessage = e => {
+      const m = e.data, job = waiting.get(m.id); if (!job) return;
+      if (m.progress) { files.set(m.progress.file, m.progress); return onProgress([...files.values()]); }
+      waiting.delete(m.id);
+      if (m.error) { job.reject(new Error(m.error)); reset(); } else job.resolve(m);
+    };
+    worker.onerror = e => { e.preventDefault(); waiting.forEach(j => j.reject(new Error(e.message || 'The recognition models couldn’t load'))); waiting.clear(); reset(); };
+    return worker;
+  }
+  function reset() { if (worker) worker.terminate(); worker = null; }
+  const run = (op, blob) => new Promise((resolve, reject) => { const id = ++seq; waiting.set(id, { resolve, reject }); w().postMessage({ id, op, blob }); });
+  const queue = (op, blob) => { const p = chain.then(() => run(op, blob)); chain = p.catch(() => {}); return p; };
+  return {
+    supported: typeof Worker === 'function' && typeof OffscreenCanvas === 'function',
+    progress(fn) { onProgress = fn || (() => {}); },
+    segment: blob => queue('segment', blob).then(m => m.segments),
+    embed: blob => queue('embed', blob).then(m => m.vec)
+  };
+})();
+// "Downloading the recognition models (first time only): 40 of 130 MB", or '' once they're all here
+function downloadNote(list) {
+  const t = list.reduce((s, f) => s + (f.total || 0), 0), l = list.reduce((s, f) => s + (f.loaded || 0), 0);
+  return t && l < t ? `Downloading the recognition models (first time only): ${mb(l)} of ${mb(t)} MB` : '';
+}
+// Makes vectors for closet photos that don't have one yet and whose bytes are in this browser. Returns how many items
+// can't be matched here (no vector, and their photos are only in another browser or in Google Photos).
+async function indexCloset(status = () => {}) {
+  const todo = [];
+  for (const it of doc.items) for (const p of toIndex(it)) if (!unpackVec(p.vec)) todo.push([it.id, p.id]);
+  let done = 0, since = 0;
+  for (const [itemId, photoId] of todo) {
+    const blob = await Photos.full(photoId); if (!blob) continue;
+    const vec = await Recognise.embed(blob);
+    const it = itemById(itemId); if (!it) continue;
+    it.photos = it.photos.map(p => p.id === photoId ? { ...p, vec: packVec(vec) } : p); it.u = now();
+    done++; if (++since >= 10) { since = 0; save(); }
+    status(`Getting your closet ready for matching: ${done} photo${done > 1 ? 's' : ''}…`);
+  }
+  if (done) save();
+  return doc.items.filter(it => !itemVecs(it).length && (it.photos || []).length).length;
+}
+// The closest closet items for one garment vector, among items of the regions this kind can be (all items if none)
+function rankFor(kind, vec) {
+  if (!vec) return [];
+  const regions = (KINDS[kind] || {}).regions || [];
+  const pool = doc.items.filter(visible).map(it => ({ it, vs: itemVecs(it) })).filter(x => x.vs.length);
+  const same = pool.filter(x => regions.includes(regionOf(x.it.type)));
+  return (same.length ? same : pool).map(x => ({ id: x.it.id, score: Math.max(...x.vs.map(v => cosine(v, vec))) }))
+    .sort((a, b) => b.score - a.score);
+}
+// Up to two colours from data/colours.json that cover most of a garment crop, for a new item's first guess
+async function guessColours(blob) {
+  const bmp = await createImageBitmap(blob), s = 48 / Math.max(bmp.width, bmp.height), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(bmp.width * s)); c.height = Math.max(1, Math.round(bmp.height * s));
+  const g = c.getContext('2d'); g.drawImage(bmp, 0, 0, c.width, c.height); bmp.close && bmp.close();
+  const px = g.getImageData(0, 0, c.width, c.height).data, rgb = K.colours.filter(x => /^#[0-9a-f]{6}$/i.test(x.hex)).map(x => [x.id, parseInt(x.hex.slice(1, 3), 16), parseInt(x.hex.slice(3, 5), 16), parseInt(x.hex.slice(5, 7), 16)]);
+  const n = new Map(); let all = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i + 3] < 128) continue; all++;
+    let best = null, bd = 1e9; for (const [id, r, gg, b] of rgb) { const d = (px[i] - r) ** 2 + (px[i + 1] - gg) ** 2 + (px[i + 2] - b) ** 2; if (d < bd) { bd = d; best = id; } }
+    n.set(best, (n.get(best) || 0) + 1);
+  }
+  return [...n].sort((a, b) => b[1] - a[1]).filter(([, k], i) => i === 0 || k / all > 0.25).slice(0, 2).map(([id]) => id);
+}
+
+let wore = null; // the "what I wore" confirm screen while it's open: { photo, pieces: [{kind, blob, url, vec, ranked}], saved }
+const pct = s => `${Math.round(Math.max(0, s) * 100)}%`;
+const isDay = s => /^\d{4}-\d{2}-\d{2}$/.test(s) && !isNaN(new Date(s));
+// The day a photo was taken: the camera's own date in a JPEG (EXIF DateTimeOriginal, else DateTime), otherwise the file's
+// modified date, which for a photo straight off a phone is usually the same day. '' when there's nothing usable.
+async function photoDate(file) {
+  try {
+    const v = new DataView(await file.slice(0, 256 * 1024).arrayBuffer());
+    if (v.getUint16(0) === 0xFFD8) for (let o = 2; o + 4 <= v.byteLength;) {
+      const m = v.getUint16(o), len = v.getUint16(o + 2);
+      if ((m & 0xFF00) !== 0xFF00 || m === 0xFFDA) break;
+      if (m === 0xFFE1 && v.getUint32(o + 4) === 0x45786966) { // "Exif"
+        const t = o + 10, le = v.getUint16(t) === 0x4949, u16 = x => v.getUint16(t + x, le), u32 = x => v.getUint32(t + x, le);
+        const read = (ifd, want) => { const n = u16(ifd); for (let i = 0; i < n; i++) { const e = ifd + 2 + i * 12; if (u16(e) === want) return u32(e + 8); } return null; };
+        const text = off => { let r = ''; for (let i = 0; i < 19; i++) r += String.fromCharCode(v.getUint8(t + off + i)); return r; };
+        const ifd0 = u32(4), exif = read(ifd0, 0x8769), at = (exif != null && read(exif, 0x9003)) || read(ifd0, 0x0132);
+        const d = at != null && text(at).match(/^(\d{4}):(\d{2}):(\d{2})/);
+        if (d && d[1] !== '0000') return `${d[1]}-${d[2]}-${d[3]}`;
+        break;
+      }
+      o += 2 + len;
+    }
+  } catch (e) { /* not a readable JPEG: fall back to the file date */ }
+  return file.lastModified ? localDay(file.lastModified) : '';
+}
+async function woreFromPhoto(file) {
+  if (!isImage(file)) return toast('Only photos can be used (JPEG, PNG, WebP, HEIC).');
+  closeDrawer();
+  const [photo, shot] = await Promise.all([Photos.add(file), photoDate(file)]);
+  // Assume it was worn the day the photo was taken (not a future date from a wrong camera clock); today can be picked instead
+  const taken = isDay(shot) && shot <= today() ? shot : '', day = taken || today();
+  // The stored photo is what the recogniser sees, so its size is what the pieces' boxes are measured against
+  const full = await Photos.full(photo), bmp = await createImageBitmap(full);
+  wore = { photo, url: URL.createObjectURL(full), W: bmp.width, H: bmp.height, pieces: [], step: -1, saved: false, styles: new Set() };
+  if (bmp.close) bmp.close();
+  const items = doc.items.filter(visible);
+  // A large panel rather than the side drawer: the outfit stays in view (left, or pinned on top on a phone) while each
+  // piece is answered in turn, then a Review step logs it
+  $('#layer').innerHTML = `<div class="scrim" data-close></div><div class="drawer wore-panel" role="dialog" aria-modal="true" aria-labelledby="wTitle">
+  <div class="wore-stage"><div class="wore-frame" id="wFrame"><img src="${wore.url}" alt="Your outfit photo"><i class="wore-hl" id="wHl" hidden></i></div>
+    <button type="button" class="zoom-btn wore-zoom" data-zoom="${esc(photo)}" data-zoom-label="Your outfit photo" aria-label="Look closer at your outfit photo">${ZOOM_ICON}</button>
+    <button type="button" class="btn sm wore-cropbtn" data-wcrop="start">✂ Mark a missed piece</button>
+    <div class="wore-cropbar" id="wCropBar" hidden><span class="small">Drag around the piece it missed. Arrow keys move the box, Shift+arrows resize it.</span><span class="grow"></span><button type="button" class="btn sm" data-wcrop="cancel">Cancel</button><button type="button" class="btn sm primary" data-wcrop="use">Add this piece</button></div></div>
+  <div class="wore-side" id="wSide">
+    <h2 id="wTitle">What I wore</h2>
+    <div class="wore-dots" id="wDots" aria-label="Steps"></div>
+    <div class="wore-style" id="wStyle" role="group" aria-label="Style" hidden></div>
+    <p class="small muted" id="wStatus" role="status">Finding the clothes in your photo…</p>
+    <div id="wRows"></div>
+    <section class="stack" id="wReview" hidden>
+      <div class="form">
+        <label class="field">Date worn<input type="text" name="at" id="wAt" value="${day}" inputmode="numeric"></label>
+        ${taken && taken !== today() ? `<p class="small muted" style="margin:0">The day the photo was taken. <button type="button" class="btn sm" data-wore-date="${today()}">Use today instead</button></p>` : ''}
+        <label class="field">Outfit name<input type="text" id="wName" placeholder="Worn ${day}"></label>
+      </div>
+      <ul class="wore-sum" id="wSum"></ul>
+      <p class="small" style="margin:0">Something in the photo that isn’t in your closet yet? <button type="button" class="btn sm" data-wcrop="start">✂ Mark it on the photo</button></p>
+      <details class="more" id="wMissed"><summary>Add something it missed</summary>
+        ${items.length ? K.types.filter(t => !t.parent).map(g => [g, items.filter(it => typeGroup(it.type) === g.id)]).filter(([, l]) => l.length).map(([g, l]) => `<h4 class="shelf-h">${esc(g.name)}</h4><ul class="grid">${l.map(it => card(it, false)).join('')}</ul>`).join('') : '<p class="muted">Your closet is empty.</p>'}</details>
+      <p class="small muted" style="margin:0">Nothing is logged until you press Log it. ${doc.settings.showSpicy ? '' : 'Spicy items are hidden, so they aren’t suggested.'}</p>
+    </section>
+    <div class="row wore-nav" id="wNav" hidden></div>
+  </div><button type="button" class="x" data-close aria-label="Close">×</button></div>`;
+  fillThumbs($('#layer'));
+  const mine = wore, status = t => { if (wore === mine && $('#wStatus')) $('#wStatus').textContent = t; };
+  Recognise.progress(list => { const d = downloadNote(list); if (d) status(d); });
+  try {
+    const segs = await Recognise.segment(full);
+    if (wore !== mine) return;
+    status(segs.length ? `Found ${segs.length} piece${segs.length > 1 ? 's' : ''}. Comparing with your closet…` : 'No clothes found.');
+    const missing = await indexCloset(status);
+    for (const s of segs) {
+      const vec = await Recognise.embed(s.blob); if (wore !== mine) return;
+      const pc = { kind: s.label, blob: s.blob, url: URL.createObjectURL(s.blob), vec, ranked: rankFor(s.label, vec), box: s.box };
+      pc.answer = clearMatch(pc); mine.pieces.push(pc);
+    }
+    if (wore !== mine) return;
+    status([segs.length ? 'Answer each piece: pick the right item, add it as a new one, or leave it out.' : 'No clothes found in this photo. Pick what you wore under “Add something it missed”.',
+      missing ? `${missing} item${missing > 1 ? 's' : ''} can’t be matched in this browser yet: open the app where ${missing > 1 ? 'their photos were' : 'its photo was'} added, once, to get ${missing > 1 ? 'them' : 'it'} ready.` : ''].filter(Boolean).join(' '));
+    if (!segs.length) $('#wMissed').open = true;
+    woreBoxes(); woreStep(0);
+  } catch (err) {
+    if (wore !== mine) return;
+    const msg = String(err.message || err);
+    status(`Couldn’t recognise the clothes: ${/fetch|network|Failed to load/i.test(msg) ? 'the models didn’t download. Are you online?' : msg}. You can still pick what you wore below.`);
+    $('#wMissed').open = true; woreStep(0);
+  } finally { Recognise.progress(null); }
+}
+// A piece's category is the closet's own top-level type group (Tops, Bottoms, Shoes…) of the type it would start as
+const kindGroup = kind => typeGroup((KINDS[kind] || {}).type) || 'accessories';
+const itemLabel = it => it.name || kname('types', it.type);
+// A small button that opens an item's photos close up (it sits outside the card's own button, and a label ignores clicks on it)
+const ZOOM_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg>';
+const zoomBtn = it => { const p = coverPhoto(it); return p ? `<button type="button" class="zoom-btn" data-zoom="${esc(p.id)}" data-zoom-item="${esc(it.id)}" aria-label="Look closer at ${esc(itemLabel(it))}">${ZOOM_ICON}</button>` : ''; };
+const photoTag = it => { const p = coverPhoto(it); return p ? `<img alt="" data-photo="${esc(p.id)}"${p.role === 'cutout' ? ' class="cut"' : ''}>` : '<i class="ph"></i>'; };
+// One picture tile per item, a radio of the piece's group, so picking from the grid is the same as ticking a row
+const tile = (i, it, score) => `<li><label class="tile"><input type="radio" name="piece${i}" value="${esc(it.id)}">${photoTag(it)}${zoomBtn(it)}<span class="nm">${esc(itemLabel(it))}</span>${score == null ? '' : `<span class="pc">${pct(score)}</span>`}</label></li>`;
+// The grid behind "More …": every item this kind of piece can be (closest first), then, on request, the rest by category
+function moreGrid(i) {
+  const pc = wore.pieces[i], scored = new Map(pc.ranked.map(r => [r.id, r.score])), regions = (KINDS[pc.kind] || {}).regions || [];
+  const same = doc.items.filter(it => offered(pc, it) && regions.includes(regionOf(it.type)))
+    .sort((a, b) => (scored.has(b.id) ? scored.get(b.id) : -2) - (scored.has(a.id) ? scored.get(a.id) : -2) || itemLabel(a).localeCompare(itemLabel(b)));
+  const rest = doc.items.filter(it => offered(pc, it) && !regions.includes(regionOf(it.type)));
+  const shelves = K.types.filter(t => !t.parent).map(g => [g, rest.filter(it => typeGroup(it.type) === g.id)]).filter(([, l]) => l.length);
+  return `${same.length ? `<ul class="tiles">${same.map(it => tile(i, it, scored.get(it.id))).join('')}</ul>` : `<p class="small muted">${styleOn() && !pc.allStyles ? 'Nothing of this kind in this style.' : 'Nothing of this kind in your closet yet.'}</p>`}
+    ${shelves.length ? `<details class="more"><summary>Other categories</summary>${shelves.map(([g, l]) => `<h4 class="shelf-h">${esc(g.name)}</h4><ul class="tiles">${l.map(it => tile(i, it)).join('')}</ul>`).join('')}</details>` : ''}`;
+}
+// Style: the wardrobe words picked for this logging (not saved). With any picked, only items with one of them are offered
+// (OR, like the closet's word filter); a piece can be shown everything again with "Show all"
+const styleOn = () => !!(wore && wore.styles.size);
+const inStyle = it => !styleOn() || (it.words || []).some(w => wore.styles.has(w));
+const offered = (pc, it) => !!it && visible(it) && (!pc || pc.allStyles || inStyle(it));
+function renderStyleBar() {
+  const bar = $('#wStyle'); if (!bar || !wore) return;
+  const items = doc.items.filter(visible), used = sortedWords().filter(w => items.some(it => (it.words || []).includes(w.id)));
+  bar.hidden = !used.length || wore.step < 0; if (bar.hidden) return;
+  const n = items.filter(inStyle).length;
+  bar.innerHTML = `<span class="lbl">Style</span>${used.map(w => `<button type="button" class="chip" data-wstyle="${esc(w.id)}" aria-pressed="${wore.styles.has(w.id)}">${wordChip(w)}</button>`).join('')}${styleOn() ? `<button type="button" class="chip" data-wstyle="">Clear</button><span class="n" aria-live="polite">${n} item${n === 1 ? '' : 's'} match</span>` : ''}`;
+}
+// "Add something it missed": items outside the style are hidden (unless already picked), and empty shelves with them
+function filterMissed() {
+  const m = $('#wMissed'); if (!m || !wore) return;
+  $$('li', m).forEach(li => { const b = $('[data-item]', li); if (b) li.hidden = !(inStyle(itemById(b.dataset.item)) || b.getAttribute('aria-pressed') === 'true'); });
+  $$('.shelf-h', m).forEach(h => { const ul = h.nextElementSibling; h.hidden = !!ul && $$('li', ul).every(li => li.hidden); if (ul) ul.hidden = h.hidden; });
+}
+// The item a piece clearly is (well ahead of the next one), which starts out picked; null when it isn't clear
+const clearMatch = pc => { const [a, b] = pc.ranked; return a && a.score >= MATCH.clear && (!b || a.score - b.score >= MATCH.margin) ? a.id : null; };
+const pieceCat = pc => kname('types', kindGroup(pc.kind));
+// A piece's box on the photo, in percent of the photo, so it lines up at any size
+const boxPos = ([x, y, w, h]) => ({ left: `${x / wore.W * 100}%`, top: `${y / wore.H * 100}%`, width: `${w / wore.W * 100}%`, height: `${h / wore.H * 100}%` });
+// Mark a missed piece: draw a box on the photo (or move one with the keys); its crop is recognised and ranked like a
+// found piece, then answered the same way (a match, a new placeholder item with followUp, or left out)
+const WoreCrop = (() => {
+  let box = null, drag = null; // box in photo pixels [x, y, w, h]
+  const frame = () => $('#wFrame'), el = () => $('#wCropBox');
+  const clampBox = ([x, y, w, h]) => { w = Math.max(8, Math.min(wore.W, w)); h = Math.max(8, Math.min(wore.H, h)); return [Math.max(0, Math.min(wore.W - w, x)), Math.max(0, Math.min(wore.H - h, y)), w, h]; };
+  const draw = () => { const b = el(); if (b && box) Object.assign(b.style, boxPos(box)); };
+  function start() {
+    const f = frame(); if (!f || !wore) return;
+    box = clampBox([wore.W * 0.3, wore.H * 0.35, wore.W * 0.4, wore.H * 0.3]);
+    f.classList.add('cropping'); $('#wHl').hidden = true;
+    if (!el()) f.insertAdjacentHTML('beforeend', '<i class="wore-crop" id="wCropBox" tabindex="0" role="img" aria-label="The box around the missed piece. Arrow keys move it, Shift and arrow keys resize it."></i>');
+    draw(); $('#wCropBar').hidden = false; $('.wore-cropbtn').hidden = true; el().focus({ preventScroll: true });
+  }
+  function stop() {
+    const f = frame(); box = null; drag = null; if (!f) return;
+    f.classList.remove('cropping'); if (el()) el().remove();
+    $('#wCropBar').hidden = true; $('.wore-cropbtn').hidden = false;
+    if (wore && wore.pieces[wore.step]) woreStep(wore.step);
+  }
+  // A kind to start from, by where the box sits on the body; it can be changed on the piece's step
+  const guessKind = ([, y, , h]) => { const c = (y + h / 2) / wore.H; return c < 0.14 ? 'hat' : c < 0.46 ? 'top' : c < 0.8 ? 'pants' : 'shoes'; };
+  async function use() {
+    if (!box || !wore) return;
+    const mine = wore, b = box.map(Math.round), kind = guessKind(b); stop();
+    const img = new Image(); img.src = mine.url; await img.decode();
+    const c = document.createElement('canvas'); c.width = b[2]; c.height = b[3];
+    c.getContext('2d').drawImage(img, b[0], b[1], b[2], b[3], 0, 0, b[2], b[3]);
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    if (wore !== mine || !blob) return;
+    toast('Comparing it with your closet…', 1500);
+    let vec = null; try { vec = await Recognise.embed(blob); } catch (err) { toast('Couldn’t compare it with your closet here. You can still pick a match or add it as new.', 4000); }
+    if (wore !== mine) return;
+    const pc = { kind, blob, url: URL.createObjectURL(blob), vec, ranked: rankFor(kind, vec), box: b, manual: true };
+    pc.answer = null; mine.pieces.push(pc);
+    woreBoxes(); woreStep(mine.pieces.length - 1);
+  }
+  const at = e => { const r = frame().getBoundingClientRect(); return [(e.clientX - r.left) / r.width * wore.W, (e.clientY - r.top) / r.height * wore.H]; };
+  document.addEventListener('pointerdown', e => {
+    const f = frame(); if (!box || !f || !f.contains(e.target)) return;
+    e.preventDefault(); const [x, y] = at(e);
+    const inside = e.target === el();
+    drag = inside ? { move: true, x, y, b0: [...box] } : { move: false, x, y };
+    if (!inside) { box = clampBox([x, y, 8, 8]); draw(); }
+    try { f.setPointerCapture(e.pointerId); } catch (err) { /* released */ }
+  });
+  document.addEventListener('pointermove', e => {
+    if (!drag || !box || !frame()) return;
+    const [x, y] = at(e);
+    if (drag.move) box = clampBox([drag.b0[0] + x - drag.x, drag.b0[1] + y - drag.y, drag.b0[2], drag.b0[3]]);
+    else { const x0 = Math.max(0, Math.min(drag.x, x)), y0 = Math.max(0, Math.min(drag.y, y)); box = clampBox([x0, y0, Math.abs(x - drag.x), Math.abs(y - drag.y)]); }
+    draw();
+  });
+  const end = () => { if (drag) { drag = null; if (el()) el().focus({ preventScroll: true }); } };
+  document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+  function key(e) {
+    if (!box || !wore || !frame()) { box = null; drag = null; return false; }
+    if (e.key === 'Escape') { e.preventDefault(); stop(); return true; }
+    if (e.key === 'Enter' && e.target === el()) { e.preventDefault(); use(); return true; }
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+    if (!d || e.target !== el()) return false;
+    e.preventDefault(); const sx = wore.W * 0.02, sy = wore.H * 0.02;
+    box = e.shiftKey ? clampBox([box[0], box[1], box[2] + d[0] * sx, box[3] + d[1] * sy]) : clampBox([box[0] + d[0] * sx, box[1] + d[1] * sy, box[2], box[3]]);
+    draw(); return true;
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-wcrop]'); if (!b || !wore) return;
+    const v = b.dataset.wcrop; if (v === 'start') start(); else if (v === 'cancel') stop(); else if (v === 'use') use();
+  });
+  return { key, stop, get on() { return !!box; } };
+})();
+// Faint outlines of the other pieces on the photo; tapping one goes to its step
+function woreBoxes() {
+  const f = $('#wFrame'); if (!f || !wore) return;
+  $$('.wore-box', f).forEach(b => b.remove());
+  wore.pieces.forEach((pc, i) => {
+    if (!pc.box) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'wore-box'; b.dataset.wstep = i;
+    b.setAttribute('aria-label', `Go to piece ${i + 1}, ${pieceCat(pc)}`); b.classList.toggle('on', i !== wore.step);
+    Object.assign(b.style, boxPos(pc.box)); f.append(b);
+  });
+}
+function renderDots() {
+  const w = wore, d = $('#wDots'); if (!w || !d) return;
+  const n = w.pieces.length;
+  d.innerHTML = w.pieces.map((pc, i) => `<button type="button" class="wdot${pc.answer != null ? ' done' : ''}" data-wstep="${i}"${i === w.step ? ' aria-current="step"' : ''} aria-label="Piece ${i + 1}, ${esc(pieceCat(pc))}${pc.answer != null ? ', answered' : ''}"><b>${pc.answer != null ? '✓' : i + 1}</b> ${esc(pieceCat(pc))}</button>`).join('')
+    + (n ? `<button type="button" class="wdot" data-wstep="${n}"${w.step === n ? ' aria-current="step"' : ''}>Review</button>` : '');
+}
+// Show step n: a piece (0 … pieces-1) or the Review (= pieces.length)
+function woreStep(n) {
+  const w = wore; if (!w || !$('#wRows')) return;
+  const last = w.pieces.length; n = Math.max(0, Math.min(last, n)); w.step = n;
+  const pc = w.pieces[n], hl = $('#wHl');
+  if (pc && pc.box) { hl.hidden = false; Object.assign(hl.style, boxPos(pc.box)); } else hl.hidden = true;
+  $$('#wFrame .wore-box').forEach(b => b.classList.toggle('on', +b.dataset.wstep !== n));
+  $('#wReview').hidden = !!pc;
+  renderPieces(); renderDots(); renderStyleBar(); filterMissed();
+  if (!pc) renderSummary();
+  const nav = $('#wNav'); nav.hidden = false;
+  nav.innerHTML = `<button type="button" class="btn" data-wnav="-1"${n === 0 ? ' disabled' : ''}>Back</button><span class="grow"></span><button type="button" class="btn" data-close>Cancel</button>${pc ? `<button type="button" class="btn primary" data-wnav="1">${n === last - 1 ? 'Review' : 'Next'}</button>` : '<button type="button" class="btn primary" data-act="wore-save">Log it</button>'}`;
+  $('#wSide').scrollTop = 0;
+}
+// Back and Next; Next needs the piece answered first
+function woreGo(delta) {
+  const w = wore; if (!w || w.step < 0) return;
+  const pc = w.pieces[w.step];
+  if (delta > 0 && pc && pc.answer == null) return toast(`${(KINDS[pc.kind] || {}).name || 'This piece'}: pick a match, add it as new, or leave it out`);
+  if (w.step + delta >= 0 && w.step + delta <= w.pieces.length) woreStep(w.step + delta);
+}
+// Review: each piece's answer, tap to go back to it
+function renderSummary() {
+  const s = $('#wSum'); if (!s || !wore) return;
+  s.innerHTML = wore.pieces.map((pc, i) => {
+    const a = pc.answer, it = a && a !== 'new' && a !== 'skip' ? itemById(a) : null;
+    const pic = it ? photoTag(it) : a === 'new' ? `<img alt="" src="${pc.url}" class="cut">` : '<i class="ph"></i>';
+    const what = it ? esc(itemLabel(it)) : a === 'new' ? 'New item' : a === 'skip' ? '<span class="muted">Left out</span>' : '<span class="warn">Not answered yet</span>';
+    return `<li><button type="button" class="opt wore-sumrow" data-wstep="${i}">${pic}<span class="nm"><span class="small muted">${esc(pieceCat(pc))}</span><br>${what}${pc.manual ? ' <span class="small muted">· marked by you</span>' : ''}</span><span class="pc">Change</span></button></li>`;
+  }).join('') + (styleOn() ? `<li class="small muted" style="padding:6px 0">Saved on the outfit as: ${[...wore.styles].map(wordById).filter(Boolean).map(wordChip).join(' ')}</li>` : '');
+  fillThumbs(s);
+}
+// The current piece's step: its category and kind, its crop, the closest items, the picture grid, new or leave out
+function renderPieces() {
+  const rows = $('#wRows'); if (!rows || !wore) return;
+  const i = wore.step, pc = wore.pieces[i];
+  if (!pc) { rows.innerHTML = ''; return; }
+  // Ranked within the style (if one is picked); the answer stays listed even when it's outside it
+  const inside = pc.ranked.filter(r => offered(pc, itemById(r.id))), top = inside.slice(0, MATCH.shown), [a] = inside, g = kindGroup(pc.kind);
+  const clear = clearMatch({ ranked: inside }) != null, picked = pc.answer && !['new', 'skip'].includes(pc.answer) && !top.some(r => r.id === pc.answer) ? pc.ranked.find(r => r.id === pc.answer) || { id: pc.answer, score: null } : null;
+  const many = doc.items.filter(it => offered(pc, it) && ((KINDS[pc.kind] || {}).regions || []).includes(regionOf(it.type))).length;
+  const none = styleOn() && !pc.allStyles && !inside.length;
+  const on = v => pc.answer === v ? ' checked' : '';
+  const opt = r => { const it = itemById(r.id); if (!it) return ''; return `<label class="opt"><input type="radio" name="piece${i}" value="${esc(r.id)}"${on(r.id)}>${photoTag(it)}<span class="nm">${esc(itemLabel(it))}${it.followUp ? ' <span class="follow-tag">· placeholder</span>' : ''}${styleOn() && !offered(pc, it) ? ' <span class="out-style">· outside this style</span>' : ''}</span><span class="pc">${r.score == null ? '' : pct(r.score)}</span>${zoomBtn(it)}</label>`; };
+  rows.innerHTML = `<fieldset class="piece" data-piece="${i}"><legend>Piece ${i + 1} of ${wore.pieces.length} · <span class="cat">${esc(kname('types', g))}</span></legend>
+      <div class="row small" style="margin:0 0 6px;gap:6px"><label class="sr-only" for="kind${i}">What this piece is</label><select id="kind${i}" data-kind="${i}">${Object.entries(KINDS).map(([id, k]) => `<option value="${id}"${id === pc.kind ? ' selected' : ''}>${esc(k.name)}</option>`).join('')}</select>
+        <span class="${clear ? '' : 'muted'}">${clear ? `Looks like <b>${esc(itemLabel(itemById(a.id)))}</b>.` : none ? `Nothing in this style for this piece. <button type="button" class="btn sm" data-wall="${i}">Show all</button>` : top.length ? 'No single clear match. The closest:' : 'Nothing to compare it with yet.'}${styleOn() && pc.allStyles ? ` <button type="button" class="btn sm" data-wall="${i}">Only this style</button>` : ''}</span></div>
+      <div class="piece-body"><img alt="This piece, cut from your photo" src="${pc.url}" class="crop zoomable">
+      <div class="opts">${picked ? opt(picked) : ''}${top.map(opt).join('')}
+        ${doc.items.some(it => offered(pc, it)) ? `<details class="more" data-more="${i}"${pc.moreOpen ? ' open' : ''}><summary>More ${esc(kname('types', g).toLowerCase())}${many ? ` (${many})` : ''}, with pictures</summary><div class="grid-slot">${pc.moreOpen ? moreGrid(i) : ''}</div></details>` : ''}
+        <label class="opt"><input type="radio" name="piece${i}" value="new"${on('new')}><span class="nm">Add as a new item <span class="small muted">· from this photo, marked to add a clean photo later</span></span></label>
+        <label class="opt"><input type="radio" name="piece${i}" value="skip"${on('skip')}><span class="nm muted">Leave it out</span></label>
+      </div></div></fieldset>`;
+  checkAnswer(i);
+  fillThumbs(rows);
+}
+// Tick the piece's answer wherever it appears (a ranked row or a tile in the grid)
+function checkAnswer(i) { const v = wore.pieces[i].answer; if (v == null) return; const r = $$(`#layer input[name="piece${i}"]`).find(x => x.value === v); if (r) r.checked = true; }
+// A piece whose kind changes is ranked again and starts over
+function setPieceKind(i, kind) {
+  const pc = wore.pieces[i]; pc.kind = kind; pc.ranked = rankFor(kind, pc.vec); pc.answer = clearMatch(pc); pc.moreOpen = false;
+  renderPieces(); renderDots(); woreBoxes();
+}
+// The answer lives on the piece, so it survives moving between steps
+document.addEventListener('change', e => {
+  const m = wore && /^piece(\d+)$/.exec(e.target.name || ''); if (!m) return;
+  wore.pieces[+m[1]].answer = e.target.value; checkAnswer(+m[1]); renderDots();
+});
+document.addEventListener('click', e => {
+  if (!wore || Zoom.isOpen) return;
+  const st = e.target.closest('[data-wstyle]');
+  if (st) { const id = st.dataset.wstyle; if (!id) wore.styles.clear(); else if (!wore.styles.delete(id)) wore.styles.add(id); renderStyleBar(); renderPieces(); filterMissed(); return; }
+  const all = e.target.closest('[data-wall]'); if (all) { const pc = wore.pieces[+all.dataset.wall]; pc.allStyles = !pc.allStyles; return renderPieces(); }
+  const s = e.target.closest('[data-wstep]'); if (s) return woreStep(+s.dataset.wstep);
+  const n = e.target.closest('[data-wnav]'); if (n) return woreGo(+n.dataset.wnav);
+});
+// The picture grid is drawn the first time it's opened, so a big closet doesn't load hundreds of thumbnails up front
+document.addEventListener('toggle', e => {
+  const d = e.target; if (!d.matches) return;
+  if (d.open && d.closest('.grid-slot')) return fillThumbs(d); // "Other categories" inside the grid
+  if (!d.matches('[data-more]') || !wore) return;
+  const i = +d.dataset.more; if (wore.pieces[i]) wore.pieces[i].moreOpen = d.open;
+  const slot = $('.grid-slot', d); if (!d.open || slot.innerHTML) return;
+  slot.innerHTML = moreGrid(i); fillThumbs(slot); checkAnswer(i);
+}, true);
+async function saveWore() {
+  const w = wore; if (!w || w.saved) return;
+  const at = ($('#wAt').value || '').trim();
+  if (!isDay(at)) return toast('Write the date as YYYY-MM-DD');
+  const chosen = new Set(), make = [], learn = [];
+  for (const [i, pc] of w.pieces.entries()) {
+    const id = pc.answer;
+    if (id == null) { woreStep(i); return toast(`${(KINDS[pc.kind] || {}).name || 'A piece'}: pick a match, add it as new, or leave it out`); }
+    if (id === 'skip') continue;
+    if (id === 'new') { make.push(pc); continue; }
+    chosen.add(id); if (pc.vec) learn.push([id, pc.vec]);
+  }
+  $$('#wMissed [data-item][aria-pressed="true"]').forEach(b => chosen.add(b.dataset.item));
+  if (!chosen.size && !make.length) return toast('Pick at least one item');
+  w.saved = true;
+  // New items from the photo: the crop is their photo until a clean one is added (followUp), with a type and colours to start
+  for (const pc of make) {
+    const k = KINDS[pc.kind] || {}, type = K.byId.types.has(k.type) ? k.type : newItem().type;
+    const photo = { id: await Photos.add(new File([pc.blob], 'crop.png', { type: 'image/png' })), role: 'crop', ...(pc.vec ? { vec: packVec(pc.vec) } : {}) };
+    const it = { id: uid(), added: now(), name: `${k.name || kname('types', type)}, worn ${at}`, type, colours: await guessColours(pc.blob).catch(() => []), photos: [photo], followUp: true };
+    put('items', it); chosen.add(it.id);
+  }
+  // Each confirmed match remembers what it looked like worn, so it's easier to recognise next time
+  for (const [id, vec] of learn) { const it = itemById(id); if (it) put('items', { ...it, seen: [packVec(vec), ...(it.seen || [])].slice(0, MATCH.seen) }); }
+  const ids = [...chosen], same = doc.outfits.find(o => (o.items || []).length === ids.length && ids.every(id => o.items.includes(id)));
+  const worn = { id: w.photo, role: 'worn' }, styles = [...w.styles].filter(wordById);
+  let outfit;
+  if (same) { outfit = same.id; put('outfits', { ...same, photos: [...(same.photos || []), worn], ...(styles.length ? { words: [...new Set([...(same.words || []), ...styles])] } : {}) }); }
+  else { outfit = uid(); put('outfits', { id: outfit, name: ($('#wName').value || '').trim() || `Worn ${at}`, items: ids, photos: [worn], source: 'photo', ...(styles.length ? { words: styles } : {}) }); }
+  put('wears', { id: uid(), at, outfit, source: 'photo', photo: w.photo });
+  closeDrawer(); tab = 'worn'; lsSet(TAB_KEY, tab); render();
+  toast(`Logged ${ids.length} item${ids.length > 1 ? 's' : ''} for ${at}${make.length ? `. ${make.length} new item${make.length > 1 ? 's' : ''} need${make.length > 1 ? '' : 's'} a clean photo (Closet › Needs a clean photo)` : ''}`, 5000);
+}
 /* ---------- Filters ---------- */
 // AND across dimensions, OR within one. State lives in settings.filters and syncs.
 const F = () => doc.settings.filters || {};
+// Closet review: what an item still lacks, from the checks in MISSING (filters.missing holds the picked ones)
+const MISSING = { photo: 'Photo', price: 'Price', gender: 'Gender', size: 'Size', colour: 'Colour', purchased: 'Purchase date' };
+const LACKS = {
+  photo: it => !(it.photos || []).length, price: it => !hasPrice(it), gender: it => !(it.gender || []).length,
+  size: it => !(it.sizes || []).some(z => String(z.value || '').trim()), colour: it => !(it.colours || []).length, purchased: it => !it.purchased
+};
+const lacks = it => Object.keys(MISSING).filter(k => LACKS[k](it));
+let reviewOpen = false;
+function reviewBar(f) {
+  if (!reviewOpen && !(f.missing || []).length) return '';
+  const pool = doc.items.filter(it => matches(it, { ...f, missing: [] })), sel = f.missing || [];
+  return `<div class="bar review-bar" role="group" aria-label="Review: show items missing">
+    <span class="small muted">Missing:</span>
+    <div class="chips">${Object.entries(MISSING).map(([k, v]) => { const n = pool.filter(LACKS[k]).length; return `<button type="button" class="chip" data-miss="${k}" aria-pressed="${sel.includes(k)}">${esc(v)}<span class="n">${n}</span></button>`; }).join('')}</div>
+    <span class="small muted">${sel.length ? `Items missing any of these. Tap one to fill it in.` : 'Pick one or more.'}</span>
+    <span class="grow"></span><button type="button" class="btn ghost sm" data-act="review-done">Done reviewing</button>
+  </div>`;
+}
 function matches(it, f = F()) {
   if (!visible(it)) return false;
   if (f.group && typeGroup(it.type) !== f.group && it.type !== f.group) return false;
@@ -439,17 +1083,72 @@ function matches(it, f = F()) {
   }
   const fw = (f.words || []).filter(wordById);
   if (fw.length && !(it.words || []).some(w => fw.includes(w))) return false;
-  if (f.size && !(it.sizes || []).some(s => String(s.value).toLowerCase() === f.size.toLowerCase())) return false;
+  if (typeof f.size === 'string' && f.size && !(it.sizes || []).some(s => String(s.value).toLowerCase() === f.size.toLowerCase())) return false; // until migrated
+  if (f.sizes && f.sizes.length) { const want = new Set(f.sizes.map(k => k.toLowerCase())); if (!(it.sizes || []).some(z => want.has(sizeKey(z).toLowerCase()))) return false; }
   if (f.spicyOnly && !it.spicy) return false;
+  if (f.followUp && !it.followUp) return false;
+  if (f.missing && f.missing.length && !lacks(it).some(k => f.missing.includes(k))) return false;
   if (f.q) { const q = f.q.toLowerCase(); if (![it.name, it.brand, it.notes, kname('types', it.type), ...wordsOf(it).map(w => w.name)].some(s => s && s.toLowerCase().includes(q))) return false; }
   return true;
 }
+// Size filter: picked sizes as "system:value" (OR among them, case-insensitive), from the sizes on visible items
+const sizeKey = z => `${z.system || ''}:${String(z.value == null ? '' : z.value).trim()}`;
+function sizeChoices() {
+  const by = new Map();
+  for (const it of doc.items.filter(visible)) for (const z of it.sizes || []) {
+    if (!String(z.value || '').trim()) continue;
+    const k = sizeKey(z), lk = k.toLowerCase(), m = by.get(z.system || '') || by.set(z.system || '', new Map()).get(z.system || '');
+    const e = m.get(lk) || m.set(lk, { key: k, value: String(z.value).trim(), ids: new Set() }).get(lk); e.ids.add(it.id);
+  }
+  const order = [...K.sizeSystems.map(x => x.id), ...[...by.keys()].filter(k => !K.byId.sizeSystems.has(k))];
+  return order.filter(id => by.has(id)).map(id => {
+    const sys = K.byId.sizeSystems.get(id) || {}, vals = [...by.get(id).values()];
+    const pos = v => (sys.values || []).findIndex(x => x.toLowerCase() === v.toLowerCase());
+    vals.sort((a, b) => sys.values ? (pos(a.value) < 0 ? 999 : pos(a.value)) - (pos(b.value) < 0 ? 999 : pos(b.value)) || a.value.localeCompare(b.value)
+      : a.value.localeCompare(b.value, undefined, { numeric: true, sensitivity: 'base' }));
+    return { id, name: sys.name || id || 'Other', vals };
+  });
+}
+// An older device saved the size filter as one typed value (filters.size): turn it into the matching picks, or drop it
+function migrateSizeFilter() {
+  const f = F(); if (typeof f.size !== 'string') return;
+  const want = f.size.trim().toLowerCase(), have = new Set((f.sizes || []).map(k => k.toLowerCase()));
+  const add = want ? sizeChoices().flatMap(g => g.vals).filter(v => v.value.toLowerCase() === want && !have.has(v.key.toLowerCase())).map(v => v.key) : [];
+  const { size, ...rest } = f; setSetting('filters', { ...rest, sizes: [...(f.sizes || []), ...add] });
+}
+let sizePopOpen = false;
+function sizePicker(f) {
+  const groups = sizeChoices(), sel = (f.sizes || []).map(k => k.toLowerCase());
+  if (!groups.length && !sel.length) return '';
+  const picked = groups.flatMap(g => g.vals).filter(v => sel.includes(v.key.toLowerCase())).map(v => v.value);
+  const label = !sel.length ? 'Size' : picked.length && picked.length <= 3 ? `Size: ${picked.join(', ')}` : `Size: ${sel.length}`;
+  return `<div class="szpick"><button type="button" class="chip" id="fSizeBtn" aria-haspopup="dialog" aria-expanded="${sizePopOpen}" aria-controls="fSizePop" aria-pressed="${!!sel.length}">${esc(label)} ▾</button>
+    <div class="szpop" id="fSizePop" role="dialog" aria-label="Sizes"${sizePopOpen ? '' : ' hidden'}>${groups.map(g => `<h4 class="shelf-h">${esc(g.name)}</h4><div class="chips">${g.vals.map(v => `<button type="button" class="chip" data-fsize="${esc(v.key)}" aria-pressed="${sel.includes(v.key.toLowerCase())}">${esc(v.value)}<span class="n">${v.ids.size}</span></button>`).join('')}</div>`).join('') || '<p class="small muted">None of your items has a size yet.</p>'}
+    ${sel.length ? '<div class="row" style="margin-top:10px"><button type="button" class="btn ghost sm" data-fsize="">Clear sizes</button></div>' : ''}</div></div>`;
+}
+function setSizePop(open) {
+  sizePopOpen = open; const pop = $('#fSizePop'), btn = $('#fSizeBtn'); if (!pop) return;
+  pop.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+  if (open) { const c = $('[data-fsize]', pop); if (c) c.focus(); } else btn.focus();
+}
+document.addEventListener('click', e => {
+  if (!$('#fSizeBtn')) return;
+  if (e.target.closest('#fSizeBtn')) return setSizePop(!sizePopOpen);
+  const c = e.target.closest('[data-fsize]');
+  if (c) {
+    const k = c.dataset.fsize, cur = (F().sizes || []), on = cur.some(x => x.toLowerCase() === k.toLowerCase());
+    setFilter('sizes', !k ? [] : on ? cur.filter(x => x.toLowerCase() !== k.toLowerCase()) : [...cur, k]);
+    const again = k && $(`#fSizePop [data-fsize="${CSS.escape(k)}"]`); if (again) again.focus(); else if ($('#fSizePop [data-fsize]')) $('#fSizePop [data-fsize]').focus();
+    return;
+  }
+  if (sizePopOpen && !e.target.closest('#fSizePop')) setSizePop(false);
+});
 function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); }
 
 /* ---------- Sort and group ---------- */
 // The closet's order and shelves. Saved as settings.sort, settings.sortReverse and settings.groupBy, so they sync.
 // Each sort has a natural direction (newest, most worn, A to Z); Reverse flips it.
-const SORTS = { added: 'Date added', worn: 'Last worn', wears: 'Most worn', name: 'Name', colour: 'Colour', type: 'Type' };
+const SORTS = { added: 'Date added', worn: 'Last worn', wears: 'Most worn', name: 'Name', colour: 'Colour', type: 'Type', price: 'Price: high to low', priceLow: 'Price: low to high' };
 const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', words: 'Wardrobe word', size: 'Size' };
 const idx = (list, id) => { const i = list.findIndex(x => x.id === id); return i < 0 ? 1e6 : i; };
 // An imported item keeps the date it was first added in its source; items made before 'added' existed keep closet order
@@ -461,6 +1160,7 @@ function wearStats() {
   doc.wears.forEach(w => { if (w.item) bump(w.item, w.at); if (w.outfit) (outfits.get(w.outfit) || []).forEach(id => bump(id, w.at)); });
   return m;
 }
+const hasPrice = it => it.price != null && it.price !== '' && Number.isFinite(+it.price);
 function sortItems(items) {
   const by = SORTS[doc.settings.sort] ? doc.settings.sort : 'added', ws = by === 'worn' || by === 'wears' ? wearStats() : null;
   const name = it => (it.name || kname('types', it.type)).toLowerCase(), pos = new Map(doc.items.map((it, i) => [it.id, i]));
@@ -470,12 +1170,30 @@ function sortItems(items) {
     wears: (a, b) => ws.get(b.id).n - ws.get(a.id).n,
     name: () => 0,
     colour: (a, b) => idx(K.colours, (a.colours || [])[0]) - idx(K.colours, (b.colours || [])[0]),
-    type: (a, b) => idx(K.types, a.type) - idx(K.types, b.type)
+    type: (a, b) => idx(K.types, a.type) - idx(K.types, b.type),
+    price: (a, b) => (+b.price || 0) - (+a.price || 0),
+    priceLow: (a, b) => (+a.price || 0) - (+b.price || 0)
   }[by];
   const out = [...items].sort((a, b) => key(a, b) || name(a).localeCompare(name(b)));
-  return doc.settings.sortReverse ? out.reverse() : out;
+  if (doc.settings.sortReverse) out.reverse();
+  // Sorting by price: items with no price go last, whichever way round
+  return by === 'price' || by === 'priceLow' ? [...out.filter(hasPrice), ...out.filter(it => !hasPrice(it))] : out;
 }
 // Returns [{key, label, items}] in a sensible order; items with several colours or gender tags sit on each matching shelf
+// A gender tag's label: a built-in tag with its emoji (data/gender-tags.json), or a tag someone typed, as typed
+const gname = id => { const g = K.byId.genderTags.get(id); return g ? [g.emoji, g.name].filter(Boolean).join(' ') : id; };
+// A colour family as a swatch: the fill (the family's own colour, else its first; metallic and pattern get a gradient)
+// and the label colour, dark or white, whichever contrasts more with every colour in the fill (WCAG, at least 4.5:1)
+const lum = hex => { const v = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+const FAM_GRADIENT = { metallic: ['#c0c4c8', '#f4f4f4', '#c9a227'], pattern: ['#f08fb2', '#f4c430', '#8fd19e', '#a9cce3', '#c3a6e0'] };
+function famSwatch(fam) {
+  const own = K.colours.filter(c => c.family === fam), one = own.find(c => c.id === fam) || own[0];
+  const stops = FAM_GRADIENT[fam] || (one ? [one.hex] : ['#888888']);
+  const fill = stops.length > 1 ? `linear-gradient(90deg,${stops.join(',')})` : stops[0];
+  const ls = stops.map(lum), ink = Math.min(...ls.map(l => ratio(l, 0))), white = Math.min(...ls.map(l => ratio(l, 1)));
+  return { fill, on: ink >= white ? '#000000' : '#ffffff', light: Math.min(...ls) > 0.75, dark: Math.max(...ls) < 0.03 };
+}
 function groupItems(items) {
   const g = GROUPS[doc.settings.groupBy] ? doc.settings.groupBy : '';
   if (!g) return [{ key: '', label: '', items }];
@@ -490,7 +1208,7 @@ function groupItems(items) {
   }[g];
   const label = {
     category: k => kname('types', k), type: k => kname('types', k), colour: k => k[0].toUpperCase() + k.slice(1),
-    gender: k => K.byId.genderTags.has(k) ? kname('genderTags', k) : k, words: k => { const w = wordById(k); return w ? [w.emoji, w.name].filter(Boolean).join(' ') : k; }, size: k => k
+    gender: gname, words: k => { const w = wordById(k); return w ? [w.emoji, w.name].filter(Boolean).join(' ') : k; }, size: k => k
   }[g];
   const rank = {
     category: k => idx(K.types, k), type: k => idx(K.types, k), colour: k => fams.indexOf(k), gender: k => idx(K.genderTags, k), words: () => 0,
@@ -684,10 +1402,11 @@ function card(it, pressed) {
   const p = coverPhoto(it), sub = [kname('types', it.type), it.brand].filter(Boolean).join(' · ');
   return `<li><button type="button" class="card" data-item="${esc(it.id)}"${pressed == null ? '' : ` aria-pressed="${pressed}"`}>
     <span class="ph">${p ? `<img alt="" data-photo="${esc(p.id)}"${p.role === 'cutout' ? ' class="cut"' : ''}>` : 'No photo'}</span>
-    <span class="cap"><b>${esc(it.name || kname('types', it.type))}${wordsOf(it).some(w => w.emoji) ? ` <span class="wemoji" title="${esc(wordsOf(it).map(w => w.name).join(', '))}">${esc(wordsOf(it).map(w => w.emoji).filter(Boolean).join(''))}</span>` : ''}</b><span>${(it.colours || []).slice(0, 3).map(c => `<i class="swatch" style="background:${esc((K.byId.colours.get(c) || {}).hex || '#888')}"></i>`).join(' ')} ${esc(sub)}${it.spicy ? ' <span class="spicy-tag">· spicy</span>' : ''}</span></span>
-  </button></li>`;
+    <span class="cap"><b>${esc(it.name || kname('types', it.type))}${wordsOf(it).some(w => w.emoji) ? ` <span class="wemoji" title="${esc(wordsOf(it).map(w => w.name).join(', '))}">${esc(wordsOf(it).map(w => w.emoji).filter(Boolean).join(''))}</span>` : ''}</b><span>${(it.colours || []).slice(0, 3).map(c => `<i class="swatch" style="background:${esc((K.byId.colours.get(c) || {}).hex || '#888')}"></i>`).join(' ')} ${esc(sub)}${it.spicy ? ' <span class="spicy-tag">· spicy</span>' : ''}${it.followUp ? ' <span class="follow-tag">· needs a clean photo</span>' : ''}</span>${(F().missing || []).length && lacks(it).length ? `<span class="miss-tag">No ${esc(lacks(it).map(k => MISSING[k].toLowerCase()).join(', '))}</span>` : ''}</span>
+  </button>${zoomBtn(it)}</li>`;
 }
 function renderCloset() {
+  migrateSizeFilter();
   const f = F(), items = sortItems(doc.items.filter(it => matches(it))), st = doc.settings;
   const groups = K.types.filter(t => !t.parent && (doc.settings.showSpicy || !t.spicy));
   const fams = [...new Set(K.colours.map(c => c.family))];
@@ -703,14 +1422,16 @@ function renderCloset() {
   <div class="bar" role="group" aria-label="Filters">
     <label class="sr-only" for="fGroup">Item type</label>
     <select id="fGroup"><option value="">All types</option>${groups.map(g => `<option value="${g.id}"${f.group === g.id ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</select>
-    <label class="sr-only" for="fSize">Size</label>
-    <input type="text" id="fSize" placeholder="Size" value="${esc(f.size || '')}" style="width:80px">
-    <div class="chips">${fams.map(x => `<button type="button" class="chip" data-fam="${x}" aria-pressed="${(f.families || []).includes(x)}">${esc(x)}</button>`).join('')}</div>
-    <div class="chips">${gtags.map(x => `<button type="button" class="chip" data-gender="${esc(x)}" aria-pressed="${(f.gender || []).includes(x)}">${esc(K.byId.genderTags.has(x) ? kname('genderTags', x) : x)}</button>`).join('')}</div>
+    ${sizePicker(f)}
+    <div class="chips">${fams.map(x => { const w = famSwatch(x); return `<button type="button" class="chip fam${w.light ? ' fam-light' : ''}${w.dark ? ' fam-dark' : ''}" data-fam="${x}" aria-pressed="${(f.families || []).includes(x)}" style="--fill:${w.fill};--on:${w.on}">${esc(x)}</button>`; }).join('')}</div>
+    <div class="chips">${gtags.map(x => `<button type="button" class="chip" data-gender="${esc(x)}" aria-pressed="${(f.gender || []).includes(x)}">${esc(gname(x))}</button>`).join('')}</div>
     ${doc.words.length ? `<div class="chips">${sortedWords().map(w => `<button type="button" class="chip" data-fword="${esc(w.id)}" aria-pressed="${(f.words || []).includes(w.id)}">${wordChip(w)}</button>`).join('')}</div>` : ''}
     ${doc.settings.showSpicy ? `<button type="button" class="chip" data-spicy aria-pressed="${!!f.spicyOnly}">Spicy only</button>` : ''}
+    ${f.followUp || doc.items.some(it => it.followUp && visible(it)) ? `<button type="button" class="chip" data-follow aria-pressed="${!!f.followUp}">Needs a clean photo</button>` : ''}
+    <button type="button" class="chip" data-act="review" aria-pressed="${reviewOpen || !!(f.missing || []).length}" title="Find items with details still missing">✎ Review</button>
     ${Object.values(f).some(v => v && (!Array.isArray(v) || v.length)) ? '<button type="button" class="btn ghost sm" data-act="clear">Clear filters</button>' : ''}
   </div>
+  ${reviewBar(f)}
   <div class="bar" role="group" aria-label="Sort and group">
     <label class="small muted" for="sSort">Sort</label>
     <select id="sSort">${Object.entries(SORTS).map(([k, v]) => `<option value="${k}"${(st.sort || 'added') === k ? ' selected' : ''}>${v}</option>`).join('')}</select>
@@ -723,23 +1444,86 @@ function renderCloset() {
       : `<ul class="grid">${s.items.map(it => card(it)).join('')}</ul>`).join('')
     : `<div class="empty">${doc.items.length ? 'Nothing matches these filters.' : 'Your closet is empty. Add your first item, or drop a few photos here.'}</div>`}`;
 }
+/* ---------- Outfit figure ---------- */
+// An outfit laid out roughly as worn, by each item's region (data/types.json): where each band sits, in percent of a
+// 3:4 box [left, top, width, height]. Regions not listed here (bag, belt, accessory, other…) go in the side column.
+const FIG_BANDS = { hat: [34, 1, 30, 11], top: [6, 12, 70, 36], scarf: [28, 11, 34, 22], dress: [14, 12, 56, 62], bottom: [14, 45, 56, 38], shoes: [14, 82, 56, 17] };
+const FIG_REGION = { hat: 'hat', top: 'top', scarf: 'scarf', dress: 'dress', bottom: 'bottom', skirt: 'bottom', shoes: 'shoes' };
+const FIG_SIDE = [78, 6, 20, 88];
+// In the top band, outer layers go behind (left)
+const figLayer = it => (typeGroup(it.type) === 'outerwear' ? 0 : 1);
+function outfitFigure(o, size = 'lg') {
+  const items = (o.items || []).map(itemById).filter(it => it && visible(it));
+  const bands = new Map(), side = [];
+  for (const it of items) { const b = FIG_REGION[regionOf(it.type)]; if (b) (bands.get(b) || bands.set(b, []).get(b)).push(it); else side.push(it); }
+  // A piece placed by hand (outfit.layout, from Arrange) keeps its place and stacking; the rest go by region
+  const L = o.layout || {}, num = (v, d) => (Number.isFinite(+v) ? +v : d);
+  const edit = size === 'lg' ? it => ` tabindex="0" role="button" aria-label="Edit ${esc(itemLabel(it))}" title="Double-click to edit ${esc(itemLabel(it))}"` : () => '';
+  const piece = (it, [l, t, w, h], z) => { const p = coverPhoto(it), st = L[it.id];
+    const style = st ? `left:${num(st.x, l)}%;top:${num(st.y, t)}%;width:${num(st.w, w)}%;z-index:${num(st.z, z)}` : `left:${l}%;top:${t}%;width:${w}%;height:${h}%;z-index:${z}`;
+    return `<span${st ? ' class="lay"' : ''} data-lay-item="${esc(it.id)}"${edit(it)} style="${style}">${p ? `<img alt="" data-photo="${esc(p.id)}">` : `<i class="fig-ph">${esc(itemLabel(it))}</i>`}</span>`; };
+  let z = 1; const out = [];
+  // Drawn top to bottom, so lower bands overlap the hem of the one above a little, like a flat lay; a scarf lies over the neckline
+  for (const band of ['dress', 'top', 'bottom', 'shoes', 'scarf', 'hat']) {
+    const list = (bands.get(band) || []).sort((a, b) => figLayer(a) - figLayer(b)); if (!list.length) continue;
+    const [L, T, W, H] = FIG_BANDS[band], n = list.length, w = W / (1 + (n - 1) * 0.6);
+    list.forEach((it, i) => out.push(piece(it, [L + i * w * 0.6, T, w, H], z++)));
+  }
+  if (side.length) { const [L, T, W, H] = FIG_SIDE, h = Math.min(H / side.length, 24); side.forEach((it, i) => out.push(piece(it, [L, T + i * (h + 1), W, h], z++))); }
+  const names = items.map(itemLabel).join(', ');
+  return `<div class="fig fig-${size}" role="img" aria-label="${esc(names ? `The outfit as worn: ${names}` : 'No items yet')}">${out.join('') || (size === 'lg' ? '<span class="fig-empty">No items yet</span>' : '')}</div>`;
+}
+const outfitWears = id => doc.wears.filter(w => w.outfit === id).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+// The photo of one wearing: its own (wear.photo), or, for wears logged before that existed, the outfit's one worn photo
+// no wear claims, when exactly one of its wears came from a photo without saying which
+function wearPhoto(o, w) {
+  if (w.photo) return w.photo;
+  if (w.source !== 'photo') return null;
+  const free = (o.photos || []).filter(p => p.role === 'worn' && !doc.wears.some(x => x.photo === p.id));
+  const unlinked = doc.wears.filter(x => x.outfit === o.id && x.source === 'photo' && !x.photo);
+  return free.length === 1 && unlinked.length === 1 ? free[0].id : null;
+}
 function renderOutfits() {
   const outfits = doc.outfits.filter(o => (o.items || []).every(id => { const it = itemById(id); return !it || visible(it); }));
   $('#main').innerHTML = `
   <div class="bar"><button type="button" class="btn primary" data-act="new-outfit">New outfit</button></div>
-  ${outfits.length ? `<div class="stack">${outfits.map(o => `<button type="button" class="panel card" data-outfit="${esc(o.id)}" style="padding:12px 14px">
-      <span><b>${esc(o.name || 'Outfit')}</b> <span class="muted small">${esc((o.occasions || []).map(x => kname('occasions', x)).join(', '))}</span></span>
-      <span class="minis">${(o.items || []).map(itemById).filter(Boolean).slice(0, 8).map(it => { const p = coverPhoto(it); return p ? `<img alt="" data-photo="${esc(p.id)}">` : '<i></i>'; }).join('')}</span>
-    </button>`).join('')}</div>` : '<div class="empty">No outfits yet. Put a few items together and save them as an outfit.</div>'}`;
+  ${outfits.length ? `<ul class="ogrid">${outfits.map(o => { const ws = outfitWears(o.id), n = (o.items || []).map(itemById).filter(it => it && visible(it)).length, name = o.name || 'Outfit';
+      // The photo from the latest wearing that has one, else the last worn photo added
+      const lw = ws.find(w => wearPhoto(o, w)), last = (lw && wearPhoto(o, lw)) || ((o.photos || []).filter(p => p.role === 'worn').slice(-1)[0] || {}).id;
+      return `<li class="ocard-wrap"><button type="button" class="card ocard" data-outfit="${esc(o.id)}">${outfitFigure(o, 'md')}
+      <span class="txt"><b>${esc(name)}</b><span class="muted small">${esc([`${n} item${n === 1 ? '' : 's'}`, ...(o.occasions || []).map(x => kname('occasions', x))].join(' · '))}</span><span class="muted small">${ws.length ? `Worn ${ws.length}×, last ${esc((ws[0].at || '').slice(0, 10))}` : 'Not worn yet'}</span>${wordsOf(o).length ? `<span class="owords">${wordsOf(o).map(w => `<span class="wtag">${wordChip(w)}</span>`).join('')}</span>` : ''}</span>
+    </button>${last ? `<button type="button" class="worn-mini" data-zoom="${esc(last)}" data-zoom-outfit="${esc(o.id)}" data-zoom-label="${esc(name)}, as worn" aria-label="Look closer at ${esc(name)} as worn" title="Look closer"><img alt="" data-photo="${esc(last)}"></button>` : ''}</li>`; }).join('')}</ul>` : '<div class="empty">No outfits yet. Put a few items together and save them as an outfit.</div>'}`;
+}
+// One wear in the log: its name (opens the outfit or the item), × to remove it, and pictures of what was worn: that
+// day's photo first, then the items (tap one for a close-up), at most WLOG_THUMBS of them
+const WLOG_THUMBS = 6;
+function wearEntry(w) {
+  const o = w.outfit && doc.outfits.find(x => x.id === w.outfit), single = !w.outfit && itemById(w.item);
+  const items = (o ? (o.items || []).map(itemById) : [single]).filter(it => it && visible(it));
+  const ph = o ? wearPhoto(o, w) : w.photo, day = esc((w.at || '').slice(0, 10)), name = o ? (o.name || 'Outfit') : single ? itemLabel(single) : (w.outfit ? 'Outfit' : 'Item');
+  const open = o ? `data-outfit="${esc(o.id)}"` : single ? `data-item="${esc(single.id)}"` : 'disabled';
+  const thumb = it => { const p = coverPhoto(it); return p ? `<button type="button" class="wthumb" data-zoom="${esc(p.id)}" data-zoom-item="${esc(it.id)}" title="${esc(itemLabel(it))}" aria-label="Look closer at ${esc(itemLabel(it))}"><img alt="" data-photo="${esc(p.id)}"></button>` : `<i class="wthumb" title="${esc(itemLabel(it))}"></i>`; };
+  return `<div class="wentry"><div class="wtop"><button type="button" class="wname" ${open}>${esc(name)}</button><button type="button" class="btn ghost sm" data-unwear="${esc(w.id)}" aria-label="Remove ${esc(name)} on ${day}">×</button></div>
+    ${ph || items.length ? `<div class="wthumbs">${ph ? `<img alt="Worn ${day}" class="zoomable worn-ph" data-photo="${esc(ph)}">` : ''}${items.slice(0, WLOG_THUMBS).map(thumb).join('')}${items.length > WLOG_THUMBS ? `<span class="more-n">+${items.length - WLOG_THUMBS}</span>` : ''}</div>` : ''}</div>`;
+}
+// The log, newest first, with wears of the same day together under that date
+function wearLog(wears) {
+  const days = [];
+  for (const w of wears) { const d = (w.at || '').slice(0, 10), last = days[days.length - 1]; if (last && last.d === d) last.ws.push(w); else days.push({ d, ws: [w] }); }
+  return days.map(({ d, ws }) => `<div class="wlog-day"><h4>${esc(d)}</h4>${ws.map(wearEntry).join('')}</div>`).join('');
 }
 function renderWorn() {
-  const wears = [...doc.wears].filter(w => { const it = w.item && itemById(w.item); return !it || visible(it); }).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+  const wears = [...doc.wears].filter(w => {
+    if (w.item) { const it = itemById(w.item); return !it || visible(it); }
+    const o = w.outfit && doc.outfits.find(x => x.id === w.outfit), its = o ? (o.items || []).map(itemById).filter(Boolean) : [];
+    return !its.length || its.some(visible);
+  }).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
   const items = doc.items.filter(visible);
   const counts = new Map(items.map(it => [it.id, wearsOf(it.id).length]));
   const cpw = items.filter(it => it.price > 0 && counts.get(it.id)).map(it => ({ it, v: it.price / counts.get(it.id) })).sort((a, b) => b.v - a.v);
   const least = [...items].sort((a, b) => counts.get(a.id) - counts.get(b.id)).slice(0, 6);
   $('#main').innerHTML = `
-  <div class="bar"><button type="button" class="btn primary" data-act="log-wear">Log what I wore</button></div>
+  <div class="bar"><button type="button" class="btn primary" data-act="log-wear">Log what I wore</button>${Recognise.supported ? '<button type="button" class="btn" data-act="wore-photo">From a photo</button><span class="small muted fine-only">or drop a photo of your outfit here</span>' : ''}</div>
   <div class="stats" style="margin-bottom:16px">
     <div class="stat panel"><b>${items.length}</b><span>Items</span></div>
     <div class="stat panel"><b>${doc.outfits.length}</b><span>Outfits</span></div>
@@ -747,7 +1531,7 @@ function renderWorn() {
     <div class="stat panel"><b>${items.filter(it => !counts.get(it.id)).length}</b><span>Never worn</span></div>
   </div>
   <div class="two">
-    <section class="panel stack"><h3>Wear log</h3>${wears.length ? wears.slice(0, 60).map(w => `<div class="entry"><span>${esc(w.outfit ? ((doc.outfits.find(o => o.id === w.outfit) || {}).name || 'Outfit') : (itemById(w.item) || {}).name || 'Item')}</span><span class="meta mono">${esc((w.at || '').slice(0, 10))} <button type="button" class="btn ghost sm" data-unwear="${esc(w.id)}" aria-label="Remove">×</button></span></div>`).join('') : '<p class="muted">Nothing logged yet.</p>'}</section>
+    <section class="panel stack"><h3>Wear log</h3>${wears.length ? wearLog(wears.slice(0, 60)) : '<p class="muted">Nothing logged yet.</p>'}</section>
     <section class="panel stack"><h3>Least worn</h3>${least.map(it => `<div class="entry"><span>${esc(it.name || kname('types', it.type))}</span><span class="meta">${counts.get(it.id)}×</span></div>`).join('') || '<p class="muted">Add items to see this.</p>'}
       <h3>Cost per wear</h3>${cpw.slice(0, 6).map(({ it, v }) => `<div class="entry"><span>${esc(it.name || kname('types', it.type))}</span><span class="meta mono">${v.toFixed(2)}</span></div>`).join('') || '<p class="muted">Add a price to an item and log a wear to see this.</p>'}</section>
   </div>`;
@@ -787,6 +1571,12 @@ function renderSettings() {
     <p class="small muted">Makes a cut-out of each item’s main photo, right here on your device: the photo is never sent anywhere for this. The first time, the browser downloads the model (tens of MB) and keeps it, so later cut-outs work offline. The original photo is always kept, and any photo has a <i>Clean background</i> button in the item form.</p>`
     : '<p class="small muted">This browser can’t run the clean-background model (it needs Web Workers and OffscreenCanvas).</p>'}
   </section>
+  <section class="panel stack"><h3>What I wore, from a photo</h3>
+    ${Recognise.supported ? (() => { const all = doc.items.filter(it => (it.photos || []).length), ready = all.filter(it => itemVecs(it).length).length; return `<p class="small muted">On the <i>Worn</i> tab, <i>From a photo</i> finds the clothes in a photo of your outfit and suggests the matching closet items, right here on your device: the photo is never sent anywhere for this. You confirm before anything is logged. The first time, the browser downloads two models (about 140 MB, more on a computer with WebGPU) and keeps them, so later it works offline.</p>
+    <p class="small">${ready} of ${all.length} items with photos are ready for matching.</p>
+    ${ready < all.length ? '<div class="row"><button type="button" class="btn" data-act="index">Get the closet ready now</button></div><p class="small muted">Only photos stored in this browser can be prepared here. The rest get ready the next time you open the app where they were added.</p>' : ''}`; })()
+    : '<p class="small muted">This browser can’t run the recognition models (they need Web Workers and OffscreenCanvas).</p>'}
+  </section>
   <section class="panel stack"><h3>Backup</h3>
     <p class="small muted">The backup is the same open JSON as the Drive file. Importing merges it in; nothing is overwritten.</p>
     <div class="row"><button type="button" class="btn" data-act="export">Export backup</button><button type="button" class="btn" data-act="import">Import backup</button></div>
@@ -803,14 +1593,116 @@ function openDrawer(html) {
   fillThumbs($('#layer'));
   const f = $('#layer input,#layer select,#layer textarea'); if (f) f.focus();
 }
-function closeDrawer() { $('#layer').innerHTML = ''; editing = null; }
+function closeDrawer() {
+  if (typeof Arrange !== 'undefined' && Arrange.on) Arrange.stop();
+  const back = outfitReturn && editing && editing.id === outfitReturn.item ? outfitReturn.outfit : null; outfitReturn = null;
+  $('#layer').innerHTML = ''; editing = null;
+  // An item opened from an outfit's figure goes back to that outfit when it's saved or closed
+  if (back) { const o = doc.outfits.find(x => x.id === back); if (o) { render(); outfitForm(structuredClone(o)); } }
+  if (wore) { wore.pieces.forEach(pc => URL.revokeObjectURL(pc.url)); URL.revokeObjectURL(wore.url); if (!wore.saved) Photos.drop(wore.photo); wore = null; } // a cancelled What I wore keeps nothing
+}
+/* ---------- Close-up ---------- */
+// Any item photo opens full size over everything else: tap or click to zoom in at that spot (again to zoom out), drag or
+// scroll to look around, arrows for the item's other photos, and Esc, × or a tap beside the photo to close
+const Zoom = (() => {
+  let el = null, set = [], at = 0, label = '', back = null, own = '', drag = null, seq = 0, pushed = false;
+  const q = s => el.querySelector(s);
+  async function show() {
+    const view = q('.zoom-view'), img = q('img'), p = set[at], n = ++seq;
+    view.classList.remove('big'); img.style.width = ''; img.classList.toggle('cut', !!p.cut);
+    if (own) { URL.revokeObjectURL(own); own = ''; }
+    let u = p.src || '';
+    if (!u) { const b = await Photos.full(p.id); if (b) u = own = URL.createObjectURL(b); else u = await Photos.thumb(p.id) || GPhotos.direct(p.id) || ''; }
+    if (n !== seq || !el) { if (u && u === own && !el) URL.revokeObjectURL(u); return; }
+    img.src = u; img.alt = label || 'Photo';
+    q('.zoom-cap').textContent = [label, set.length > 1 ? `${at + 1} / ${set.length}` : ''].filter(Boolean).join(' · ');
+    q('[data-zstep="-1"]').hidden = q('[data-zstep="1"]').hidden = set.length < 2;
+  }
+  function toggle(e) {
+    const view = q('.zoom-view'), img = q('img');
+    if (view.classList.contains('big')) { view.classList.remove('big'); img.style.width = ''; return; }
+    const r = img.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height;
+    const w = Math.max(img.naturalWidth || 0, r.width * 2.5);
+    view.classList.add('big'); img.style.width = w + 'px';
+    const h = img.getBoundingClientRect().height;
+    view.scrollLeft = fx * w - view.clientWidth / 2; view.scrollTop = fy * h - view.clientHeight / 2;
+  }
+  const move = e => { if (!drag || !el) return; const v = q('.zoom-view'), dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 4) drag.moved = true; v.scrollLeft = drag.l - dx; v.scrollTop = drag.t - dy; };
+  const up = () => setTimeout(() => { drag = null; });
+  // byHistory: closed by the browser's Back, so its history entry is already gone; otherwise take back the one open() added
+  function close(byHistory = false) {
+    if (!el) return; if (own) URL.revokeObjectURL(own); own = ''; el.remove(); el = null; seq++;
+    removeEventListener('pointermove', move); removeEventListener('pointerup', up);
+    if (pushed) { pushed = false; if (!byHistory) history.back(); }
+    if (back && back.isConnected) back.focus(); back = null;
+  }
+  // The phone's Back gesture closes the close-up instead of leaving the app
+  addEventListener('popstate', () => { if (el) close(true); });
+  function open(photos, start = 0, name = '', from = null) {
+    if (!photos.length || el) return;
+    set = photos; at = Math.min(Math.max(0, start), photos.length - 1); label = name; back = from;
+    el = document.createElement('div'); el.className = 'zoom'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Photo close-up');
+    el.innerHTML = `<button type="button" class="zoom-x" data-zclose><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>Close</button><div class="zoom-view"><img alt="" draggable="false"></div><div class="zoom-bar"><span class="zoom-cap"></span><span class="zoom-hint"><span class="fine">Tap outside or press Esc to close</span><span class="touch">Tap outside to close</span></span><button type="button" data-zstep="-1" aria-label="Previous photo">‹</button><button type="button" data-zstep="1" aria-label="Next photo">›</button></div>`;
+    document.body.append(el);
+    try { history.pushState({ zoom: true }, ''); pushed = true; } catch (e) { pushed = false; }
+    const view = q('.zoom-view'), img = q('img');
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      if (e.target.closest('[data-zclose]')) return close();
+      const s = e.target.closest('[data-zstep]'); if (s) { at = (at + +s.dataset.zstep + set.length) % set.length; return show(); }
+      if (e.target === img) { if (drag && drag.moved) return; return toggle(e); }
+      if (e.target === view) close();
+    });
+    // A mouse drags the zoomed photo around; touch scrolls it natively
+    img.addEventListener('pointerdown', e => { drag = e.pointerType === 'mouse' && view.classList.contains('big') ? { x: e.clientX, y: e.clientY, l: view.scrollLeft, t: view.scrollTop, moved: false } : null; });
+    addEventListener('pointermove', move); addEventListener('pointerup', up);
+    show(); q('[data-zclose]').focus();
+  }
+  // Keys while it's open: Esc closes it (not the drawer behind), arrows step through, Tab stays inside
+  function key(e) {
+    if (!el) return false;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+    else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && set.length > 1) { at = (at + (e.key === 'ArrowRight' ? 1 : -1) + set.length) % set.length; show(); }
+    else if (e.key === 'Tab') { const b = [...el.querySelectorAll('button:not([hidden])')], i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? -1 : 1) + b.length) % b.length].focus(); }
+    return true;
+  }
+  return { open, close, key, get isOpen() { return !!el; } };
+})();
+// The magnifier on a card, tile or row opens that item's photos; a photo marked zoomable opens itself (and its neighbours)
+document.addEventListener('click', e => {
+  if (Zoom.isOpen) return;
+  const b = e.target.closest('[data-zoom]'), im = !b && e.target.closest('img.zoomable');
+  if (!b && !im) return;
+  e.preventDefault(); e.stopPropagation();
+  if (b) {
+    const it = itemById(b.dataset.zoomItem), wo = b.dataset.zoomOutfit && doc.outfits.find(x => x.id === b.dataset.zoomOutfit), wp = wo ? (wo.photos || []).filter(p => p.role === 'worn') : [];
+    const ps = it && (it.photos || []).length ? it.photos : wp.some(p => p.id === b.dataset.zoom) ? wp : [{ id: b.dataset.zoom }];
+    return Zoom.open(ps.map(p => ({ id: p.id, cut: p.role === 'cutout' })), ps.findIndex(p => p.id === b.dataset.zoom), it ? itemLabel(it) : (b.dataset.zoomLabel || ''), b);
+  }
+  const scope = im.closest('.thumbs, .wear-hist'), imgs = scope ? $$('img.zoomable', scope) : [im];
+  const name = editing ? itemLabel(editing) : (scope && scope.dataset.label) || im.alt;
+  Zoom.open(imgs.map(x => x.dataset.photo ? { id: x.dataset.photo, cut: x.classList.contains('cut') } : { src: x.src }), imgs.indexOf(im), name, im);
+}, true);
 let editing = null; // the item being edited in the drawer, if any (drops add photos to it)
+let outfitReturn = null; // { outfit, item } while an item opened from an outfit's figure is being edited
+function editFromFigure(span) {
+  const view = $('#layer [data-view-outfit]'), it = itemById(span.dataset.layItem); if (!view || !it) return;
+  const oid = view.dataset.viewOutfit; itemForm(structuredClone(it)); outfitReturn = { outfit: oid, item: it.id };
+}
+{ // mouse: double-click; touch: a tap; keyboard: Enter or Space. Never while arranging.
+  let touch = false;
+  document.addEventListener('pointerdown', e => { touch = e.pointerType === 'touch' || e.pointerType === 'pen'; }, true);
+  const target = e => { const sp = e.target.closest && e.target.closest('#layer .fig-lg [data-lay-item]'); return sp && !sp.closest('.arranging') ? sp : null; };
+  document.addEventListener('dblclick', e => { const sp = target(e); if (sp) { e.preventDefault(); editFromFigure(sp); } });
+  document.addEventListener('click', e => { const sp = target(e); if (sp && touch) editFromFigure(sp); });
+  document.addEventListener('keydown', e => { if (e.key !== 'Enter' && e.key !== ' ') return; const sp = target(e); if (sp && e.target === sp) { e.preventDefault(); editFromFigure(sp); } });
+}
 
 const checks = (name, set, list, sel = []) => `<fieldset><legend>${name}</legend><div class="checks">${list.map(x => `<label><input type="checkbox" name="${set}" value="${esc(x.id)}"${sel.includes(x.id) ? ' checked' : ''}> ${x.hex ? `<i class="swatch" style="background:${x.hex}"></i>` : ''}${esc(x.name)}</label>`).join('')}</div></fieldset>`;
 // Fem, Masc, Androgynous come built in; anything else people type becomes their own tag and is offered again
 function genderField(it) {
   const ids = [...new Set([...K.genderTags.map(g => g.id), ...doc.items.flatMap(i => i.gender || []), ...(it.gender || [])])];
-  return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}> ${esc(K.byId.genderTags.has(g) ? kname('genderTags', g) : g)}</label>`).join('')}</div>
+  return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}> ${esc(gname(g))}</label>`).join('')}</div>
     <input type="text" name="genderNew" placeholder="Add your own, separated by commas"></fieldset>`;
 }
 function wordsField(it) {
@@ -834,7 +1726,7 @@ function wordItemsForm(w) {
 }
 function thumbsHtml(it) {
   const photos = it.photos || [], hasCut = id => photos.some(p => p.role === 'cutout' && p.from === id);
-  return photos.map(p => `<figure><img alt=""${p.role === 'cutout' ? ' class="cut"' : ''} data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
+  return photos.map(p => `<figure><img alt="" class="zoomable${p.role === 'cutout' ? ' cut' : ''}" data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : p.role === 'crop' ? 'from an outfit' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && p.role !== 'crop' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
 }
 // Redraws the photo strip of the open form only, so whatever is typed in the form stays
 function refreshThumbs(itemId) {
@@ -852,13 +1744,15 @@ function itemForm(it) {
   <div class="thumbs" id="thumbs">${thumbsHtml(it)}</div>
   <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button>${GPhotos.known() ? '<button type="button" class="btn sm" data-gphotos="pick">From Google Photos</button>' : ''}<span class="small muted fine-only">or drop one here</span></div>
   <form class="form" id="itemForm">
+    ${it.followUp ? `<div class="banner small">Made from an outfit photo. Add a clean photo of it and this goes away.<label class="row"><input type="checkbox" name="followUp" checked> Needs a clean photo</label></div>` : ''}
     <label class="field">Name<input type="text" name="name" value="${esc(it.name || '')}" placeholder="Black midi skirt"></label>
     <label class="field">Type<select name="type">${typeOpts}</select></label>
     ${checks('Colours (main first)', 'colours', K.colours, it.colours)}
-    <fieldset class="sizes"><legend>Size</legend>${sizes.map(s => `<div class="row"><select name="sizeSystem">${K.sizeSystems.map(x => `<option value="${x.id}"${s.system === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select><input type="text" name="sizeValue" value="${esc(s.value)}" placeholder="M, 38, 75B…"></div>`).join('')}</fieldset>
-    <div class="two"><label class="field">Brand<input type="text" name="brand" value="${esc(it.brand || '')}"></label>
+    <fieldset class="sizes"><legend>Size</legend>${sizes.map(s => `<div class="row"><select name="sizeSystem">${K.sizeSystems.map(x => `<option value="${x.id}"${s.system === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select><input type="text" name="sizeValue" value="${esc(s.value)}" placeholder="M, 38, 75B…" list="dlSize-${esc(s.system || '')}" autocomplete="off"></div>`).join('')}</fieldset>
+    ${usedDatalists()}
+    <div class="two"><label class="field">Brand<input type="text" name="brand" value="${esc(it.brand || '')}" list="dlBrand" autocomplete="off"></label>
     <label class="field">Price<input type="number" name="price" min="0" step="0.01" value="${it.price == null ? '' : esc(it.price)}"></label></div>
-    <label class="field">Bought<input type="text" name="purchased" value="${esc(it.purchased || '')}" placeholder="2025-03"></label>
+    ${boughtField(it)}
     <label class="row"><input type="checkbox" name="spicy"${it.spicy ? ' checked' : ''}> Spicy <span class="small muted">(hidden unless "Show spicy items" is on)</span></label>
     ${genderField(it)}
     ${wordsField(it)}
@@ -867,11 +1761,32 @@ function itemForm(it) {
   // Suggest the spicy flag when a spicy-leaning type or material is picked
   $('#itemForm').addEventListener('change', e => {
     const fd = new FormData($('#itemForm')), sp = $('#itemForm [name=spicy]');
+    if (e.target.name === 'sizeSystem') { const v = e.target.parentElement.querySelector('[name=sizeValue]'); if (v) v.setAttribute('list', `dlSize-${e.target.value}`); }
     if (e.target.name === 'type') {
       const t = K.byId.types.get(fd.get('type')) || {};
       if (t.spicy && !sp.checked) { sp.checked = true; toast('Marked as spicy. Untick it if you’d rather not.'); }
     }
   });
+}
+// Suggestions in the item form: brands and sizes already on your (visible) items, most used first; for sizes, then the
+// system's usual values. Any new value can still be typed.
+function usedValues(get) {
+  const n = new Map();
+  for (const it of doc.items.filter(visible)) for (const v of get(it)) { const t = String(v == null ? '' : v).trim(); if (!t) continue; const k = t.toLowerCase(), e = n.get(k) || n.set(k, { v: t, c: 0 }).get(k); e.c++; }
+  return [...n.values()].sort((a, b) => b.c - a.c || a.v.localeCompare(b.v, undefined, { numeric: true, sensitivity: 'base' })).map(e => e.v);
+}
+function usedDatalists() {
+  const opts = vs => vs.map(v => `<option value="${esc(v)}"></option>`).join('');
+  return `<datalist id="dlBrand">${opts(usedValues(it => [it.brand]))}</datalist>` + K.sizeSystems.map(sys => {
+    const mine = usedValues(it => (it.sizes || []).filter(z => z.system === sys.id).map(z => z.value)), low = new Set(mine.map(v => v.toLowerCase()));
+    return `<datalist id="dlSize-${esc(sys.id)}">${opts([...mine, ...(sys.values || []).filter(v => !low.has(v.toLowerCase()))])}</datalist>`;
+  }).join('');
+}
+// Purchase date: a date picker, saved as YYYY-MM-DD. An older month-only value (2025-03) is kept until a day is picked.
+function boughtField(it) {
+  const v = String(it.purchased || ''), full = /^\d{4}-\d{2}-\d{2}$/.test(v);
+  return `<label class="field">Bought<input type="date" name="purchased" value="${full ? esc(v) : ''}" max="${today()}"></label>
+    ${v && !full ? `<label class="row small muted"><input type="checkbox" name="purchasedKeep" value="${esc(v)}" checked> Keep “${esc(v)}” (pick a day above to replace it)</label>` : ''}`;
 }
 function readItemForm(it) {
   const fd = new FormData($('#itemForm')), vals = fd.getAll('sizeValue'), sys = fd.getAll('sizeSystem');
@@ -879,28 +1794,172 @@ function readItemForm(it) {
     ...it, name: fd.get('name').trim(), type: fd.get('type'), colours: fd.getAll('colours'),
     sizes: vals.map((v, i) => ({ system: sys[i], value: v.trim() })).filter(s => s.value),
     brand: fd.get('brand').trim() || undefined, price: fd.get('price') === '' ? undefined : +fd.get('price'),
-    purchased: fd.get('purchased').trim() || undefined, spicy: fd.has('spicy') || undefined,
+    purchased: fd.get('purchased') || (fd.has('purchasedKeep') ? fd.get('purchasedKeep') : '') || undefined, spicy: fd.has('spicy') || undefined, followUp: fd.has('followUp') || undefined,
     gender: [...new Set([...fd.getAll('gender'), ...fd.get('genderNew').split(',').map(s => s.trim().toLowerCase())].filter(Boolean))],
     // Words that only exist on another device stay on the item; new names become words
     words: [...new Set([...(it.words || []).filter(id => !wordById(id) && !doc.deleted.includes(id)), ...fd.getAll('words'), ...(fd.get('wordsNew') || '').split(',').map(s => (addWord(s) || {}).id)].filter(Boolean))]
   };
 }
 const newItem = () => ({ id: uid(), added: now(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
+// A saved outfit opens as its view: the name (edit it in place), the figure, every time it was worn, then its items
 function outfitForm(o) {
-  const items = doc.items.filter(visible), sel = new Set(o.items || []);
-  openDrawer(`<h2>${doc.outfits.some(x => x.id === o.id) ? 'Edit outfit' : 'New outfit'}</h2>
+  const items = doc.items.filter(visible), sel = new Set(o.items || []), saved = doc.outfits.some(x => x.id === o.id);
+  const ws = saved ? outfitWears(o.id) : [], keep = $('#layer .drawer') && $('#layer [data-view-outfit]') ? $('#layer .drawer').scrollTop : 0;
+  openDrawer(`${saved ? `<div data-view-outfit="${esc(o.id)}"><label class="sr-only" for="oName">Outfit name</label><input type="text" id="oName" class="title-edit" value="${esc(o.name || '')}" placeholder="Name this outfit" autocomplete="off" enterkeyhint="done"></div>
+  ${wordsOf(o).length ? `<div class="owords center">${wordsOf(o).map(w => `<span class="wtag">${wordChip(w)}</span>`).join('')}</div>` : ''}
+  ${outfitFigure(o, 'lg')}
+  <div class="row fig-tools" id="figTools">${figToolsHtml(false)}</div>
+  <p class="small muted fig-hint" style="margin:-8px 0 0">${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Double-click'} a piece to edit it.</p>
+  <section class="stack wear-hist" data-label="${esc(o.name || 'Outfit')}"><h3>Worn ${ws.length ? `${ws.length}×` : ''}</h3>${ws.length ? `<ul>${ws.map(w => { const ph = wearPhoto(o, w), day = esc((w.at || '').slice(0, 10));
+      return `<li class="entry"><span class="when">${ph ? `<img alt="Worn ${day}" class="zoomable" data-photo="${esc(ph)}">` : `<label class="btn sm add-ph">Add a photo<input type="file" accept="image/*" hidden data-wear-photo="${esc(w.id)}"></label>`}<span class="mono">${day}</span></span><span class="meta"><button type="button" class="btn ghost sm" data-unwear="${esc(w.id)}" aria-label="Remove the wear on ${day}">×</button></span></li>`; }).join('')}</ul>` : '<p class="muted small" style="margin:0">Not worn yet.</p>'}</section>
+  <h3 style="margin:0">Items and occasions</h3>` : '<h2>New outfit</h2>'}
   <form class="form" id="outfitForm">
-    <label class="field">Name<input type="text" name="name" value="${esc(o.name || '')}" placeholder="Club night"></label>
+    ${saved ? '' : `<label class="field">Name<input type="text" name="name" value="${esc(o.name || '')}" placeholder="Club night"></label>`}
     ${checks('Occasions', 'occasions', K.occasions, o.occasions)}
+    ${wordsField(o)}
     <fieldset><legend>Items</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, sel.has(it.id))).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
     <div class="row"><button type="submit" class="btn primary">Save</button>${doc.outfits.some(x => x.id === o.id) ? `<button type="button" class="btn" data-wear-outfit="${esc(o.id)}">Wore it today</button><span style="flex:1"></span><button type="button" class="btn danger" data-del-outfit="${esc(o.id)}">Delete</button>` : ''}</div>
   </form>`);
+  if (saved) { $('#layer .drawer').scrollTop = keep; $('#layer .x').focus(); } // no keyboard popping up for the name on a phone
+  const nm = $('#oName');
+  if (nm) {
+    nm.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nm.blur(); } });
+    nm.addEventListener('blur', () => { const cur = doc.outfits.find(x => x.id === o.id), v = nm.value.trim(); if (!cur || v === (cur.name || '')) return; put('outfits', { ...cur, name: v }); render(); toast('Name saved'); });
+  }
   $('#outfitForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
   $('#outfitForm').addEventListener('submit', e => {
-    e.preventDefault(); const fd = new FormData(e.target);
-    put('outfits', { ...o, name: fd.get('name').trim(), occasions: fd.getAll('occasions'), items: $$('#outfitForm [data-item][aria-pressed="true"]').map(b => b.dataset.item) });
+    e.preventDefault(); const fd = new FormData(e.target), cur = doc.outfits.find(x => x.id === o.id) || o;
+    const words = [...new Set([...(cur.words || []).filter(id => !wordById(id) && !doc.deleted.includes(id)), ...fd.getAll('words'), ...(fd.get('wordsNew') || '').split(',').map(x => (addWord(x) || {}).id)].filter(Boolean))];
+    put('outfits', { ...cur, name: (fd.get('name') ?? (nm ? nm.value : cur.name) ?? '').trim(), occasions: fd.getAll('occasions'), words, items: $$('#outfitForm [data-item][aria-pressed="true"]').map(b => b.dataset.item) });
     closeDrawer(); render(); toast('Outfit saved');
   });
+}
+/* ---------- Arrange an outfit's figure ---------- */
+// In the outfit view: drag pieces to move them, the corner handle (or a pinch) to resize, Bring forward / Send back (or
+// [ and ]) to restack, arrows and + / - from the keyboard. The layout is saved on the outfit when a gesture ends, as
+// percentages of the figure (outfit.layout = { itemId: { x, y, w, z } }), so the list thumbnail matches.
+const Arrange = (() => {
+  let fig = null, oid = null, lay = null, sel = null, act = null, pinch = null, timer = 0;
+  const pts = new Map();
+  const live = () => !!(fig && fig.isConnected);
+  const el = id => fig.querySelector(`[data-lay-item="${CSS.escape(id)}"]`);
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const r1 = v => Math.round(v * 10) / 10;
+  function place(id) {
+    const e = lay[id], p = el(id); if (!e || !p) return;
+    p.classList.add('lay'); Object.assign(p.style, { left: `${e.x}%`, top: `${e.y}%`, width: `${e.w}%`, height: '', zIndex: e.z });
+  }
+  function select(id) {
+    sel = id; $$('[data-lay-item]', fig).forEach(p => p.classList.toggle('sel', p.dataset.layItem === id));
+    const p = el(id); if (p && !$('.fig-handle', p)) p.insertAdjacentHTML('beforeend', '<i class="fig-handle" data-handle aria-hidden="true"></i>');
+  }
+  function save() {
+    clearTimeout(timer); if (!live()) return;
+    const cur = doc.outfits.find(x => x.id === oid); if (!cur) return;
+    const items = cur.items || [], shown = new Set(Object.keys(lay));
+    // Keep what's saved for items not on show (hidden spicy ones); drop items no longer in the outfit
+    const keep = Object.fromEntries(Object.entries(cur.layout || {}).filter(([id]) => items.includes(id) && !shown.has(id)));
+    const mine = Object.fromEntries(Object.entries(lay).filter(([id]) => items.includes(id)).map(([id, e]) => [id, { x: r1(e.x), y: r1(e.y), w: r1(e.w), z: e.z }]));
+    const next = { ...keep, ...mine }; if (JSON.stringify(next) === JSON.stringify(cur.layout || {})) return; // nothing moved
+    put('outfits', { ...cur, layout: next }); render();
+  }
+  const saveSoon = () => { clearTimeout(timer); timer = setTimeout(save, 400); };
+  function start(figEl, outfitId) {
+    fig = figEl; oid = outfitId; lay = {}; const o = doc.outfits.find(x => x.id === oid) || {}, fr = fig.getBoundingClientRect();
+    $$('[data-lay-item]', fig).forEach((p, i) => {
+      const id = p.dataset.layItem, st = (o.layout || {})[id];
+      if (st) { lay[id] = { x: +st.x || 0, y: +st.y || 0, w: +st.w || 20, z: +st.z || i + 1 }; return; }
+      // From the automatic layout: the picture's own rectangle inside its box, so nothing jumps when arranging starts
+      let r = p.getBoundingClientRect(); const img = $('img', p);
+      if (img && img.naturalWidth) { const s = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight), w = img.naturalWidth * s, h = img.naturalHeight * s; r = { left: r.left + (r.width - w) / 2, top: r.top + (r.height - h) / 2, width: w }; }
+      else { const w = Math.min(r.width, r.height * 3 / 4); r = { left: r.left + (r.width - w) / 2, top: r.top, width: w }; }
+      lay[id] = { x: (r.left - fr.left) / fr.width * 100, y: (r.top - fr.top) / fr.height * 100, w: r.width / fr.width * 100, z: +p.style.zIndex || i + 1 };
+    });
+    Object.keys(lay).forEach(place); fig.classList.add('arranging');
+    $$('[data-lay-item]', fig).forEach(p => { p.tabIndex = 0; p.setAttribute('role', 'button'); p.setAttribute('aria-label', `${itemLabel(itemById(p.dataset.layItem) || {})}: drag to move; arrow keys move, + and − resize, [ and ] restack`); });
+    const first = Object.keys(lay).sort((a, b) => lay[b].z - lay[a].z)[0]; if (first) select(first);
+  }
+  function stop() {
+    clearTimeout(timer); if (live()) { save(); fig.classList.remove('arranging'); $$('.fig-handle', fig).forEach(h => h.remove()); $$('[data-lay-item]', fig).forEach(p => { p.classList.remove('sel'); p.setAttribute('aria-label', `Edit ${itemLabel(itemById(p.dataset.layItem) || {})}`); }); }
+    fig = null; sel = null; act = null; pinch = null; pts.clear();
+  }
+  function restack(delta) {
+    if (!live() || !sel) return;
+    const ids = Object.keys(lay).sort((a, b) => lay[a].z - lay[b].z), i = ids.indexOf(sel), j = clamp(i + delta, 0, ids.length - 1);
+    ids.splice(i, 1); ids.splice(j, 0, sel); ids.forEach((id, k) => { lay[id].z = k + 1; place(id); }); save();
+  }
+  function reset() {
+    const cur = doc.outfits.find(x => x.id === oid); stop(); if (!cur) return;
+    // Hidden spicy items keep their saved place; everything on show goes back to the automatic layout
+    const keep = Object.fromEntries(Object.entries(cur.layout || {}).filter(([id]) => { const it = itemById(id); return it && !visible(it) && (cur.items || []).includes(id); }));
+    const { layout, ...rest } = cur; put('outfits', Object.keys(keep).length ? { ...rest, layout: keep } : rest); render(); refreshOutfitView();
+  }
+  const dist = () => { const [a, b] = [...pts.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+  document.addEventListener('pointerdown', e => {
+    if (!live() || !fig.contains(e.target)) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 2 && sel) { pinch = { d: dist(), w: lay[sel].w }; act = null; return; }
+    const p = e.target.closest('[data-lay-item]'); if (!p) return;
+    e.preventDefault(); select(p.dataset.layItem); p.focus({ preventScroll: true });
+    try { fig.setPointerCapture(e.pointerId); } catch (err) { /* already released */ }
+    const fr = fig.getBoundingClientRect();
+    act = { id: sel, size: !!e.target.closest('[data-handle]'), x0: e.clientX, y0: e.clientY, e0: { ...lay[sel] }, fw: fr.width, fh: fr.height, moved: false };
+  });
+  document.addEventListener('pointermove', e => {
+    if (!live() || !pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pts.size >= 2) { lay[sel].w = clamp(pinch.w * dist() / pinch.d, 6, 100); place(sel); pinch.moved = true; return; }
+    if (!act) return;
+    const dx = (e.clientX - act.x0) / act.fw * 100, dy = (e.clientY - act.y0) / act.fh * 100, l = lay[act.id];
+    if (Math.abs(dx) + Math.abs(dy) > 0.3) act.moved = true;
+    if (act.size) l.w = clamp(act.e0.w + dx, 6, 100);
+    else { l.x = clamp(act.e0.x + dx, -l.w / 2, 100 - l.w / 2); l.y = clamp(act.e0.y + dy, -10, 95); }
+    place(act.id);
+  });
+  const end = e => {
+    if (!pts.has(e.pointerId)) return; pts.delete(e.pointerId);
+    if (!live()) return;
+    if ((act && act.moved) || (pinch && pinch.moved)) save();
+    act = null; if (pts.size < 2) pinch = null;
+  };
+  document.addEventListener('pointerup', end); document.addEventListener('pointercancel', end);
+  // Keys on a focused piece
+  function key(e) {
+    if (!live() || !e.target.closest || !e.target.closest('[data-lay-item]') || !fig.contains(e.target)) return false;
+    const id = e.target.dataset.layItem, l = lay[id], step = e.shiftKey ? 5 : 1; select(id);
+    const moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+    if (moves[e.key]) { l.x = clamp(l.x + moves[e.key][0], -l.w / 2, 100 - l.w / 2); l.y = clamp(l.y + moves[e.key][1], -10, 95); }
+    else if (e.key === '+' || e.key === '=') l.w = clamp(l.w + 3, 6, 100);
+    else if (e.key === '-' || e.key === '_') l.w = clamp(l.w - 3, 6, 100);
+    else if (e.key === '[') { e.preventDefault(); restack(-1); return true; }
+    else if (e.key === ']') { e.preventDefault(); restack(1); return true; }
+    else return false;
+    e.preventDefault(); place(id); saveSoon(); return true;
+  }
+  return { start, stop, restack, reset, key, get on() { return live(); } };
+})();
+const figToolsHtml = arranging => arranging
+  ? `<button type="button" class="btn sm" data-arr="1">Bring forward</button><button type="button" class="btn sm" data-arr="-1">Send back</button><button type="button" class="btn sm" data-arr="reset">Reset layout</button><span class="grow"></span><button type="button" class="btn sm primary" data-arr="done">Done</button>
+     <p class="small muted" style="margin:0;flex-basis:100%">Drag a piece to move it, its corner to resize (or pinch). Keys: arrows move, + and − resize, [ and ] restack.</p>`
+  : `<button type="button" class="btn sm" data-arr="start">Arrange</button>`;
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-arr]'); if (!b) return;
+  const v = b.dataset.arr, tools = $('#figTools'), fig = $('#layer .fig-lg'), view = $('#layer [data-view-outfit]');
+  if (v === 'start' && fig && view) { Arrange.start(fig, view.dataset.viewOutfit); tools.innerHTML = figToolsHtml(true); }
+  else if (v === 'done') { Arrange.stop(); tools.innerHTML = figToolsHtml(false); }
+  else if (v === 'reset') Arrange.reset();
+  else Arrange.restack(+v);
+});
+// Draw the open outfit view again after something in it changed (a wear removed, a photo added)
+function refreshOutfitView() { const v = $('#layer [data-view-outfit]'), o = v && doc.outfits.find(x => x.id === v.dataset.viewOutfit); if (o) outfitForm(structuredClone(o)); }
+// A photo for one wearing: stored like any photo, kept with the outfit's worn photos (so it uploads to Google Photos
+// the same way), and linked from the wear
+async function addWearPhoto(wearId, file) {
+  if (!file || !isImage(file)) return toast('Only photos can be used (JPEG, PNG, WebP, HEIC).');
+  const w = doc.wears.find(x => x.id === wearId), o = w && doc.outfits.find(x => x.id === w.outfit); if (!o) return;
+  const id = await Photos.add(file);
+  put('outfits', { ...o, photos: [...(o.photos || []), { id, role: 'worn' }] }); put('wears', { ...w, photo: id });
+  render(); refreshOutfitView(); toast('Photo added');
 }
 function wearForm() {
   const items = doc.items.filter(visible);
@@ -909,7 +1968,7 @@ function wearForm() {
     <label class="field">Date<input type="text" name="at" value="${today()}"></label>
     ${doc.outfits.length ? `<label class="field">Outfit<select name="outfit"><option value="">Separate items…</option>${doc.outfits.map(o => `<option value="${esc(o.id)}">${esc(o.name || 'Outfit')}</option>`).join('')}</select></label>` : ''}
     <fieldset><legend>Items</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, false)).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
-    <p class="small muted">Logging from a photo of yourself, with the app suggesting the items, is planned.</p>
+    ${Recognise.supported ? '<p class="small muted">Or <button type="button" class="btn sm" data-act="wore-photo">log it from a photo</button> of your outfit, and the app suggests the items.</p>' : ''}
     <div class="row"><button type="submit" class="btn primary">Log it</button></div>
   </form>`);
   $('#wearForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
@@ -929,12 +1988,16 @@ async function takePhotos(files, target) {
   // A new main photo gets a cut-out made in the background, unless the item has one already (some imports do)
   const clean = [];
   if (target) { // into the item being edited
+    let cleanPhoto = false;
     for (const f of imgs) {
-      const p = { id: await Photos.add(f), role: (target.photos || []).length ? 'label' : 'main' };
+      // An item made from an outfit photo has only its crop: the first real photo becomes its main photo
+      const p = { id: await Photos.add(f), role: (target.photos || []).some(x => x.role === 'main') ? 'label' : 'main' };
       target.photos = [...(target.photos || []), p];
+      if (p.role === 'main') cleanPhoto = true;
       if (p.role === 'main' && !target.photos.some(x => x.role === 'cutout')) clean.push([target.id, p.id]);
     }
-    const cur = readItemForm(target); itemForm({ ...cur, photos: target.photos });
+    const cur = readItemForm(target); itemForm({ ...cur, photos: target.photos, ...(cleanPhoto && cur.followUp ? { followUp: undefined } : {}) });
+    if (cleanPhoto && cur.followUp) toast('Clean photo added. Save to take it off the “needs a clean photo” list.');
   } else { // one new item per photo; open the first to fill in
     const made = [];
     for (const f of imgs) { const it = newItem(); it.photos = [{ id: await Photos.add(f), role: 'main' }]; it.name = ''; made.push(it); clean.push([it.id, it.photos[0].id]); }
@@ -946,7 +2009,7 @@ async function takePhotos(files, target) {
 }
 let dragDepth = 0;
 const isFileDrag = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
-function dropLabel(n) { return editing ? `Drop to add ${n > 1 ? n + ' photos' : 'the photo'} to ${editing.name || 'this item'}` : `Drop to add ${n > 1 ? n + ' items' : 'an item'} to your closet`; }
+function dropLabel(n) { if (!editing && !$('#layer').innerHTML && tab === 'worn' && Recognise.supported) return 'Drop to log what you wore from this photo'; return editing ? `Drop to add ${n > 1 ? n + ' photos' : 'the photo'} to ${editing.name || 'this item'}` : `Drop to add ${n > 1 ? n + ' items' : 'an item'} to your closet`; }
 addEventListener('dragenter', e => {
   if (!isFileDrag(e)) return; e.preventDefault();
   if (dragDepth++ === 0) { const d = document.createElement('div'); d.className = 'drop'; d.id = 'dropOverlay'; d.innerHTML = `<p>${esc(dropLabel(e.dataTransfer.items ? e.dataTransfer.items.length : 1))}</p>`; document.body.appendChild(d); }
@@ -956,6 +2019,7 @@ addEventListener('dragover', e => { if (isFileDrag(e)) e.preventDefault(); });
 addEventListener('drop', e => {
   if (!isFileDrag(e)) return; e.preventDefault(); dragDepth = 0; const d = $('#dropOverlay'); d && d.remove();
   if ($('#layer').innerHTML && !editing) return toast('Close this panel to add photos');
+  if (!editing && tab === 'worn' && Recognise.supported) { const f = [...e.dataTransfer.files].find(isImage); return f ? woreFromPhoto(f) : toast('Only photos can be used (JPEG, PNG, WebP, HEIC).'); }
   takePhotos(e.dataTransfer.files, editing);
 });
 $('#photoIn').addEventListener('change', e => { takePhotos(e.target.files, editing); e.target.value = ''; });
@@ -985,6 +2049,7 @@ async function pickPhotos(target) {
       : c === 'expired' ? 'The Google Photos sign-in ran out. Tap again to reconnect.' : `Couldn’t get photos from Google Photos${err && err.msg ? ` (${err.msg})` : ''}`, 7000);
   } finally { picking = false; }
 }
+$('#woreIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) woreFromPhoto(f); });
 
 /* ---------- Backup ---------- */
 function exportBackup() {
@@ -1081,10 +2146,20 @@ document.addEventListener('click', async e => {
   if (d.tab) { tab = d.tab; lsSet(TAB_KEY, tab); return render(); }
   if (d.act === 'add') return itemForm(newItem());
   if (d.act === 'photo') return $('#photoIn').click();
-  if (d.act === 'clear') { setSetting('filters', {}); return render(); }
+  if (d.act === 'clear') { setSetting('filters', {}); sizePopOpen = false; reviewOpen = false; return render(); }
   if (d.act === 'reverse') { setSetting('sortReverse', !doc.settings.sortReverse); return render(); }
   if (d.act === 'new-outfit') return outfitForm({ id: uid(), items: [] });
   if (d.act === 'log-wear') return wearForm();
+  if (d.act === 'wore-photo') return $('#woreIn').click();
+  if (d.act === 'wore-save') return saveWore();
+  if (d.woreDate) { $('#wAt').value = d.woreDate; return; }
+  if (d.act === 'index') {
+    t.disabled = true; Recognise.progress(list => { const n = downloadNote(list); if (n) toast(n, 60000); });
+    try { const left = await indexCloset(m => toast(m, 60000)); toast(left ? `Done. ${left} item${left > 1 ? 's' : ''} can only be prepared where ${left > 1 ? 'their photos were' : 'its photo was'} added.` : 'Your closet is ready for matching'); }
+    catch (err) { toast(`Couldn’t prepare the closet: ${err.message || err}`, 6000); }
+    finally { Recognise.progress(null); render(); }
+    return;
+  }
   if (d.act === 'export') return exportBackup();
   if (d.act === 'import') return $('#backupIn').click();
   if (d.act === 'import-closet') return $('#closetIn').click();
@@ -1095,6 +2170,11 @@ document.addEventListener('click', async e => {
   if (d.fam) { const s = new Set(F().families || []); s.has(d.fam) ? s.delete(d.fam) : s.add(d.fam); return setFilter('families', [...s]); }
   if (d.gender) { const s = new Set(F().gender || []); s.has(d.gender) ? s.delete(d.gender) : s.add(d.gender); return setFilter('gender', [...s]); }
   if (d.spicy !== undefined) return setFilter('spicyOnly', !F().spicyOnly);
+  if (d.follow !== undefined) return setFilter('followUp', !F().followUp);
+  if (d.miss) { const cur = F().missing || []; reviewOpen = true; return setFilter('missing', cur.includes(d.miss) ? cur.filter(k => k !== d.miss) : [...cur, d.miss]); }
+  if (d.act === 'review') { const on = reviewOpen || (F().missing || []).length; reviewOpen = !on; if (on) return setFilter('missing', []); return render(); }
+  if (d.act === 'review-done') { reviewOpen = false; return setFilter('missing', []); }
+  if (d.item && t.closest('#wMissed')) return t.setAttribute('aria-pressed', String(t.getAttribute('aria-pressed') !== 'true'));
   if (d.item && !t.closest('#layer')) return itemForm(structuredClone(itemById(d.item)));
   if (d.outfit) return outfitForm(structuredClone(doc.outfits.find(o => o.id === d.outfit)));
   if (d.rmphoto && editing) { // a photo's cut-out goes with it
@@ -1105,9 +2185,9 @@ document.addEventListener('click', async e => {
   if (d.cutout && editing) return cleanBackground(editing.id, d.cutout);
   if (d.wearItem) { logWear({ item: d.wearItem }); return closeDrawer(), render(); }
   if (d.wearOutfit) { logWear({ outfit: d.wearOutfit }); return closeDrawer(), render(); }
-  if (d.unwear) { remove('wears', d.unwear); return render(); }
+  if (d.unwear) { remove('wears', d.unwear); render(); return refreshOutfitView(); }
   if (d.delItem && confirm('Delete this item? Outfits and the wear log keep their other items.')) { const it = itemById(d.delItem); remove('items', d.delItem); (it.photos || []).forEach(p => Photos.drop(p.id)); GPhotos.unlink(it.photos || []); closeDrawer(); return render(); }
-  if (d.delOutfit && confirm('Delete this outfit? Its items stay in your closet.')) { remove('outfits', d.delOutfit); closeDrawer(); return render(); }
+  if (d.delOutfit && confirm('Delete this outfit? Its items stay in your closet.')) { const o = doc.outfits.find(x => x.id === d.delOutfit) || {}; remove('outfits', d.delOutfit); (o.photos || []).forEach(p => Photos.drop(p.id)); GPhotos.unlink(o.photos || []); closeDrawer(); return render(); }
   if (d.gphotos === 'pick') return pickPhotos(editing);
   if (d.gphotos === 'off') { GPhotos.signOut(); render(); return toast('Disconnected from Google Photos. The album and its photos stay in your Google Photos.'); }
   if (d.gphotos === 'on') {
@@ -1128,10 +2208,11 @@ document.addEventListener('submit', e => {
   put('items', it); closeDrawer(); render(); toast('Saved');
 });
 document.addEventListener('change', e => {
+  if (e.target.dataset.wearPhoto !== undefined) return addWearPhoto(e.target.dataset.wearPhoto, e.target.files[0]);
   if (e.target.id === 'showSpicy') { setSetting('showSpicy', e.target.checked); render(); }
   if (e.target.id === 'autoCutout') setSetting('autoCutout', e.target.checked);
+  if (e.target.dataset.kind !== undefined && wore) setPieceKind(+e.target.dataset.kind, e.target.value);
   if (e.target.id === 'fGroup') setFilter('group', e.target.value);
-  if (e.target.id === 'fSize') setFilter('size', e.target.value.trim());
   if (e.target.id === 'sSort') { setSetting('sort', e.target.value); render(); }
   if (e.target.id === 'sGroup') { setSetting('groupBy', e.target.value); render(); }
   const wd = e.target.dataset || {};
@@ -1147,6 +2228,12 @@ document.addEventListener('change', e => {
 let qTimer;
 document.addEventListener('input', e => { if (e.target.id === 'q') { clearTimeout(qTimer); qTimer = setTimeout(() => { setFilter('q', e.target.value); const q = $('#q'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); } });
 document.addEventListener('keydown', e => {
+  if (Zoom.key(e)) return;
+  if (typeof WoreCrop !== 'undefined' && WoreCrop.key(e)) return;
+  if (Arrange.key(e)) return;
+  if (e.key === 'Escape' && sizePopOpen && $('#fSizePop')) { e.preventDefault(); return setSizePop(false); }
+  // What I wore: the arrow keys step between pieces, except while typing or choosing in a field
+  if (wore && wore.step >= 0 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !(e.target.closest && e.target.closest('input,select,textarea'))) { e.preventDefault(); return woreGo(e.key === 'ArrowRight' ? 1 : -1); }
   if (e.key === 'Escape' && $('#layer').innerHTML) closeDrawer();
   if (e.key === 'Enter' && e.target.id === 'newWord') { e.preventDefault(); $('[data-act="add-word"]').click(); }
   if (e.key === 'Enter' && e.target.dataset && (e.target.dataset.wordName || e.target.dataset.wordEmoji)) e.target.blur();
@@ -1424,10 +2511,11 @@ const GPhotos = (() => {
   function setMediaId(itemId, photoId, mediaItemId) {
     const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId, mediaAccount: doc.settings.photosAccount } : p);
     const it = itemById(itemId); if (it) put('items', { ...it, photos: mark(it.photos) });
+    const o = doc.outfits.find(x => x.id === itemId); if (o) put('outfits', { ...o, photos: mark(o.photos) }); // an outfit photo (What I wore)
     if (editing && editing.id === itemId) editing.photos = mark(editing.photos);
   }
-  // Saved photos not in this account's album yet
-  const waiting = () => doc.items.flatMap(it => (it.photos || []).filter(p => !inAlbum(p)).map(p => [it.id, p]));
+  // Saved photos (of items, and outfit photos) not in this account's album yet
+  const waiting = () => [...doc.items, ...doc.outfits].flatMap(it => (it.photos || []).filter(p => !inAlbum(p)).map(p => [it.id, p]));
   async function sync() {
     clearTimeout(S.timer);
     if (!live() || S.busy) return;

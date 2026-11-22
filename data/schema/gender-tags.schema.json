@@ -21,6 +21,12 @@
         "type": "string",
         "minLength": 1,
         "description": "Name shown in the app."
+      },
+      "emoji": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 16,
+        "description": "Optional emoji shown before the name wherever the tag appears (filter chips, the item form, shelf headings), as a quick visual cue. Tags people add themselves have none."
       }
     }
   }

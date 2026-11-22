@@ -54,5 +54,6 @@
   {"id": "watch", "name": "Watch", "parent": "accessories", "aliases": ["watch"]},
   {"id": "jewellery", "name": "Jewellery", "parent": "accessories", "aliases": ["bracelet", "necklace", "ring"]},
   {"id": "harness", "name": "Harness", "parent": "accessories", "spicy": true},
-  {"id": "collar", "name": "Collar", "parent": "accessories", "spicy": true}
+  {"id": "collar", "name": "Collar", "parent": "accessories", "spicy": true},
+  {"id": "wig", "name": "Wig", "parent": "accessories", "region": "hat", "aliases": ["wigs", "hairpiece"]}
 ]

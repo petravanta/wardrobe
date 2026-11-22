@@ -18,6 +18,26 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   bundled in `vendor/background-removal.js` (generated, don't edit; rebuild steps in the README). A cut-out is a
   photo with `role: 'cutout'` and `from`; the original is never replaced. `sw.js` caches `staticimgly.com` cache-first,
   on purpose. Photos never leave the device for this.
+- **What I wore**: `Recognise` / `woreFromPhoto()` / `saveWore()` in `index.html`, the models in `recognise-worker.js`
+  (transformers.js bundled unchanged in `vendor/transformers.min.js`). The confirm screen always comes before anything
+  is saved. Photo vectors are `photo.vec` and `item.seen`, tagged with `EMBED_ID`; bump it whenever the embedding model
+  or its precision changes. A piece's kind maps to `region`s in `data/types.json` through `KINDS`. Items made from a
+  crop carry `followUp: true` until a clean photo is added. Outfits can have photos (`role: 'worn'`), which `GPhotos`
+  uploads like item photos.
+- **Wear photos**: a wear's own photo is `wear.photo`, but the photo record always lives in its outfit's `photos`
+  (`role: 'worn'`) so `GPhotos` and merges see it; never store a photo only on the wear. `wearPhoto()` pairs older wears.
+- **Outfit figure**: `outfitFigure()` places items by `regionOf()` (never by type id); a new region needs a place in
+  `FIG_REGION`/`FIG_BANDS` or it falls into the side column. A hand layout (`outfit.layout`, from `Arrange`) wins over the
+  region placement; saving it keeps entries of hidden spicy items untouched.
+- **Closet review**: `filters.missing` holds checks from `MISSING`/`LACKS` (`photo`, `price`, `gender`, `size`, `colour`,
+  `purchased`); an item shows when it lacks any. A new check needs an entry in both.
+- **Purchase date**: `item.purchased` is `YYYY-MM-DD` from a date input; older month-only values are kept, never rewritten.
+- **Missed pieces**: `WoreCrop` adds a hand-drawn piece (`manual: true`) to `wore.pieces`; its `vec` may be null when the
+  model can't run, so `rankFor()` and `saveWore()` must cope with that.
+- **Figure editing**: in the large outfit figure, double-click / tap / Enter on a piece opens `itemForm()` with
+  `outfitReturn` set, and `closeDrawer()` reopens the outfit. Never while `Arrange` is on.
+- **Size filter**: `filters.sizes` holds `"system:value"` keys (compared case-insensitively); `migrateSizeFilter()`
+  turns an older `filters.size` string into them.
 - **Spicy**: anything with `spicy: true` must stay out of every view, stat, search and share export while
   `settings.showSpicy` is off. Use `visible(item)`.
 - **Google Photos**: `GPhotos` in `index.html` (README, *Google Photos*). Its own token with the Photos scopes under
@@ -26,8 +46,8 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   `GPhotos.pick()` (Picker API) returns `File`s that go through `takePhotos()`, the same path as *Add photo*; it needs
   a window opened on the tap (`pickPhotos()`), and buttons that open Google windows carry `data-gphotos` so the
   token-renewal tap listener leaves them alone.
-- **Wardrobe words**: records in `doc.words` (`id`, `name`, `colour`, optional `emoji`); items hold word ids in `item.words`. Rename and
-  colour live on the word only. `deleteWord()` strips the id from every item. Ids with no word are skipped (`wordsOf()`).
+- **Wardrobe words**: records in `doc.words` (`id`, `name`, `colour`, optional `emoji`); items and outfits hold word ids in `.words`. Rename and
+  colour live on the word only. `deleteWord()` strips the id from every item and outfit. Ids with no word are skipped (`wordsOf()`).
 - **Colour season**: `renderColour()` and the `cs…` functions in `index.html`, data in `data/colour-seasons.json` and
   `data/colour-quiz.json`. Only `settings.colourSeason` (a season id) is saved. A photo used for sampling lives only on
   the sampler's canvas: never pass it to `Photos.add()`, IndexedDB, Drive or Google Photos, and never save answers or
