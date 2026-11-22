@@ -11,3 +11,14 @@ Because this library is part of the app, Wardrobe as a whole is shared under AGP
 ## ONNX Runtime Web (MIT)
 
 The same bundle includes [onnxruntime-web](https://github.com/microsoft/onnxruntime) 1.21.0, © Microsoft Corporation, under the MIT licence.
+
+## transformers.js (Apache-2.0)
+
+[`vendor/transformers.min.js`](vendor/transformers.min.js) is the unchanged browser build of [`@huggingface/transformers`](https://github.com/huggingface/transformers.js) 3.8.1, © Hugging Face, under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). It includes ONNX Runtime Web (MIT, © Microsoft Corporation) and downloads its WebAssembly from jsDelivr at run time.
+
+## Recognition models (downloaded at run time)
+
+*What I wore* downloads two models from the Hugging Face hub the first time it runs; they are not part of this repository.
+
+- [`Xenova/segformer_b2_clothes`](https://huggingface.co/Xenova/segformer_b2_clothes), an ONNX conversion of [`mattmdjaga/segformer_b2_clothes`](https://huggingface.co/mattmdjaga/segformer_b2_clothes) (SegFormer fine-tuned for clothes parsing), MIT licence.
+- [`Xenova/clip-vit-base-patch32`](https://huggingface.co/Xenova/clip-vit-base-patch32), an ONNX conversion of OpenAI's [CLIP ViT-B/32](https://huggingface.co/openai/clip-vit-base-patch32), MIT licence.
