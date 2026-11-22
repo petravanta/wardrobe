@@ -695,6 +695,7 @@ function renderCloset() {
   $('#main').innerHTML = `
   <div class="bar">
     <button type="button" class="btn primary" data-act="add">Add item</button>
+    ${GPhotos.known() ? '<button type="button" class="btn" data-gphotos="pick">From Google Photos</button>' : ''}
     <span class="small muted fine-only">or drop photos anywhere</span>
     <span class="grow"></span>
     <label class="sr-only" for="q">Search</label><input type="text" id="q" placeholder="Search" value="${esc(f.q || '')}" style="max-width:180px">
@@ -773,7 +774,7 @@ function renderSettings() {
     <div class="row">${store.configured ? (conn ? '<button type="button" class="btn" data-drive="off">Disconnect</button>' : '<button type="button" class="btn primary" data-drive="on">Connect Google Drive</button>') : '<span class="muted">Drive sync is turned off in this copy.</span>'}</div>
   </section>
   <section class="panel stack"><h3>Google Photos</h3>
-    <p>${GPhotos.known() ? `Item photos are saved to the <b>Wardrobe</b> album in the Google Photos of <b>${esc(GPhotos.email || 'your account')}</b>, so they show on your other devices too. ${esc(GPhotos.status())}` : 'Item photos are saved in this browser. Connect Google Photos to keep them in a <b>Wardrobe</b> album in your own Google Photos, so they show on your other devices too. You choose the account when you connect; it can be a different one from Google Drive.'}</p>
+    <p>${GPhotos.known() ? `Item photos are saved to the <b>Wardrobe</b> album in the Google Photos of <b>${esc(GPhotos.email || 'your account')}</b>, so they show on your other devices too. To add photos you already have, tap <b>From Google Photos</b> in the closet or on an item: you choose them in Google Photos, and the app gets only those. ${esc(GPhotos.status())}` : 'Item photos are saved in this browser. Connect Google Photos to keep them in a <b>Wardrobe</b> album in your own Google Photos, so they show on your other devices too. You choose the account when you connect; it can be a different one from Google Drive.'}</p>
     <div class="row">${GPhotos.known() ? '<button type="button" class="btn" data-gphotos="on">Use another account</button><button type="button" class="btn" data-gphotos="off">Disconnect</button>' : '<button type="button" class="btn primary" data-gphotos="on">Connect Google Photos</button>'}</div>
     <p class="small muted">Photos of spicy items go to the same album, and Google Photos also shows them in your main photo library: <i>Show spicy items</i> only hides them in this app. Removing a photo here takes it out of the album; Google doesn’t let apps delete photos, so it stays in your library until you delete it there.</p>
   </section>
@@ -849,7 +850,7 @@ function itemForm(it) {
   const isNew = !doc.items.some(x => x.id === it.id);
   openDrawer(`<h2>${isNew ? 'Add item' : esc(it.name || 'Item')}</h2>
   <div class="thumbs" id="thumbs">${thumbsHtml(it)}</div>
-  <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button><span class="small muted fine-only">or drop one here</span></div>
+  <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button>${GPhotos.known() ? '<button type="button" class="btn sm" data-gphotos="pick">From Google Photos</button>' : ''}<span class="small muted fine-only">or drop one here</span></div>
   <form class="form" id="itemForm">
     <label class="field">Name<input type="text" name="name" value="${esc(it.name || '')}" placeholder="Black midi skirt"></label>
     <label class="field">Type<select name="type">${typeOpts}</select></label>
@@ -958,6 +959,32 @@ addEventListener('drop', e => {
   takePhotos(e.dataTransfer.files, editing);
 });
 $('#photoIn').addEventListener('change', e => { takePhotos(e.target.files, editing); e.target.value = ''; });
+// From the user's Google Photos, chosen in Google's picker. Into the item being edited, or one new item per photo.
+let picking = false;
+async function pickPhotos(target) {
+  if (picking) return toast('Google Photos is already open. Choose your photos there.');
+  if (!GPhotos.live()) { // this tap opens Google's sign-in, so the picker needs the next one
+    try { await GPhotos.renew(); toast('Reconnected to Google Photos. Tap again to choose photos.'); }
+    catch (err) { toast(err && err.code === 'offline' ? 'You’re offline' : 'Couldn’t reconnect to Google Photos'); }
+    return;
+  }
+  const win = open('about:blank', '_blank');
+  if (!win) return toast('Your browser blocked the Google Photos window. Allow pop-ups for this site and try again.', 6000);
+  picking = true; toast('Choose photos in Google Photos, then tap Done', 60000);
+  try {
+    const { files, failed, videos } = await GPhotos.pick(win, (n, all) => toast(`Getting photos from Google Photos: ${n} of ${all}…`, 60000));
+    const skip = [failed && `${failed} Google Photos didn’t let this browser download`, videos && `${videos} video${videos > 1 ? 's' : ''}`].filter(Boolean).join(' and ');
+    if (!files.length) return toast(failed ? 'Google Photos didn’t let this browser download the photos, so none were added.' : videos ? 'Only photos can be added, not videos.' : 'No photos chosen', 7000);
+    if (target && !(editing && editing.id === target.id)) return toast('The item was closed, so the photos weren’t added. Open it and try again.', 6000);
+    await takePhotos(files, target ? editing : null);
+    toast(`Added ${files.length} photo${files.length > 1 ? 's' : ''} from Google Photos${skip ? `; skipped ${skip}` : ''}`, 6000);
+  } catch (err) {
+    const c = err && err.code;
+    toast(c === 'cancelled' ? 'No photos chosen' : c === 'timeout' ? 'Google Photos took too long. Try again.' : c === 'offline' ? 'You’re offline'
+      : c === 'scopes' ? 'Google Photos didn’t allow choosing photos. In Settings, tap Use another account and leave every permission ticked.'
+      : c === 'expired' ? 'The Google Photos sign-in ran out. Tap again to reconnect.' : `Couldn’t get photos from Google Photos${err && err.msg ? ` (${err.msg})` : ''}`, 7000);
+  } finally { picking = false; }
+}
 
 /* ---------- Backup ---------- */
 function exportBackup() {
@@ -1081,6 +1108,7 @@ document.addEventListener('click', async e => {
   if (d.unwear) { remove('wears', d.unwear); return render(); }
   if (d.delItem && confirm('Delete this item? Outfits and the wear log keep their other items.')) { const it = itemById(d.delItem); remove('items', d.delItem); (it.photos || []).forEach(p => Photos.drop(p.id)); GPhotos.unlink(it.photos || []); closeDrawer(); return render(); }
   if (d.delOutfit && confirm('Delete this outfit? Its items stay in your closet.')) { remove('outfits', d.delOutfit); closeDrawer(); return render(); }
+  if (d.gphotos === 'pick') return pickPhotos(editing);
   if (d.gphotos === 'off') { GPhotos.signOut(); render(); return toast('Disconnected from Google Photos. The album and its photos stay in your Google Photos.'); }
   if (d.gphotos === 'on') {
     try { await GPhotos.connect(); render(); toast('Connected to Google Photos'); }
@@ -1381,7 +1409,7 @@ const GPhotos = (() => {
   }
   async function call(path, opt = {}) {
     if (!live()) throw { code: 'expired' };
-    let r; try { r = await fetch(API + path, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + st().token } }); } catch (e) { throw { code: 'offline' }; }
+    let r; try { r = await fetch((path.startsWith('https:') ? '' : API) + path, { ...opt, headers: { ...(opt.headers || {}), Authorization: 'Bearer ' + st().token } }); } catch (e) { throw { code: 'offline' }; }
     if (r.status === 401) { set({ token: null, exp: 0 }); throw { code: 'expired' }; }
     if (!r.ok) { let msg = ''; try { msg = (await r.json()).error.message; } catch (e) { } throw { code: 'http', status: r.status, msg }; }
     return r;
@@ -1448,6 +1476,57 @@ const GPhotos = (() => {
     }
     return got;
   }
+  // Photos the user already has: Google's Picker. The app can't browse the library; the user chooses photos in a
+  // Google Photos window and the app gets only those, for this session. win: a window opened on the tap (browsers block
+  // one opened later), sent to the picker once the session exists. Resolves { files, failed }; the bytes come straight
+  // to this browser and then go through the same path as any added photo.
+  const PICK = 'https://photospicker.googleapis.com/v1';
+  const secs = (s, d) => (parseFloat(s) || d);
+  async function pick(win, progress) {
+    let s;
+    try { s = await json(PICK + '/sessions', {}); }
+    catch (e) { win.close(); throw e.code === 'http' && e.status === 403 ? { code: 'scopes' } : e; }
+    win.location.href = s.pickerUri + '/autoclose';
+    try {
+      const every = secs(s.pollingConfig && s.pollingConfig.pollInterval, 5) * 1000;
+      const until = Date.now() + secs(s.pollingConfig && s.pollingConfig.timeoutIn, 1800) * 1000;
+      let closed = 0;
+      for (;;) {
+        // Check again as soon as the user is back in the app, not only on the timer (background tabs are slowed)
+        await new Promise(res => { const t = setTimeout(done, every); function done() { clearTimeout(t); removeEventListener('focus', done); res(); } addEventListener('focus', done); });
+        s = await (await call(`${PICK}/sessions/${s.id}`)).json();
+        if (s.mediaItemsSet) break;
+        if (win.closed && ++closed > 2) throw { code: 'cancelled' }; // closed without choosing
+        if (Date.now() > until) throw { code: 'timeout' };
+      }
+      const picked = []; let page = '';
+      do {
+        const j = await (await call(`${PICK}/mediaItems?sessionId=${encodeURIComponent(s.id)}&pageSize=100${page ? '&pageToken=' + encodeURIComponent(page) : ''}`)).json();
+        picked.push(...(j.mediaItems || [])); page = j.nextPageToken;
+      } while (page);
+      const photos = picked.filter(m => m.type !== 'VIDEO' && m.mediaFile), files = []; let failed = 0;
+      for (const m of photos) {
+        progress && progress(files.length + failed + 1, photos.length);
+        const b = await bytes(m.mediaFile.baseUrl + '=w2048-h2048');
+        if (!b) { failed++; continue; }
+        const name = (m.mediaFile.filename || 'photo').replace(/\.[^.]+$/, '') + (b.type === 'image/png' ? '.png' : '.jpg');
+        files.push(new File([b], name, { type: b.type, lastModified: Date.parse(m.createTime) || Date.now() }));
+      }
+      return { files, failed, videos: picked.length - photos.length };
+    } finally {
+      if (!win.closed) win.close();
+      call(`${PICK}/sessions/${s.id}`, { method: 'DELETE' }).catch(() => {});
+    }
+  }
+  // Google asks for the token on the request. If this browser can't send it to Google's image server (CORS), try
+  // without it before giving up.
+  async function bytes(url) {
+    for (const opt of [{ headers: { Authorization: 'Bearer ' + st().token } }, {}]) {
+      try { const r = await fetch(url, opt); if (r.ok) { const b = await r.blob(); if (/^image\//.test(b.type)) return b; } console.warn('Google Photos image', r.status, opt.headers ? 'with token' : 'without token'); }
+      catch (e) { console.warn('Google Photos image blocked', opt.headers ? 'with token' : 'without token', e); }
+    }
+    return null;
+  }
   // Tokens last an hour. Renew on a tap when close to running out, unless Drive needs this tap (one Google window per tap).
   document.addEventListener('click', e => {
     if (!known() || e.target.closest('[data-gphotos],[data-drive]')) return;
@@ -1458,7 +1537,7 @@ const GPhotos = (() => {
   }, true);
   addEventListener('online', () => sync());
   return {
-    known, live, sync, fetchMissing,
+    known, live, sync, fetchMissing, pick, renew: () => signIn(),
     direct(id) {
       const d = direct.get(id); if (!d) return '';
       if (d.exp > Date.now()) return d.url;
