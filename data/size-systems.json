@@ -8,5 +8,6 @@
   { "id": "shoe-eu", "name": "Shoe EU" },
   { "id": "shoe-uk", "name": "Shoe UK" },
   { "id": "shoe-us", "name": "Shoe US" },
-  { "id": "bra", "name": "Bra (band and cup)" }
+  { "id": "bra", "name": "Bra (band and cup)" },
+  { "id": "one-size", "name": "One size", "values": ["One size"], "single": true }
 ]

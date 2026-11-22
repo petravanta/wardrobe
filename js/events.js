@@ -82,7 +82,7 @@ document.addEventListener('change', e => {
   if (wd.wordName) {
     const w = wordById(wd.wordName), n = e.target.value.trim().replace(/\s+/g, ' '), other = n && wordByName(n);
     if (!w) return;
-    if (!n || (other && other.id !== w.id)) { e.target.value = w.name; return toast(n ? `You already have “${n}”` : 'A word needs a name'); }
+    if (!n || (other && other.id !== w.id)) { e.target.value = w.name; return toast(n ? `You already have “${n}”` : 'A tag needs a name'); }
     if (n !== w.name) { put('words', { ...w, name: n }); render(); }
   }
 });

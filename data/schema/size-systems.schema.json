@@ -30,6 +30,10 @@
         },
         "uniqueItems": true,
         "description": "Values offered as choices, in order. Leave out for free-text sizes (numbers, measurements)."
+      },
+      "single": {
+        "type": "boolean",
+        "description": "The system has exactly one value (its first in values), such as One size: the item form fills it in and hides the size box."
       }
     }
   }

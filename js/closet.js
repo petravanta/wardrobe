@@ -19,7 +19,7 @@ function renderCloset() {
   const f = F(), items = sortItems(doc.items.filter(it => matches(it))), st = doc.settings;
   const groups = K.types.filter(t => !t.parent && (doc.settings.showSpicy || !t.spicy));
   const fams = [...new Set(K.colours.map(c => c.family))];
-  const gtags = [...new Set([...K.genderTags.map(g => g.id), ...doc.items.flatMap(i => i.gender || [])])];
+  const gtags = K.genderTags.map(g => g.id);
   $('#main').innerHTML = `
   <div class="bar">
     <button type="button" class="btn primary" data-act="add">Add item</button>

@@ -10,6 +10,7 @@ document.addEventListener('visibilitychange', async () => {
 (async () => {
   try { await loadKnowledge(); }
   catch (e) { $('#main').innerHTML = `<div class="empty">Couldn’t load the app’s built-in lists (${esc(e.message)}). Check your connection and reload.</div>`; return; }
+  { const was = JSON.stringify(doc); doc = upgrade(doc); if (JSON.stringify(doc) !== was) lsSet(KEY, doc); } // moves that need the built-in lists (migrateGenderTags)
   if (store.known && store.data) doc = mergeDocs(doc, store.data);
   render(); showSaveState();
   // Home-screen shortcuts: ?do=add-item, ?do=log-wear

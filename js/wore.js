@@ -219,8 +219,8 @@ function moreGrid(i) {
   return `${same.length ? `<ul class="tiles">${same.map(it => tile(i, it, scored.get(it.id))).join('')}</ul>` : `<p class="small muted">${styleOn() && !pc.allStyles ? 'Nothing of this kind in this style.' : 'Nothing of this kind in your closet yet.'}</p>`}
     ${shelves.length ? `<details class="more"><summary>Other categories</summary>${shelves.map(([g, l]) => `<h4 class="shelf-h">${esc(g.name)}</h4><ul class="tiles">${l.map(it => tile(i, it)).join('')}</ul>`).join('')}</details>` : ''}`;
 }
-// Style: the wardrobe words picked for this logging (not saved). With any picked, only items with one of them are offered
-// (OR, like the closet's word filter); a piece can be shown everything again with "Show all"
+// Style: the tags picked for this logging (not saved). With any picked, only items with one of them are offered
+// (OR, like the closet's tag filter); a piece can be shown everything again with "Show all"
 const styleOn = () => !!(wore && wore.styles.size);
 const inStyle = it => !styleOn() || (it.words || []).some(w => wore.styles.has(w));
 const offered = (pc, it) => !!it && visible(it) && (!pc || pc.allStyles || inStyle(it));

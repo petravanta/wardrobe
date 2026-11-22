@@ -51,8 +51,13 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   `GPhotos.pick()` (Picker API) returns `File`s that go through `takePhotos()`, the same path as *Add photo*; it needs
   a window opened on the tap (`pickPhotos()`), and buttons that open Google windows carry `data-gphotos` so the
   token-renewal tap listener leaves them alone.
-- **Wardrobe words**: records in `doc.words` (`id`, `name`, `colour`, optional `emoji`); items and outfits hold word ids in `.words`. Rename and
-  colour live on the word only. `deleteWord()` strips the id from every item and outfit. Ids with no word are skipped (`wordsOf()`).
+- **Tags** (called wardrobe words before, so the code still says `word`): records in `doc.words` (`id`, `name`, `colour`,
+  optional `emoji`); items and outfits hold tag ids in `.words`. Rename and colour live on the tag only. `deleteWord()`
+  strips the id from every item and outfit. Ids with no tag are skipped (`wordsOf()`). The forms use the picker in
+  `js/tags.js` (`wordsField()` / `formWords()`). `item.gender` only holds ids from `data/gender-tags.json`;
+  `migrateGenderTags()` (in `upgrade()`, once the built-in lists are loaded) turns any other value into a tag with an id
+  made from its name, so every device makes the same one.
+- **Sizes**: a size system with `single: true` (One size) has one value, filled in by the form with the box hidden.
 - **Colour season**: `renderColour()` and the `cs…` functions in `js/colour.js`, data in `data/colour-seasons.json` and
   `data/colour-quiz.json`. Only `settings.colourSeason` (a season id) is saved. A photo used for sampling lives only on
   the sampler's canvas: never pass it to `Photos.add()`, IndexedDB, Drive or Google Photos, and never save answers or

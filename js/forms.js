@@ -17,20 +17,15 @@ function editFromFigure(span) {
 const checks = (name, set, list, sel = []) => `<fieldset><legend>${name}</legend><div class="checks">${list.map(x => `<label><input type="checkbox" name="${set}" value="${esc(x.id)}"${sel.includes(x.id) ? ' checked' : ''}> ${x.hex ? `<i class="swatch" style="background:${x.hex}"></i>` : ''}${esc(x.name)}</label>`).join('')}</div></fieldset>`;
 // Fem, Masc, Androgynous come built in; anything else people type becomes their own tag and is offered again
 function genderField(it) {
-  const ids = [...new Set([...K.genderTags.map(g => g.id), ...doc.items.flatMap(i => i.gender || []), ...(it.gender || [])])];
-  return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}> ${esc(gname(g))}</label>`).join('')}</div>
-    <input type="text" name="genderNew" placeholder="Add your own, separated by commas"></fieldset>`;
-}
-function wordsField(it) {
-  return `<fieldset><legend>Wardrobe words</legend>${doc.words.length ? `<div class="checks">${sortedWords().map(w => `<label><input type="checkbox" name="words" value="${esc(w.id)}"${(it.words || []).includes(w.id) ? ' checked' : ''}> ${wordChip(w)}</label>`).join('')}</div>` : ''}
-    <input type="text" name="wordsNew" placeholder="${doc.words.length ? 'Add new words' : 'Your own words, like goth or cozy'}, separated by commas"></fieldset>`;
+  const ids = [...new Set([...K.genderTags.map(g => g.id), ...(it.gender || [])])];
+  return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}>${esc(gname(g))}</label>`).join('')}</div></fieldset>`;
 }
 // Ticks or unticks items for one word, across the closet
 function wordItemsForm(w) {
   const items = sortItems(doc.items.filter(visible));
   openDrawer(`<h2>Tag items: ${wordChip(w)}</h2>
   <form class="form" id="wordForm">
-    <fieldset><legend>Items with this word</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, (it.words || []).includes(w.id))).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
+    <fieldset><legend>Items with this tag</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, (it.words || []).includes(w.id))).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
     <div class="row"><button type="submit" class="btn primary">Save</button></div>
   </form>`);
   $('#wordForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
@@ -64,7 +59,7 @@ function itemForm(it) {
     <label class="field">Name<input type="text" name="name" value="${esc(it.name || '')}" placeholder="Black midi skirt"></label>
     <label class="field">Type<select name="type">${typeOpts}</select></label>
     ${checks('Colours (main first)', 'colours', K.colours, it.colours)}
-    <fieldset class="sizes"><legend>Size</legend>${sizes.map(s => `<div class="row"><select name="sizeSystem">${K.sizeSystems.map(x => `<option value="${x.id}"${s.system === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select><input type="text" name="sizeValue" value="${esc(s.value)}" placeholder="M, 38, 75B…" list="dlSize-${esc(s.system || '')}" autocomplete="off"></div>`).join('')}</fieldset>
+    <fieldset class="sizes"><legend>Size</legend>${sizes.map(sizeRow).join('')}</fieldset>
     ${usedDatalists()}
     <div class="two"><label class="field">Brand<input type="text" name="brand" value="${esc(it.brand || '')}" list="dlBrand" autocomplete="off"></label>
     <label class="field">Price<input type="number" name="price" min="0" step="0.01" value="${it.price == null ? '' : esc(it.price)}"></label></div>
@@ -77,7 +72,9 @@ function itemForm(it) {
   // Suggest the spicy flag when a spicy-leaning type or material is picked
   $('#itemForm').addEventListener('change', e => {
     const fd = new FormData($('#itemForm')), sp = $('#itemForm [name=spicy]');
-    if (e.target.name === 'sizeSystem') { const v = e.target.parentElement.querySelector('[name=sizeValue]'); if (v) v.setAttribute('list', `dlSize-${e.target.value}`); }
+    if (e.target.name === 'sizeSystem') { const r = e.target.closest('.size-row'), v = $('[name=sizeValue]', r), was = K.byId.sizeSystems.get(r.dataset.system) || {}, sys = K.byId.sizeSystems.get(e.target.value) || {};
+      if (was.single) v.value = ''; if (sys.single) v.value = sys.values[0];
+      r.outerHTML = sizeRow({ system: e.target.value, value: v.value }); }
     if (e.target.name === 'type') {
       const t = K.byId.types.get(fd.get('type')) || {};
       if (t.spicy && !sp.checked) { sp.checked = true; toast('Marked as spicy. Untick it if you’d rather not.'); }
@@ -98,6 +95,19 @@ function usedDatalists() {
     return `<datalist id="dlSize-${esc(sys.id)}">${opts([...mine, ...(sys.values || []).filter(v => !low.has(v.toLowerCase()))])}</datalist>`;
   }).join('');
 }
+// One size row: system, value box (hidden for a one-value system such as One size) and the sizes you've used in that
+// system as chips, most used first; a tap fills the box.
+function sizeRow(s) {
+  const sys = K.byId.sizeSystems.get(s.system) || {}, used = sys.single ? [] : usedValues(it => (it.sizes || []).filter(z => z.system === s.system).map(z => z.value)).slice(0, 12);
+  return `<div class="size-row stack" data-system="${esc(s.system || '')}"><div class="row"><select name="sizeSystem" aria-label="Size system">${K.sizeSystems.map(x => `<option value="${x.id}"${s.system === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select><input type="text" name="sizeValue" aria-label="Size" value="${esc(sys.single ? sys.values[0] : s.value)}" placeholder="M, 38, 75B…" list="dlSize-${esc(s.system || '')}" autocomplete="off"${sys.single ? ' hidden' : ''}></div>
+    ${used.length ? `<div class="chips size-chips" aria-label="Sizes you've used">${used.map(v => `<button type="button" class="chip" data-size-pick="${esc(v)}" aria-pressed="${String(v.toLowerCase() === String(s.value || '').trim().toLowerCase())}">${esc(v)}</button>`).join('')}</div>` : ''}</div>`;
+}
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-size-pick]'); if (!c) return;
+  const r = c.closest('.size-row'); $('[name=sizeValue]', r).value = c.dataset.sizePick;
+  $$('[data-size-pick]', r).forEach(b => b.setAttribute('aria-pressed', String(b === c)));
+});
+document.addEventListener('input', e => { if (e.target.name === 'sizeValue') { const r = e.target.closest('.size-row'), v = e.target.value.trim().toLowerCase(); if (r) $$('[data-size-pick]', r).forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sizePick.toLowerCase() === v))); } });
 // Purchase date: a date picker, saved as YYYY-MM-DD. An older month-only value (2025-03) is kept until a day is picked.
 function boughtField(it) {
   const v = String(it.purchased || ''), full = /^\d{4}-\d{2}-\d{2}$/.test(v);
@@ -111,9 +121,7 @@ function readItemForm(it) {
     sizes: vals.map((v, i) => ({ system: sys[i], value: v.trim() })).filter(s => s.value),
     brand: fd.get('brand').trim() || undefined, price: fd.get('price') === '' ? undefined : +fd.get('price'),
     purchased: fd.get('purchased') || (fd.has('purchasedKeep') ? fd.get('purchasedKeep') : '') || undefined, spicy: fd.has('spicy') || undefined, followUp: fd.has('followUp') || undefined,
-    gender: [...new Set([...fd.getAll('gender'), ...fd.get('genderNew').split(',').map(s => s.trim().toLowerCase())].filter(Boolean))],
-    // Words that only exist on another device stay on the item; new names become words
-    words: [...new Set([...(it.words || []).filter(id => !wordById(id) && !doc.deleted.includes(id)), ...fd.getAll('words'), ...(fd.get('wordsNew') || '').split(',').map(s => (addWord(s) || {}).id)].filter(Boolean))]
+    gender: [...new Set(fd.getAll('gender'))], words: formWords(fd, it)
   };
 }
 const newItem = () => ({ id: uid(), added: now(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
@@ -145,7 +153,7 @@ function outfitForm(o) {
   $('#outfitForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
   $('#outfitForm').addEventListener('submit', e => {
     e.preventDefault(); const fd = new FormData(e.target), cur = doc.outfits.find(x => x.id === o.id) || o;
-    const words = [...new Set([...(cur.words || []).filter(id => !wordById(id) && !doc.deleted.includes(id)), ...fd.getAll('words'), ...(fd.get('wordsNew') || '').split(',').map(x => (addWord(x) || {}).id)].filter(Boolean))];
+    const words = formWords(fd, cur);
     put('outfits', { ...cur, name: (fd.get('name') ?? (nm ? nm.value : cur.name) ?? '').trim(), occasions: fd.getAll('occasions'), words, items: $$('#outfitForm [data-item][aria-pressed="true"]').map(b => b.dataset.item) });
     closeDrawer(); render(); toast('Outfit saved');
   });

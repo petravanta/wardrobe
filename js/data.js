@@ -25,6 +25,7 @@ function upgrade(d) {
   // Imported items once kept their source details under an older field name; move them to item.source
   out.items = out.items.map(r => { if (!r.whering || r.source) return r; const { whering, ...rest } = r; return { ...rest, source: whering }; });
   out.words = out.words.filter(w => typeof w.name === 'string' && w.name.trim());
+  if (K.genderTags) migrateGenderTags(out); // needs data/gender-tags.json, so start.js upgrades again once it's loaded
   out.deleted = Array.isArray(d.deleted) ? d.deleted : [];
   return out;
 }

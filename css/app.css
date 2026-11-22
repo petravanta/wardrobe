@@ -210,3 +210,8 @@ details.more summary{cursor:pointer;font-weight:600;color:var(--muted);font-size
 fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0;margin-bottom:4px}
 .sizes .row select,.sizes .row input{flex:1}
+/* Tag picker and size chips in the forms */
+.tagpick .chips{margin:4px 0}
+.tagpick .chip .swatch,.tagpick .chip .wemoji{margin-right:4px}
+.size-row{gap:6px}
+.size-chips .chip{padding:3px 10px;font-size:12px}

@@ -3,8 +3,8 @@ function renderSettings() {
   const conn = store.known;
   const used = id => doc.items.filter(it => visible(it) && (it.words || []).includes(id)).length;
   $('#main').innerHTML = `<div class="stack">
-  <section class="panel stack"><h3>Wardrobe words</h3>
-    <p class="small muted">Your own words for your clothes, like goth, cozy or capsule. Tag items with them in the item form or with <i>Tag items</i> here, then filter or group the closet by them.</p>
+  <section class="panel stack"><h3>Tags</h3>
+    <p class="small muted">Your own tags for your clothes, like goth, cozy or capsule. Add them in the item or outfit form, or with <i>Tag items</i> here, then filter or group the closet by them.</p>
     ${sortedWords().map(w => `<div class="row word-row">
       <label class="sr-only" for="wc-${esc(w.id)}">Colour of ${esc(w.name)}</label><input type="color" id="wc-${esc(w.id)}" data-word-colour="${esc(w.id)}" value="${esc(w.colour || '#888888')}">
       <label class="sr-only" for="we-${esc(w.id)}">Emoji for ${esc(w.name)}</label><input type="text" class="emoji" id="we-${esc(w.id)}" data-word-emoji="${esc(w.id)}" value="${esc(w.emoji || '')}" list="wordEmoji" placeholder="＋" autocomplete="off">
@@ -13,8 +13,8 @@ function renderSettings() {
       <button type="button" class="btn sm" data-word-items="${esc(w.id)}">Tag items</button><button type="button" class="btn ghost sm" data-del-word="${esc(w.id)}" aria-label="Delete ${esc(w.name)}">×</button>
     </div>`).join('')}
     <datalist id="wordEmoji">${WORD_EMOJI.map(x => `<option value="${x}">`).join('')}</datalist>
-    <p class="small muted">Give a word an emoji in the small box: pick a suggestion, or use your keyboard’s emoji picker (Windows + . or Ctrl + Cmd + Space). Clear it to go back to the colour dot.</p>
-    <div class="row"><label class="sr-only" for="newWord">New word</label><input type="text" id="newWord" placeholder="New word"><button type="button" class="btn" data-act="add-word">Add</button></div>
+    <p class="small muted">Give a tag an emoji in the small box: pick a suggestion, or use your keyboard’s emoji picker (Windows + . or Ctrl + Cmd + Space). Clear it to go back to the colour dot.</p>
+    <div class="row"><label class="sr-only" for="newWord">New tag</label><input type="text" id="newWord" placeholder="New tag"><button type="button" class="btn" data-act="add-word">Add</button></div>
   </section>
   <section class="panel stack"><h3>Google Drive</h3>
     <p>${conn ? `Syncing to <b>${esc(store.file)}</b> in your Google Drive. ${esc(store.status())}` : 'Your wardrobe is saved in this browser. Connect Google Drive to keep it in an open JSON file in your own Drive and use it on other devices.'}</p>

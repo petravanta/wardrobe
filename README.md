@@ -15,15 +15,20 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 
 - **Closet**: add items with photos, type (two levels, such as Tops › Corset), colours, size, brand,
   price, purchase date (a date picker, saved as `YYYY-MM-DD`; an older month-only value such as `2025-03` is kept until a
-  day is picked), spicy flag and gender (Masc, Fem, Androgynous, plus any tags you define). Brand and size suggest the
+  day is picked), spicy flag and gender (Masc, Fem, Androgynous). Brand and size suggest the
   values already on your items (most used first; for sizes, then the size system's usual values), and any new value can
-  still be typed. Accessories include *Wig* (placed on the head in an outfit's figure).
+  still be typed. The sizes you've used in the chosen system also show as chips under the size box: a tap fills it in.
+  *One size* (a size system with one value, `single` in `data/size-systems.json`) hides the size box. Accessories include *Wig* (placed on the head in an outfit's figure).
   The materials, seasons, occasions, care and notes fields are left out of the form for now; their data
   files (and any values already on an item) are kept.
-- **Wardrobe words**: your own words for your clothes (goth, cozy, capsule…), each with a colour and an optional emoji
+- **Tags**: your own tags for your clothes (goth, cozy, capsule…), each with a colour and an optional emoji
   that shows on chips, cards and shelves. Add, rename, recolour, emoji and delete them in Settings; tag items in the item form, or many at once with *Tag items*.
-  Outfits take words too, as many as fit (sporty and goth), in the outfit's form. Deleting a word takes it off every item and outfit. Search finds items by their words too.
-- **Filters**: type, colour family, size, gender tags and wardrobe words, AND across filters and OR within one; saved in
+  In the item and outfit forms, the tag box finds the tags you already have as you type (most used first, also shown
+  as chips to tap) and makes a new one with Enter. Outfits take tags too, as many as fit (sporty and goth). Deleting a
+  tag takes it off every item and outfit. Search finds items by their tags too. Tags replace the earlier *wardrobe words*
+  (same records, ids, colours and emoji, still stored as `words`) and the gender tags people typed themselves, which
+  became tags of the same name the first time the app opened (`migrateGenderTags()`).
+- **Filters**: type, colour family, size, gender and tags, AND across filters and OR within one; saved in
   your settings and synced. Colour families are swatches filled with their colour (label in black or white, whichever
   contrasts more; a picked one gets a ring and a check). *Size* opens a picker of the sizes your items actually have,
   grouped by size system with a count each (`filters.sizes: ["letter:M", "eu:38"]`; an older typed `filters.size` is
@@ -33,7 +38,7 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   colour, purchase date, each with a count. Pick one or more and the closet shows items missing any of them, each card
   saying what's missing; tap one to fill it in. Saved as `filters.missing` (`["price", "purchased"]`).
 - **Sort and group**: sort the closet by date added, last worn, most worn, name, colour, type or price (high to low or
-  low to high; items without a price go last either way) (with *Reverse*), and group it into shelves by category, type, colour family, gender tag, wardrobe word or size. An item with
+  low to high; items without a price go last either way) (with *Reverse*), and group it into shelves by category, type, colour family, gender, tag or size. An item with
   several colours or tags sits on each matching shelf. Saved in your settings and synced.
 - **Spicy items**: hidden everywhere unless *Show spicy items* is on in Settings. Spicy-leaning types and
   materials (latex, PVC, harness…) suggest the flag when you add an item.
@@ -132,7 +137,7 @@ runs in the browser, on your device: the photo is never sent anywhere to be reco
   was taken, or today), the outfit name, each piece's answer (tap to change it) and *Add something it missed*, grouped
   by category. When nothing is found it opens straight on Review. Nothing is saved until *Log it*; cancelling drops the
   photo.
-- **Style**: a row of your wardrobe words at the top of every step narrows what's offered (the ranked rows, the picture
+- **Style**: a row of your tags at the top of every step narrows what's offered (the ranked rows, the picture
   grid and *Add something it missed*) to items with any of the picked words, and says how many match. An answer already
   picked stays, marked *outside this style*; a piece with nothing in the style offers *Show all*. The pick lasts for
   this logging only; the picked words are saved on the outfit as its `words`.
@@ -274,8 +279,8 @@ What the app knows is data, in `data/`. Each file has a JSON Schema in `data/sch
 | Seasons | `data/seasons.json` | `data/schema/seasons.schema.json` | Seasons an item suits |
 | Occasions | `data/occasions.json` | `data/schema/occasions.schema.json` | Occasions for items and outfits |
 | Care | `data/care.json` | `data/schema/care.schema.json` | Care instructions, with an optional `why` |
-| Size systems | `data/size-systems.json` | `data/schema/size-systems.schema.json` | Size systems and, where closed, their values |
-| Gender tags | `data/gender-tags.json` | `data/schema/gender-tags.schema.json` | Built-in tags (Masc, Fem, Androgynous); people add their own in the item form, and they are offered again |
+| Size systems | `data/size-systems.json` | `data/schema/size-systems.schema.json` | Size systems and, where closed, their values; `single` marks a one-value system (One size) |
+| Gender tags | `data/gender-tags.json` | `data/schema/gender-tags.schema.json` | The gender choices (Masc, Fem, Androgynous); anything else is a tag |
 | Colour seasons | `data/colour-seasons.json` | `data/schema/colour-seasons.schema.json` | The 12 seasons on the *Colour* tab: where each sits on warmth, depth and clarity, its palette, neutrals, metals and colours to avoid, with a `why` |
 | Colour questions | `data/colour-quiz.json` | `data/schema/colour-quiz.schema.json` | The *Colour* tab's questions and answers, how each answer scores, and which ones a photo sample can suggest |
 

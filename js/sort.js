@@ -3,7 +3,7 @@
 // The closet's order and shelves. Saved as settings.sort, settings.sortReverse and settings.groupBy, so they sync.
 // Each sort has a natural direction (newest, most worn, A to Z); Reverse flips it.
 const SORTS = { added: 'Date added', worn: 'Last worn', wears: 'Most worn', name: 'Name', colour: 'Colour', type: 'Type', price: 'Price: high to low', priceLow: 'Price: low to high' };
-const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', words: 'Wardrobe word', size: 'Size' };
+const GROUPS = { '': 'No groups', category: 'Category', type: 'Type', colour: 'Colour', gender: 'Gender', words: 'Tag', size: 'Size' };
 const idx = (list, id) => { const i = list.findIndex(x => x.id === id); return i < 0 ? 1e6 : i; };
 // An imported item keeps the date it was first added in its source; items made before 'added' existed keep closet order
 const addedAt = it => (it.source && it.source.createdAt) || it.added || '';
@@ -70,7 +70,7 @@ function groupItems(items) {
   }[g];
   const shelves = new Map();
   items.forEach(it => { const ks = keysOf(it).filter(Boolean); (ks.length ? ks : ['']).forEach(k => { if (!shelves.has(k)) shelves.set(k, []); shelves.get(k).push(it); }); });
-  const none = { colour: 'No colour', gender: 'No gender tag', words: 'No wardrobe word', size: 'No size' }[g] || 'Other';
+  const none = { colour: 'No colour', gender: 'No gender tag', words: 'No tag', size: 'No size' }[g] || 'Other';
   return [...shelves].map(([key, items]) => ({ key, label: key ? label(key) : none, items }))
     .sort((a, b) => (!a.key) - (!b.key) || rank(a.key) - rank(b.key) || a.label.localeCompare(b.label));
 }
