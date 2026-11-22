@@ -89,6 +89,12 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
   background* only works where the photo was added.
 - **Removing** a photo in the app takes it out of the album. Google doesn't let apps delete photos, so it stays in
   your library until you delete it there.
+- **From Google Photos** (in the closet bar and next to *Add photo* on an item, once connected) adds photos you
+  already have. Apps can no longer browse a Google Photos library, so this uses Google's **Picker**: the app opens a
+  Google Photos window, you choose photos there and tap *Done*, and the app gets only those. It downloads each one
+  (up to 2048 px, as JPEG) straight into this browser and treats it like a photo from *Add photo*: in the closet each
+  becomes a new item, in an item it is added to that item, and it then uploads to the *Wardrobe* album like any other.
+  Nothing passes through a server of ours. Videos are skipped. The picker session is deleted right after.
 - **Spicy** photos go to the same album, and Google Photos also shows album photos in the main library. *Show spicy
   items* only hides them in this app.
 - **Sign-in**: its own token under `localStorage` key `wardrobe.photos`, never the shared Drive token (adding Photos
@@ -98,8 +104,8 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
   old one. It lasts an hour and renews on a tap, like Drive; when both
   need renewing, Drive takes the first tap and Photos the next. The album's id is `settings.photosAlbum`.
 - **Scopes**: `photoslibrary.appendonly`, `photoslibrary.readonly.appcreateddata`,
-  `photoslibrary.edit.appcreateddata` (to take photos out of the album) and `photospicker.mediaitems.readonly` (for the
-  Picker import, next), plus `userinfo.email` to show which account is connected. The Library API only sees photos this app uploaded.
+  `photoslibrary.edit.appcreateddata` (to take photos out of the album) and `photospicker.mediaitems.readonly` (for
+  *From Google Photos*), plus `userinfo.email` to show which account is connected. The Library API only sees photos this app uploaded.
 
 **One-off setup** in Google Cloud Console, in the project of the shared OAuth client: enable the **Photos Library API**
 and the **Google Photos Picker API** (*APIs & Services → Library*), and add the four scopes above under *Google Auth
