@@ -15,7 +15,7 @@ function editFromFigure(span) {
 }
 
 const checks = (name, set, list, sel = []) => `<fieldset><legend>${name}</legend><div class="checks">${list.map(x => `<label><input type="checkbox" name="${set}" value="${esc(x.id)}"${sel.includes(x.id) ? ' checked' : ''}> ${x.hex ? `<i class="swatch" style="background:${x.hex}"></i>` : ''}${esc(x.name)}</label>`).join('')}</div></fieldset>`;
-// Fem, Masc, Androgynous come built in; anything else people type becomes their own tag and is offered again
+// Fem, Masc, Androgynous come built in (data/gender-tags.json); anything else is a tag (migrateGenderTags)
 function genderField(it) {
   const ids = [...new Set([...K.genderTags.map(g => g.id), ...(it.gender || [])])];
   return `<fieldset><legend>Gender (the cut, not the wearer)</legend><div class="checks">${ids.map(g => `<label><input type="checkbox" name="gender" value="${esc(g)}"${(it.gender || []).includes(g) ? ' checked' : ''}>${esc(gname(g))}</label>`).join('')}</div></fieldset>`;
@@ -37,21 +37,79 @@ function wordItemsForm(w) {
 }
 function thumbsHtml(it) {
   const photos = it.photos || [], hasCut = id => photos.some(p => p.role === 'cutout' && p.from === id);
-  return photos.map(p => `<figure><img alt="" class="zoomable${p.role === 'cutout' ? ' cut' : ''}" data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : p.role === 'crop' ? 'from an outfit' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && p.role !== 'crop' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
+  return photos.map(p => `<figure><img alt="" class="zoomable${p.role === 'cutout' ? ' cut' : ''}" data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><button type="button" class="rot" data-rotate="${esc(p.id)}" aria-label="Turn photo a quarter turn clockwise" title="Turn a quarter turn">⟳</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : p.role === 'crop' ? 'from an outfit' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && p.role !== 'crop' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
 }
+// Next and back from the item form, in the closet's current order. Changes in the form are saved first, as Save would.
+function itemStep(delta) {
+  if (!editing) return;
+  const order = itemNav, at = order.indexOf(editing.id), next = order[at + delta]; if (at < 0 || !next) return;
+  const was = itemById(editing.id), cur = readItemForm(editing); if (!cur.name) cur.name = kname('types', cur.type);
+  if (was && JSON.stringify({ ...was, u: 0 }) !== JSON.stringify({ ...cur, u: 0 })) { put('items', cur); render(); toast('Saved'); }
+  itemForm(structuredClone(itemById(next)), order); $('#layer .drawer').scrollTop = 0;
+  const b = $(`#layer [data-item-step="${delta}"]`); if (b && !b.disabled) b.focus();
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-item-step]'); if (b) itemStep(+b.dataset.itemStep); });
+document.addEventListener('keydown', e => {
+  if ((e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') || !editing || Zoom.isOpen || !$('#layer .item-nav') || e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.target.closest && e.target.closest('input,select,textarea,[contenteditable]')) return;
+  e.preventDefault(); itemStep(e.key === 'ArrowRight' ? 1 : -1);
+});
+// Turning a photo a quarter turn clockwise makes new photo versions (new ids): the old ones leave this browser and the
+// Google Photos album, and the turned ones upload like any new photo. A photo and its cut-out turn together. The item is
+// saved straight away (as with Clean background), so the open form and the saved item never point at a dropped photo.
+let turning = false;
+async function turnBlob(blob) {
+  const bmp = await createImageBitmap(blob), c = document.createElement('canvas');
+  c.width = bmp.height; c.height = bmp.width; const x = c.getContext('2d');
+  x.translate(c.width, 0); x.rotate(Math.PI / 2); x.drawImage(bmp, 0, 0); bmp.close && bmp.close();
+  const png = blob.type === 'image/png'; return new Promise(r => c.toBlob(r, png ? 'image/png' : 'image/jpeg', .92));
+}
+async function rotatePhoto(photoId) {
+  if (!editing || turning) return;
+  const item = editing, p = (item.photos || []).find(x => x.id === photoId); if (!p) return;
+  const root = p.role === 'cutout' && p.from && item.photos.some(x => x.id === p.from) ? p.from : p.id;
+  const group = item.photos.filter(x => x.id === root || (x.role === 'cutout' && x.from === root));
+  if (group.some(x => Cutout.pending.has(x.id))) return toast('Wait for the clean background to finish first');
+  turning = true;
+  try {
+    const blobs = await Promise.all(group.map(x => Photos.full(x.id)));
+    if (blobs.some(b => !b)) return toast('This photo isn’t on this device yet, so it can’t be turned here');
+    const ids = new Map();
+    for (let i = 0; i < group.length; i++) { const b = await turnBlob(blobs[i]); ids.set(group[i].id, await Photos.add(new File([b], 'turned', { type: b.type }))); }
+    const swap = photos => (photos || []).map(x => {
+      if (!ids.has(x.id)) return x;
+      const { mediaItemId, mediaAccount, vec, ...rest } = x; return { ...rest, id: ids.get(x.id), ...(x.from && ids.has(x.from) ? { from: ids.get(x.from) } : {}) };
+    });
+    item.photos = swap(item.photos);
+    const saved = itemById(item.id); if (saved) put('items', { ...saved, photos: swap(saved.photos) });
+    GPhotos.unlink(group); group.forEach(x => Photos.drop(x.id));
+    if (editing === item) refreshThumbs(item.id);
+    render();
+  } catch (err) { toast(`Couldn’t turn the photo${err && err.message ? ` (${err.message})` : ''}`); }
+  finally { turning = false; }
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-rotate]'); if (b) rotatePhoto(b.dataset.rotate); });
 // Redraws the photo strip of the open form only, so whatever is typed in the form stays
 function refreshThumbs(itemId) {
   const t = $('#thumbs'); if (!t || !editing || editing.id !== itemId) return;
   t.innerHTML = thumbsHtml(editing); fillThumbs(t);
 }
-function itemForm(it) {
+// nav: the list next and back walk through. Opened from the closet it's the closet's order then; stepping keeps that list,
+// so an item that a Review check no longer shows (its brand was just filled in) can still be gone back to.
+let itemNav = [];
+function itemForm(it, nav) {
   editing = it;
   const types = K.types.filter(t => doc.settings.showSpicy || !t.spicy || t.id === it.type);
   const groups = types.filter(t => !t.parent);
   const typeOpts = groups.map(g => `<optgroup label="${esc(g.name)}"><option value="${g.id}"${it.type === g.id ? ' selected' : ''}>${esc(g.name)} (other)</option>${types.filter(t => t.parent === g.id).map(t => `<option value="${t.id}"${it.type === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}</optgroup>`).join('');
   const sizes = (it.sizes && it.sizes.length ? it.sizes : [{ system: typeSizeSystems(it.type)[0], value: '' }]);
   const isNew = !doc.items.some(x => x.id === it.id);
-  openDrawer(`<h2>${isNew ? 'Add item' : esc(it.name || 'Item')}</h2>
+  const order = itemNav = isNew || outfitReturn ? [] : (nav || closetOrder()).filter(id => itemById(id)), at = order.indexOf(it.id);
+  openDrawer(`${at >= 0 && order.length > 1 ? `<nav class="item-nav" aria-label="Items">
+    <button type="button" class="btn sm" data-item-step="-1"${at > 0 ? '' : ' disabled'} aria-label="Previous item">‹ Back</button>
+    <span class="small muted">${at + 1} of ${order.length}</span>
+    <button type="button" class="btn sm" data-item-step="1"${at < order.length - 1 ? '' : ' disabled'} aria-label="Next item">Next ›</button></nav>` : ''}
+  <h2>${isNew ? 'Add item' : esc(it.name || 'Item')}</h2>
   <div class="thumbs" id="thumbs">${thumbsHtml(it)}</div>
   <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button>${GPhotos.known() ? '<button type="button" class="btn sm" data-gphotos="pick">From Google Photos</button>' : ''}<span class="small muted fine-only">or drop one here</span></div>
   <form class="form" id="itemForm">

@@ -34,9 +34,14 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   grouped by size system with a count each (`filters.sizes: ["letter:M", "eu:38"]`; an older typed `filters.size` is
   turned into these). Built-in gender tags show their emoji (`emoji` in `data/gender-tags.json`: ♂️ Masc, ♀️ Fem,
   ⚧️ Androgynous).
-- **Review**: *✎ Review* in the closet's filters opens checks for what items still lack: photo, price, gender, size,
+- **Review**: *✎ Review* in the closet's filters opens checks for what items still lack: photo, price, brand, gender, size,
   colour, purchase date, each with a count. Pick one or more and the closet shows items missing any of them, each card
   saying what's missing; tap one to fill it in. Saved as `filters.missing` (`["price", "purchased"]`).
+- **Next and back**: an item opened from the closet has *‹ Back* and *Next ›* (and the ← → keys outside a text box),
+  in the closet's current order, so they walk through the current filter or Review. Changes are saved first, as *Save*
+  would. The list stays as it was when the item was opened, so an item that was just fixed can still be gone back to.
+- **Picture size**: *Pictures S M L* in the closet's sort bar sets the size of the closet's cards (`settings.thumbSize`,
+  synced).
 - **Sort and group**: sort the closet by date added, last worn, most worn, name, colour, type or price (high to low or
   low to high; items without a price go last either way) (with *Reverse*), and group it into shelves by category, type, colour family, gender, tag or size. An item with
   several colours or tags sits on each matching shelf. Saved in your settings and synced.
@@ -58,7 +63,8 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   wears by day and shows each one's pictures: that day's photo first, then the items worn (up to six, then *+n*). Tap
   a picture for a close-up, or the name to open the outfit or item.
 - **Close-up**: the magnifier on a card, tile or row (and the photos in an item, outfit or *What I wore*) opens the
-  photos full size; tap to zoom, drag to look around. *Close* at the top right, Esc, a tap beside the photo or the
+  photos full size; tap to zoom, drag to look around. Opened from a closet card, *‹ Item* and *Item ›* (or ↑ ↓)
+  step to the closet's other items that have photos. *Close* at the top right, Esc, a tap beside the photo or the
   phone's Back gesture closes it.
 - **What I wore, from a photo**, on this device: the app finds the clothes in a photo of your outfit, suggests the
   matching closet items, and logs the outfit once you confirm. A piece it can't place can become a new item from the
@@ -68,6 +74,8 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   (see *Google Photos* below).
 - **Clean background** on this device: a new item's main photo gets a transparent cut-out next to the
   original, and any photo can be cleaned from the item form (see *Clean background* below).
+- **Turn a photo**: ⟳ on a photo in the item form turns it a quarter turn clockwise, together with its cut-out. The
+  turned photo is a new photo (a new id), so it uploads to Google Photos as one; the old one leaves the album.
 - **Google Drive sync** of `Wardrobe data.json`, kept in *petravanta/Wardrobe/* in My Drive (a copy saved earlier in
   the root of My Drive is moved there once, on the next connect, keeping its id so other devices carry on syncing), **Export backup** and **Import backup** (merge).
 - **Colour season**: find your colour season (12-season system) with a short questionnaire, optionally helped by

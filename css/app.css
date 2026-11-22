@@ -215,3 +215,19 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
 .tagpick .chip .swatch,.tagpick .chip .wemoji{margin-right:4px}
 .size-row{gap:6px}
 .size-chips .chip{padding:3px 10px;font-size:12px}
+
+/* Item form: next and back, turning a photo */
+.item-nav{display:flex;align-items:center;gap:8px;margin:0 48px 8px 0}
+.item-nav span{flex:1;text-align:center}
+.thumbs .rot{position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;line-height:1;font-size:14px;padding:0}
+.zoom-bar button.zitem{font-size:14px;padding:0 14px;white-space:nowrap}
+.zoom-bar{flex-wrap:wrap}
+@media (max-width:520px){.zoom-cap{flex-basis:100%}.zoom-hint{display:none}}
+.zoom-bar button:disabled{opacity:.35;cursor:default}
+/* Closet thumbnail size (settings.thumbSize) */
+.grid.th-s{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.grid.th-s .card .cap{padding:6px 8px}.grid.th-s .card .cap b{font-size:12px}.grid.th-s .card .cap span{display:none}
+.grid.th-l{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+@media (max-width:420px){.grid.th-s{grid-template-columns:repeat(3,minmax(0,1fr))}.grid.th-l{grid-template-columns:minmax(0,1fr)}}
+.chips.seg .chip{min-width:34px;justify-content:center}
+.zoom ~ .toast{z-index:90}

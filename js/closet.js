@@ -14,6 +14,15 @@ function card(it, pressed) {
     <span class="cap"><b>${esc(it.name || kname('types', it.type))}${wordsOf(it).some(w => w.emoji) ? ` <span class="wemoji" title="${esc(wordsOf(it).map(w => w.name).join(', '))}">${esc(wordsOf(it).map(w => w.emoji).filter(Boolean).join(''))}</span>` : ''}</b><span>${(it.colours || []).slice(0, 3).map(c => `<i class="swatch" style="background:${esc((K.byId.colours.get(c) || {}).hex || '#888')}"></i>`).join(' ')} ${esc(sub)}${it.spicy ? ' <span class="spicy-tag">· spicy</span>' : ''}${it.followUp ? ' <span class="follow-tag">· needs a clean photo</span>' : ''}</span>${(F().missing || []).length && lacks(it).length ? `<span class="miss-tag">No ${esc(lacks(it).map(k => MISSING[k].toLowerCase()).join(', '))}</span>` : ''}</span>
   </button>${zoomBtn(it)}</li>`;
 }
+// The items the closet shows now, in its order (an item on several shelves counts once): next and back in the item
+// form and the close-up follow it, so they walk through the current filter, Review included
+function closetOrder() {
+  const seen = new Set();
+  return groupItems(sortItems(doc.items.filter(it => matches(it)))).flatMap(s => s.items).filter(it => !seen.has(it.id) && seen.add(it.id)).map(it => it.id);
+}
+// Closet thumbnail size: settings.thumbSize 's' | 'm' (default) | 'l'
+const THUMB_SIZES = { s: 'S', m: 'M', l: 'L' };
+const thumbClass = () => `grid th-${THUMB_SIZES[doc.settings.thumbSize] ? doc.settings.thumbSize : 'm'}`;
 function renderCloset() {
   migrateSizeFilter();
   const f = F(), items = sortItems(doc.items.filter(it => matches(it))), st = doc.settings;
@@ -47,9 +56,10 @@ function renderCloset() {
     <button type="button" class="chip" data-act="reverse" aria-pressed="${!!st.sortReverse}" title="Reverse the order">⇅ Reverse</button>
     <label class="small muted" for="sGroup">Group</label>
     <select id="sGroup">${Object.entries(GROUPS).map(([k, v]) => `<option value="${k}"${(st.groupBy || '') === k ? ' selected' : ''}>${v}</option>`).join('')}</select>
+    <span class="small muted" id="thLbl">Pictures</span><div class="chips seg" role="group" aria-labelledby="thLbl">${Object.entries(THUMB_SIZES).map(([k, v]) => `<button type="button" class="chip" data-thumb-size="${k}" aria-pressed="${(THUMB_SIZES[st.thumbSize] ? st.thumbSize : 'm') === k}" aria-label="${{ s: 'Small', m: 'Medium', l: 'Large' }[k]} pictures">${v}</button>`).join('')}</div>
   </div>
   ${items.length ? groupItems(items).map(s => s.label
-      ? `<section class="shelf"><h3>${esc(s.label)} <span class="count">${s.items.length}</span></h3><ul class="grid">${s.items.map(it => card(it)).join('')}</ul></section>`
-      : `<ul class="grid">${s.items.map(it => card(it)).join('')}</ul>`).join('')
+      ? `<section class="shelf"><h3>${esc(s.label)} <span class="count">${s.items.length}</span></h3><ul class="${thumbClass()}">${s.items.map(it => card(it)).join('')}</ul></section>`
+      : `<ul class="${thumbClass()}">${s.items.map(it => card(it)).join('')}</ul>`).join('')
     : `<div class="empty">${doc.items.length ? 'Nothing matches these filters.' : 'Your closet is empty. Add your first item, or drop a few photos here.'}</div>`}`;
 }

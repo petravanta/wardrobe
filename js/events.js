@@ -8,6 +8,7 @@ document.addEventListener('click', async e => {
   if (d.act === 'add') return itemForm(newItem());
   if (d.act === 'photo') return $('#photoIn').click();
   if (d.act === 'clear') { setSetting('filters', {}); sizePopOpen = false; reviewOpen = false; return render(); }
+  if (d.thumbSize) { setSetting('thumbSize', d.thumbSize); return render(); }
   if (d.act === 'reverse') { setSetting('sortReverse', !doc.settings.sortReverse); return render(); }
   if (d.act === 'new-outfit') return outfitForm({ id: uid(), items: [] });
   if (d.act === 'log-wear') return wearForm();

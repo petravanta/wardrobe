@@ -3,9 +3,9 @@
 // AND across dimensions, OR within one. State lives in settings.filters and syncs.
 const F = () => doc.settings.filters || {};
 // Closet review: what an item still lacks, from the checks in MISSING (filters.missing holds the picked ones)
-const MISSING = { photo: 'Photo', price: 'Price', gender: 'Gender', size: 'Size', colour: 'Colour', purchased: 'Purchase date' };
+const MISSING = { photo: 'Photo', price: 'Price', brand: 'Brand', gender: 'Gender', size: 'Size', colour: 'Colour', purchased: 'Purchase date' };
 const LACKS = {
-  photo: it => !(it.photos || []).length, price: it => !hasPrice(it), gender: it => !(it.gender || []).length,
+  photo: it => !(it.photos || []).length, price: it => !hasPrice(it), brand: it => !String(it.brand || '').trim(), gender: it => !(it.gender || []).length,
   size: it => !(it.sizes || []).some(z => String(z.value || '').trim()), colour: it => !(it.colours || []).length, purchased: it => !it.purchased
 };
 const lacks = it => Object.keys(MISSING).filter(k => LACKS[k](it));

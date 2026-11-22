@@ -15,7 +15,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   changing data. Item records refer to entries by id; ids are never renamed or reused.
 - **User data**: `localStorage` key `wardrobe.data`; Drive file `petravanta/Wardrobe/Wardrobe data.json` (app id `wardrobe`, key prefix
   `wardrobe.drive`). Lists: `items`, `outfits`, `wears`, `words`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
-  `groupBy`, `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
+  `groupBy`, `thumbSize` (`s`, `m`, `l`), `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
   `mergeDocs()`.
 - **Photos**: bytes live in IndexedDB database `wardrobe` (`photos` full size, `thumbs` 400 px), keyed by the photo
   id stored on the item. Every way of adding a photo goes through `Photos.add()` / `takePhotos()`.
@@ -34,8 +34,12 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
 - **Outfit figure**: `outfitFigure()` places items by `regionOf()` (never by type id); a new region needs a place in
   `FIG_REGION`/`FIG_BANDS` or it falls into the side column. A hand layout (`outfit.layout`, from `Arrange`) wins over the
   region placement; saving it keeps entries of hidden spicy items untouched.
-- **Closet review**: `filters.missing` holds checks from `MISSING`/`LACKS` (`photo`, `price`, `gender`, `size`, `colour`,
-  `purchased`); an item shows when it lacks any. A new check needs an entry in both.
+- **Closet review**: `filters.missing` holds checks from `MISSING`/`LACKS` (`photo`, `price`, `brand`, `gender`,
+  `size`, `colour`, `purchased`); an item shows when it lacks any. A new check needs an entry in both.
+- **Next and back**: `closetOrder()` is what the closet shows, in order; `itemForm(it, nav)` keeps the list in `itemNav`
+  while stepping. The close-up gets the same list when opened from a closet card.
+- **Turning photos**: `rotatePhoto()` never edits bytes in place: it adds turned copies (new ids, no `mediaItemId` or `vec`),
+  swaps them into the form and the saved item, then drops and unlinks the old ones.
 - **Purchase date**: `item.purchased` is `YYYY-MM-DD` from a date input; older month-only values are kept, never rewritten.
 - **Missed pieces**: `WoreCrop` adds a hand-drawn piece (`manual: true`) to `wore.pieces`; its `vec` may be null when the
   model can't run, so `rankFor()` and `saveWore()` must cope with that.
