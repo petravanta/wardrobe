@@ -63,7 +63,8 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   (see *Google Photos* below).
 - **Clean background** on this device: a new item's main photo gets a transparent cut-out next to the
   original, and any photo can be cleaned from the item form (see *Clean background* below).
-- **Google Drive sync** of `Wardrobe data.json`, **Export backup** and **Import backup** (merge).
+- **Google Drive sync** of `Wardrobe data.json`, kept in *petravanta/Wardrobe/* in My Drive (a copy saved earlier in
+  the root of My Drive is moved there once, on the next connect, keeping its id so other devices carry on syncing), **Export backup** and **Import backup** (merge).
 - **Colour season**: find your colour season (12-season system) with a short questionnaire, optionally helped by
   tapping skin, hair and eyes on a photo, or pick it yourself; then see its palette and which closet items are in it
   (see *Colour season* below).

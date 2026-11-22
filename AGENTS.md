@@ -7,12 +7,13 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   `general/shared/theme.css` between its marker comments), `css/app.css`, then the `js/*.js` files with plain `<script>`
   tags in the order listed there. They are classic scripts sharing one global scope, so a file may use functions from
   any other at run time, but code that runs while a file loads can only use files above it. `js/start.js` comes last.
-  `js/shared/google-token.js` and `js/shared/drive-store.js` are unchanged copies of `general/shared/`; when those
-  change, copy them again. A new file needs its `<script>` tag and an entry in `sw.js` (`APP_SHELL`).
+  `js/shared/google-token.js` and `js/shared/drive-store.js` are unchanged copies of `shared/` in the
+  [petravanta/general](https://github.com/petravanta/general) repo; when those change, copy them again (from GitHub: a
+  local `site/general` folder may be older). A new file needs its `<script>` tag and an entry in `sw.js` (`APP_SHELL`).
 - **Accent**: slate, `#475569` light / `#a5b4c8` dark.
 - **Built-in knowledge** is in `data/*.json` with schemas in `data/schema/`. Run `node scripts/check-data.js` after
   changing data. Item records refer to entries by id; ids are never renamed or reused.
-- **User data**: `localStorage` key `wardrobe.data`; Drive file `Wardrobe data.json` (app id `wardrobe`, key prefix
+- **User data**: `localStorage` key `wardrobe.data`; Drive file `petravanta/Wardrobe/Wardrobe data.json` (app id `wardrobe`, key prefix
   `wardrobe.drive`). Lists: `items`, `outfits`, `wears`, `words`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
   `groupBy`, `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
   `mergeDocs()`.
