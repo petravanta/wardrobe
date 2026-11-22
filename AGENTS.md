@@ -44,7 +44,10 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
 - **Missed pieces**: `WoreCrop` adds a hand-drawn piece (`manual: true`) to `wore.pieces`; its `vec` may be null when the
   model can't run, so `rankFor()` and `saveWore()` must cope with that.
 - **Figure editing**: in the large outfit figure, double-click / tap / Enter on a piece opens `itemForm()` with
-  `outfitReturn` set, and `closeDrawer()` reopens the outfit. Never while `Arrange` is on.
+  `outfitReturn` set, and `closeDrawer()` reopens the outfit. Never while `Arrange` is on. The ✎ on an item in the outfit
+  panel's picker does the same with `outfitReturn.draft` (the unsaved form), which `closeDrawer()` reopens instead.
+- **Outfit panel**: `outfitForm()` opens `openDrawer(html, 'outfit-panel')`; the picker's selection lives in its `sel`
+  set, not in the DOM. Saving keeps items hidden by the spicy setting in the outfit.
 - **Size filter**: `filters.sizes` holds `"system:value"` keys (compared case-insensitively); `migrateSizeFilter()`
   turns an older `filters.size` string into them.
 - **Spicy**: anything with `spicy: true` must stay out of every view, stat, search and share export while

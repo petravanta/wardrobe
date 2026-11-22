@@ -50,10 +50,14 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 - **Outfits**: combine items, name them and tag occasions. Each outfit shows as a *figure*: its items' photos (cut-outs
   first) laid out roughly where they're worn, by each type's `region` in `data/types.json` (hat on top, tops and outer
   layers, a dress across top and middle, bottoms, shoes at the foot; bags, belts and accessories in a side column). The
-  Outfits tab is a grid of cards (two across on a phone), each with the figure, name, wears and words; the photo from
+  Outfits tab is a grid of cards (two across on a phone), each with the figure, name, wears and tags; the photo from
   the latest wearing sits in the corner and opens a close-up of the outfit's worn photos. Double-click a piece in the
   large figure (tap it on a phone, or Enter from the keyboard) to open that item's form, change its photo or details,
-  and come back to the outfit when you save or close it. Opening an outfit shows the figure large, the name (edit it right
+  and come back to the outfit when you save or close it. An outfit opens in a large panel (full screen on a phone):
+  the figure on one side, the details and the item picker on the other. The picker has a search box, a type menu and
+  tag chips; the items already in the outfit stay at the top whatever the filters, and each card has ✎ to open that
+  item's form and come back to the outfit, with what was picked so far kept. A new outfit's figure fills in as items
+  are picked. Opening an outfit shows the figure large, the name (edit it right
   there; it saves when you leave the field or press Enter), every time it was worn, newest first, with that day's photo
   (tap for a close-up, or *Add a photo* to a wear without one), and its items and occasions. *Arrange* lets you lay the
   figure out yourself: drag a piece, resize it from its corner (or pinch), *Bring forward* / *Send back*, or use the

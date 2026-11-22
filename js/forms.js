@@ -1,9 +1,9 @@
 'use strict';
 let editing = null; // the item being edited in the drawer, if any (drops add photos to it)
-let outfitReturn = null; // { outfit, item } while an item opened from an outfit's figure is being edited
+let outfitReturn = null; // { outfit, item, draft? } while an item opened from an outfit (its figure or its item picker) is being edited
 function editFromFigure(span) {
   const view = $('#layer [data-view-outfit]'), it = itemById(span.dataset.layItem); if (!view || !it) return;
-  const oid = view.dataset.viewOutfit; itemForm(structuredClone(it)); outfitReturn = { outfit: oid, item: it.id };
+  const oid = view.dataset.viewOutfit; outfitReturn = { outfit: oid, item: it.id }; itemForm(structuredClone(it));
 }
 { // mouse: double-click; touch: a tap; keyboard: Enter or Space. Never while arranging.
   let touch = false;
@@ -183,15 +183,26 @@ function readItemForm(it) {
   };
 }
 const newItem = () => ({ id: uid(), added: now(), type: (K.types.find(t => t.parent) || K.types[0]).id, photos: [] });
-// A saved outfit opens as its view: the name (edit it in place), the figure, every time it was worn, then its items
+// An outfit opens in a large panel: the figure on one side, the details and the item picker on the other (one column,
+// full screen, on a phone). A saved outfit shows its name (edit it in place), the figure, every time it was worn, then
+// its items and occasions; a new one shows its figure as items are picked. Items chosen in the picker sit at the top.
 function outfitForm(o) {
-  const items = doc.items.filter(visible), sel = new Set(o.items || []), saved = doc.outfits.some(x => x.id === o.id);
-  const ws = saved ? outfitWears(o.id) : [], keep = $('#layer .drawer') && $('#layer [data-view-outfit]') ? $('#layer .drawer').scrollTop : 0;
-  openDrawer(`${saved ? `<div data-view-outfit="${esc(o.id)}"><label class="sr-only" for="oName">Outfit name</label><input type="text" id="oName" class="title-edit" value="${esc(o.name || '')}" placeholder="Name this outfit" autocomplete="off" enterkeyhint="done"></div>
-  ${wordsOf(o).length ? `<div class="owords center">${wordsOf(o).map(w => `<span class="wtag">${wordChip(w)}</span>`).join('')}</div>` : ''}
-  ${outfitFigure(o, 'lg')}
-  <div class="row fig-tools" id="figTools">${figToolsHtml(false)}</div>
-  <p class="small muted fig-hint" style="margin:-8px 0 0">${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Double-click'} a piece to edit it.</p>
+  const items = doc.items.filter(visible), sel = new Set((o.items || []).filter(id => items.some(it => it.id === id))), saved = doc.outfits.some(x => x.id === o.id);
+  const hidden = (o.items || []).filter(id => !sel.has(id)); // hidden spicy items stay in the outfit
+  const ws = saved ? outfitWears(o.id) : [], side = $('#layer .op-side'), same = $(`#layer [data-op="${CSS.escape(o.id)}"]`);
+  const keep = same ? { side: side ? side.scrollTop : 0, panel: $('#layer .drawer').scrollTop } : null;
+  const pick = { q: '', group: '', tags: new Set() };
+  const groups = K.types.filter(t => !t.parent && items.some(it => typeGroup(it.type) === t.id));
+  const usedTags = sortedWords().filter(w => items.some(it => (it.words || []).includes(w.id)));
+  openDrawer(`<div class="op-fig" data-op="${esc(o.id)}">
+    ${saved ? `${wordsOf(o).length ? `<div class="owords center">${wordsOf(o).map(w => `<span class="wtag">${wordChip(w)}</span>`).join('')}</div>` : ''}
+    ${outfitFigure(o, 'lg')}
+    <div class="row fig-tools" id="figTools">${figToolsHtml(false)}</div>
+    <p class="small muted fig-hint">${matchMedia('(pointer:coarse)').matches ? 'Tap' : 'Double-click'} a piece to edit it.</p>`
+    : `<div id="opPreview">${outfitFigure({ ...o, items: [...sel] }, 'lg')}</div><p class="small muted fig-hint">Pick items on the ${matchMedia('(max-width:760px)').matches ? 'list below' : 'right'} to see the outfit here.</p>`}
+  </div>
+  <div class="op-side">
+  ${saved ? `<div data-view-outfit="${esc(o.id)}"><label class="sr-only" for="oName">Outfit name</label><input type="text" id="oName" class="title-edit" value="${esc(o.name || '')}" placeholder="Name this outfit" autocomplete="off" enterkeyhint="done"></div>
   <section class="stack wear-hist" data-label="${esc(o.name || 'Outfit')}"><h3>Worn ${ws.length ? `${ws.length}×` : ''}</h3>${ws.length ? `<ul>${ws.map(w => { const ph = wearPhoto(o, w), day = esc((w.at || '').slice(0, 10));
       return `<li class="entry"><span class="when">${ph ? `<img alt="Worn ${day}" class="zoomable" data-photo="${esc(ph)}">` : `<label class="btn sm add-ph">Add a photo<input type="file" accept="image/*" hidden data-wear-photo="${esc(w.id)}"></label>`}<span class="mono">${day}</span></span><span class="meta"><button type="button" class="btn ghost sm" data-unwear="${esc(w.id)}" aria-label="Remove the wear on ${day}">×</button></span></li>`; }).join('')}</ul>` : '<p class="muted small" style="margin:0">Not worn yet.</p>'}</section>
   <h3 style="margin:0">Items and occasions</h3>` : '<h2>New outfit</h2>'}
@@ -199,20 +210,61 @@ function outfitForm(o) {
     ${saved ? '' : `<label class="field">Name<input type="text" name="name" value="${esc(o.name || '')}" placeholder="Club night"></label>`}
     ${checks('Occasions', 'occasions', K.occasions, o.occasions)}
     ${wordsField(o)}
-    <fieldset><legend>Items</legend>${items.length ? `<ul class="grid">${items.map(it => card(it, sel.has(it.id))).join('')}</ul>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
-    <div class="row"><button type="submit" class="btn primary">Save</button>${doc.outfits.some(x => x.id === o.id) ? `<button type="button" class="btn" data-wear-outfit="${esc(o.id)}">Wore it today</button><span style="flex:1"></span><button type="button" class="btn danger" data-del-outfit="${esc(o.id)}">Delete</button>` : ''}</div>
-  </form>`);
-  if (saved) { $('#layer .drawer').scrollTop = keep; $('#layer .x').focus(); } // no keyboard popping up for the name on a phone
-  const nm = $('#oName');
+    <fieldset class="op-pick"><legend>Items <span class="count" id="opCount"></span></legend>${items.length ? `
+      <div class="bar op-filters" role="group" aria-label="Find items">
+        <label class="sr-only" for="opQ">Search items</label><input type="text" id="opQ" placeholder="Search items" autocomplete="off" enterkeyhint="search">
+        <label class="sr-only" for="opGroup">Item type</label><select id="opGroup"><option value="">All types</option>${groups.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>
+        ${usedTags.length ? `<div class="chips">${usedTags.map(w => `<button type="button" class="chip" data-op-tag="${esc(w.id)}" aria-pressed="false">${wordChip(w)}</button>`).join('')}</div>` : ''}
+      </div>
+      <div id="opItems"></div>` : '<p class="muted">Add items to your closet first.</p>'}</fieldset>
+    <div class="row op-actions"><button type="submit" class="btn primary">Save</button>${saved ? `<button type="button" class="btn" data-wear-outfit="${esc(o.id)}">Wore it today</button><span style="flex:1"></span><button type="button" class="btn danger" data-del-outfit="${esc(o.id)}">Delete</button>` : ''}</div>
+  </form>
+  </div>`, 'outfit-panel');
+  const nm = $('#oName'), form = $('#outfitForm');
+  // Picked items first (always shown, whatever the filters), then the others that match the search, type and tags
+  const shows = it => {
+    if (pick.group && typeGroup(it.type) !== pick.group) return false;
+    if (pick.tags.size && !(it.words || []).some(w => pick.tags.has(w))) return false;
+    const q = pick.q.trim().toLowerCase();
+    return !q || [it.name, it.brand, kname('types', it.type), ...wordsOf(it).map(w => w.name)].some(s => s && s.toLowerCase().includes(q));
+  };
+  const pickCard = it => card(it, sel.has(it.id)).replace(/<\/li>$/, `<button type="button" class="edit-btn" data-edit-item="${esc(it.id)}" aria-label="Edit ${esc(itemLabel(it))}" title="Edit item">✎</button></li>`);
+  function list() {
+    const box = $('#opItems'); if (!box) return;
+    const picked = items.filter(it => sel.has(it.id)), rest = items.filter(it => !sel.has(it.id) && shows(it));
+    box.innerHTML = `${picked.length ? `<h4 class="op-sub">In this outfit</h4><ul class="grid th-s">${picked.map(pickCard).join('')}</ul>` : ''}
+      <h4 class="op-sub">${picked.length ? 'Add more' : 'Pick items'}</h4>${rest.length ? `<ul class="grid th-s">${rest.map(pickCard).join('')}</ul>` : '<p class="muted small">No other items match.</p>'}`;
+    $('#opCount').textContent = sel.size ? `${sel.size} picked` : '';
+    fillThumbs(box);
+    const pv = $('#opPreview'); if (pv) { pv.innerHTML = outfitFigure({ ...o, items: [...sel] }, 'lg'); fillThumbs(pv); }
+  }
+  list();
+  if (keep) { if ($('#layer .op-side')) $('#layer .op-side').scrollTop = keep.side; $('#layer .drawer').scrollTop = keep.panel; }
+  if (saved) $('#layer .x').focus(); // no keyboard popping up for the name on a phone
   if (nm) {
     nm.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); nm.blur(); } });
     nm.addEventListener('blur', () => { const cur = doc.outfits.find(x => x.id === o.id), v = nm.value.trim(); if (!cur || v === (cur.name || '')) return; put('outfits', { ...cur, name: v }); render(); toast('Name saved'); });
   }
-  $('#outfitForm').addEventListener('click', e => { const c = e.target.closest('[data-item]'); if (c) { e.stopPropagation(); c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true')); } }, true);
-  $('#outfitForm').addEventListener('submit', e => {
-    e.preventDefault(); const fd = new FormData(e.target), cur = doc.outfits.find(x => x.id === o.id) || o;
-    const words = formWords(fd, cur);
-    put('outfits', { ...cur, name: (fd.get('name') ?? (nm ? nm.value : cur.name) ?? '').trim(), occasions: fd.getAll('occasions'), words, items: $$('#outfitForm [data-item][aria-pressed="true"]').map(b => b.dataset.item) });
+  const q = $('#opQ'), g = $('#opGroup');
+  if (q) q.addEventListener('input', () => { pick.q = q.value; list(); });
+  if (q) q.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+  if (g) g.addEventListener('change', () => { pick.group = g.value; list(); });
+  // What the form holds now, to come back to after editing one of its items
+  const draft = () => {
+    const fd = new FormData(form), cur = doc.outfits.find(x => x.id === o.id) || o;
+    return { ...cur, name: (fd.get('name') ?? (nm ? nm.value : cur.name) ?? '').trim(), occasions: fd.getAll('occasions'), words: formWords(fd, cur), items: [...sel, ...hidden] };
+  };
+  form.addEventListener('click', e => {
+    const ed = e.target.closest('[data-edit-item]');
+    if (ed) { e.stopPropagation(); const it = itemById(ed.dataset.editItem); if (!it) return; outfitReturn = { outfit: o.id, item: it.id, draft: draft() }; itemForm(structuredClone(it)); return; }
+    const tg = e.target.closest('[data-op-tag]');
+    if (tg) { e.stopPropagation(); const id = tg.dataset.opTag; pick.tags.has(id) ? pick.tags.delete(id) : pick.tags.add(id); tg.setAttribute('aria-pressed', String(pick.tags.has(id))); return list(); }
+    const c = e.target.closest('#opItems [data-item]');
+    if (c) { e.stopPropagation(); const id = c.dataset.item; sel.has(id) ? sel.delete(id) : sel.add(id); list(); const again = $(`#opItems [data-item="${CSS.escape(id)}"]`); if (again) again.focus({ preventScroll: true }); }
+  }, true);
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    put('outfits', draft());
     closeDrawer(); render(); toast('Outfit saved');
   });
 }
