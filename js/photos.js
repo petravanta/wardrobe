@@ -40,11 +40,32 @@ const Photos = (() => {
 })();
 const isImage = f => /^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|heic|heif|avif)$/i.test(f.name);
 const coverPhoto = it => { const p = it.photos || []; return p.find(x => x.role === 'cutout') || p.find(x => x.role === 'main') || p[0]; };
+// A crop cut from an outfit photo (What I wore) that records where it came from can be made again from that photo, so
+// it stays on the device and never goes to Google Photos. Older crops without from/box upload like any photo.
+const regenerable = p => !!(p && p.role === 'crop' && p.from && Array.isArray(p.box) && p.box.length === 4 && Array.isArray(p.of));
+const photoRec = id => { for (const it of [...doc.items, ...doc.outfits, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id) return p; return null; };
+async function regenCrop(p) {
+  const src = await Photos.full(p.from); if (!src) return false;
+  const bmp = await createImageBitmap(src), [x, y, w, h] = p.box, sx = bmp.width / p.of[0], sy = bmp.height / p.of[1];
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w * sx)); c.height = Math.max(1, Math.round(h * sy));
+  c.getContext('2d').drawImage(bmp, x * sx, y * sy, w * sx, h * sy, 0, 0, c.width, c.height); bmp.close && bmp.close();
+  const blob = await new Promise(r => c.toBlob(r, 'image/png')); if (!blob) return false;
+  await Photos.put(p.id, new File([blob], 'crop.png', { type: 'image/png' })); return true;
+}
+// Where the crop's outfit photo is only shown from Google Photos (another device: its bytes can't be copied), the
+// browser shows just the crop's part of it
+const cropView = (img, p) => { const [x, y, w, h] = p.box, [W, H] = p.of, pc = v => `${(v * 100).toFixed(2)}%`; img.style.objectViewBox = `inset(${pc(y / H)} ${pc(1 - (x + w) / W)} ${pc(1 - (y + h) / H)} ${pc(x / W)})`; };
 // A photo this browser doesn't have yet (added on another device) comes down from the Google Photos album
 async function fillThumbs(root = document) {
   const missing = [];
   for (const img of $$('img[data-photo]', root)) if (!img.getAttribute('src')) {
-    const id = img.dataset.photo, u = await Photos.thumb(id) || GPhotos.direct(id), m = mediaIdOf(id);
+    const id = img.dataset.photo; let u = await Photos.thumb(id) || GPhotos.direct(id);
+    const p = !u && photoRec(id);
+    if (regenerable(p)) {
+      if (await regenCrop(p).catch(() => false)) { u = await Photos.thumb(id); }
+      else { const d = GPhotos.direct(p.from), m = mediaIdOf(p.from); if (d) { cropView(img, p); u = d; } else if (m && GPhotos.live()) { missing.push([p.from, m]); continue; } }
+    }
+    const m = mediaIdOf(id);
     if (u) img.src = u; else if (m && GPhotos.live()) missing.push([id, m]); else img.remove();
   }
   if (missing.length && await GPhotos.fetchMissing(missing)) fillThumbs(root);

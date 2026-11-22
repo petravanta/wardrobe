@@ -74,19 +74,22 @@ function renderColour() {
       <h3>Metals</h3><p>${esc(cur.metals.join(', '))}</p>
       ${cur.avoid.length ? `<h3>Harder to wear</h3>${csSwatches(cur.avoid)}${cur.why ? `<p class="small muted">${esc(cur.why)}</p>` : ''}` : ''}
       <p class="small muted">A guide, not a rule: wear what you love. Colours near your face matter most; trousers, shoes and bags are far more forgiving.</p></section>
+    <details class="panel more"${Object.keys(CS.answers).length ? ' open' : ''}><summary>Find my season again</summary><div class="stack" style="margin-top:12px">${csQuiz()}</div></details>
+    ${picker}
     <section class="panel stack"><h3>From your closet</h3>
       ${doc.items.some(visible) ? `<p class="small muted">Matched by each item's main colour.${m.other.length ? ` ${m.other.length} with a print or no colour ${m.other.length === 1 ? 'isn’t' : 'aren’t'} counted.` : ''}</p>
       <h3>In your palette <span class="count">${m.in.length}</span></h3>${m.in.length ? `<ul class="grid">${m.in.map(it => card(it)).join('')}</ul>` : '<p class="muted small">Nothing yet.</p>'}
       ${m.out.length ? `<details class="more"><summary>Outside it (${m.out.length})</summary><ul class="grid" style="margin-top:12px">${m.out.map(it => card(it)).join('')}</ul><p class="small muted" style="margin-top:8px">Worth keeping if you love them: wear them away from your face, or with one of your colours near it.</p></details>` : ''}`
-      : '<p class="muted small">Add items with a colour to see which ones are in your palette.</p>'}</section>
-    <details class="panel more"${Object.keys(CS.answers).length ? ' open' : ''}><summary>Find my season again</summary><div class="stack" style="margin-top:12px">${csQuiz()}</div></details>`;
+      : '<p class="muted small">Add items with a colour to see which ones are in your palette.</p>'}</section>`;
   } else {
     body = `<section class="panel stack"><h2>Find your colour season</h2>
       <p>Colour seasons sort people by their natural colouring (warm or cool, light or deep, bright or soft) into 12 groups, each with a palette that tends to flatter. Answer a few questions, optionally with help from a photo, then see your palette and which of your clothes are already in it.</p>
       <p class="small muted">${CS_GUIDE}</p></section>
-    <section class="panel stack"><h3>Questions</h3>${csQuiz()}</section>`;
+    <section class="panel stack"><h3>Questions</h3>${csQuiz()}</section>
+    ${picker}`;
   }
-  $('#main').innerHTML = `<div class="stack">${body}${picker}</div>`;
+  // Finding or picking a season comes before the closet's matching items, which can be a long list
+  $('#main').innerHTML = `<div class="stack">${body}</div>`;
 }
 function csUse(id) { setSetting('colourSeason', id); render(); scrollTo({ top: 0 }); toast(id ? `${kname('colourSeasons', id)} is your season` : 'Season cleared'); }
 document.addEventListener('change', e => {

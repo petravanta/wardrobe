@@ -59,14 +59,29 @@ const GPhotos = (() => {
     const a = await json('/albums', { album: { title: 'Wardrobe' } });
     setSetting('photosAlbum', a.id); return a.id;
   }
-  function setMediaId(itemId, photoId, mediaItemId) {
-    const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId, mediaAccount: doc.settings.photosAccount } : p);
+  function setMediaId(itemId, photoId, mediaItemId, mediaDesc) {
+    const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId, mediaAccount: doc.settings.photosAccount, ...(mediaDesc ? { mediaDesc } : {}) } : p);
     const it = itemById(itemId); if (it) put('items', { ...it, photos: mark(it.photos) });
     const o = doc.outfits.find(x => x.id === itemId); if (o) put('outfits', { ...o, photos: mark(o.photos) }); // an outfit photo (What I wore)
     if (editing && editing.id === itemId) editing.photos = mark(editing.photos);
   }
   // Saved photos (of items, and outfit photos) not in this account's album yet
-  const waiting = () => [...doc.items, ...doc.outfits].flatMap(it => (it.photos || []).filter(p => !inAlbum(p)).map(p => [it.id, p]));
+  const waiting = () => [...doc.items, ...doc.outfits].flatMap(it => (it.photos || []).filter(p => !inAlbum(p) && !regenerable(p)).map(p => [it.id, p]));
+  // Each upload gets a description naming the app, the kind of photo and the item or outfit, so it can be told apart
+  // in Google Photos. Photos uploaded before that get it later with mediaItems.patch, which Google allows for media
+  // items the app created (photoslibrary.edit.appcreateddata, already in SCOPES). photo.mediaDesc is the text it has.
+  const KIND_TEXT = { main: 'item photo', label: 'label photo', cutout: 'clean background', crop: 'crop from an outfit photo', worn: 'outfit photo' };
+  const describe = (ownerId, p) => {
+    const it = itemById(ownerId), o = !it && doc.outfits.find(x => x.id === ownerId);
+    const name = it ? itemLabel(it) : o ? (o.name || 'Outfit') : '';
+    return ['Wardrobe app', KIND_TEXT[p.role] || 'photo', name].filter(Boolean).join(' · ').slice(0, 900);
+  };
+  function setDesc(ownerId, photoId, mediaDesc) {
+    const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaDesc } : p);
+    const it = itemById(ownerId); if (it) put('items', { ...it, photos: mark(it.photos) });
+    const o = doc.outfits.find(x => x.id === ownerId); if (o) put('outfits', { ...o, photos: mark(o.photos) });
+    if (editing && editing.id === ownerId) editing.photos = mark(editing.photos);
+  }
   async function sync() {
     clearTimeout(S.timer);
     if (!live() || S.busy) return;
@@ -85,14 +100,20 @@ const GPhotos = (() => {
         const albumId = await album();
         for (let i = 0; i < todo.length; i += 20) { // upload the bytes one by one, then add them to the album 20 at a time
           const chunk = todo.slice(i, i + 20), items = [];
-          for (const [, p, blob] of chunk) {
+          for (const [owner, p, blob] of chunk) {
             const token = await (await call('/uploads', { method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-Goog-Upload-Content-Type': blob.type || 'image/jpeg', 'X-Goog-Upload-Protocol': 'raw' }, body: blob })).text();
-            items.push({ simpleMediaItem: { uploadToken: token, fileName: `wardrobe-${p.id}.${blob.type === 'image/png' ? 'png' : 'jpg'}` } });
+            items.push({ description: describe(owner, p), simpleMediaItem: { uploadToken: token, fileName: `wardrobe-${p.id}.${blob.type === 'image/png' ? 'png' : 'jpg'}` } });
           }
           const r = await json('/mediaItems:batchCreate', { albumId, newMediaItems: items });
-          (r.newMediaItemResults || []).forEach((m, k) => { if (m.mediaItem) { setMediaId(chunk[k][0], chunk[k][1].id, m.mediaItem.id); S.done++; } });
+          (r.newMediaItemResults || []).forEach((m, k) => { if (m.mediaItem) { setMediaId(chunk[k][0], chunk[k][1].id, m.mediaItem.id, items[k].description); S.done++; } });
           note();
         }
+      }
+      // Descriptions for photos uploaded before there were any, or whose item was renamed since; a few at a time
+      const skip = new Set(st().descSkip || []), stale = [...doc.items, ...doc.outfits].flatMap(it => (it.photos || []).filter(p => inAlbum(p) && !skip.has(p.mediaItemId)).map(p => [it.id, p, describe(it.id, p)])).filter(([, p, d]) => p.mediaDesc !== d);
+      for (const [owner, p, d] of stale.slice(0, 40)) {
+        try { await call(`/mediaItems/${encodeURIComponent(p.mediaItemId)}?updateMask=description`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.mediaItemId, description: d }) }); setDesc(owner, p.id, d); }
+        catch (e) { if (e.code !== 'http') throw e; set({ descSkip: [...(st().descSkip || []), p.mediaItemId] }); } // not this app's, or gone: don't ask again
       }
     } catch (e) {
       S.err = e.code === 'expired' ? null : e.code === 'offline' ? 'offline' : (e.msg || 'error');
@@ -176,7 +197,7 @@ const GPhotos = (() => {
   }, true);
   addEventListener('online', () => sync());
   return {
-    known, live, sync, fetchMissing, pick, renew: () => signIn(),
+    known, live, sync, fetchMissing, pick, renew: () => signIn(), describe,
     direct(id) {
       const d = direct.get(id); if (!d) return '';
       if (d.exp > Date.now()) return d.url;

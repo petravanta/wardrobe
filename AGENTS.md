@@ -59,7 +59,9 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   consent for every app. A photo's `mediaItemId` is never dropped by a merge (`keepMedia()`), so nothing uploads twice.
   `GPhotos.pick()` (Picker API) returns `File`s that go through `takePhotos()`, the same path as *Add photo*; it needs
   a window opened on the tap (`pickPhotos()`), and buttons that open Google windows carry `data-gphotos` so the
-  token-renewal tap listener leaves them alone.
+  token-renewal tap listener leaves them alone. Uploads carry `describe()` as their description; `photo.mediaDesc`
+  records it, and older or renamed ones are patched. `regenerable()` crops (What I wore, with `from`/`box`/`of`) never
+  upload: `regenCrop()` cuts them again, or `cropView()` shows that part of the outfit photo.
 - **Tags** (called wardrobe words before, so the code still says `word`): records in `doc.words` (`id`, `name`, `colour`,
   optional `emoji`); items and outfits hold tag ids in `.words`. Rename and colour live on the tag only. `deleteWord()`
   strips the id from every item and outfit. Ids with no tag are skipped (`wordsOf()`). The forms use the picker in

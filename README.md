@@ -91,7 +91,7 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   the root of My Drive is moved there once, on the next connect, keeping its id so other devices carry on syncing), **Export backup** and **Import backup** (merge).
 - **Colour season**: find your colour season (12-season system) with a short questionnaire, optionally helped by
   tapping skin, hair and eyes on a photo, or pick it yourself; then see its palette and which closet items are in it
-  (see *Colour season* below).
+  (see *Colour season* below). *Find my season again* and *Pick your season yourself* sit above the matching items.
 - Light and dark themes, the hub's *All apps* menu, and install as an app (shortcuts *Add item* and *Log
   what I wore*).
 
@@ -195,7 +195,16 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
 - **Upload**: every saved photo without a `mediaItemId` whose bytes are in this browser uploads (originals and
   cut-outs, at the 1600 px size the app stores), and gets the album copy's `mediaItemId`, which syncs through Drive.
   New photos upload a couple of seconds after they're saved. Photos are only in the browser where they were added, so
-  that browser does their first upload.
+  that browser does their first upload. Each upload gets a description such as *Wardrobe app · item photo · Black
+  midi skirt* (kinds: item photo, label photo, clean background, outfit photo), so app photos can be told apart in
+  Google Photos. Photos uploaded before that, or whose item or outfit was renamed since, get the new text through
+  `mediaItems.patch` (Google allows it for media items the app created, with `photoslibrary.edit.appcreateddata`), up
+  to 40 per sync; `photo.mediaDesc` is the text a photo has. Google's API notes ask that descriptions hold only text
+  people wrote, and these are made by the app.
+- **Crops stay on the device**: a crop cut from an outfit photo in *What I wore* keeps where it came from (`from`, the
+  outfit photo; `box` and `of`, where in that photo), so it isn't uploaded: it is cut again from the outfit photo when
+  a browser doesn't have it, or, where the outfit photo is only shown from Google Photos, that part of it is shown
+  (`object-view-box`, Chrome and Edge). Crops made before this upload as before.
 - **Showing them elsewhere**: a browser that doesn't have a photo's bytes (another device, or the app on another
   address such as localhost and GitHub Pages) asks the album for it by `mediaItemId` and shows Google's image address,
   which lasts an hour and is then asked for again. Google sends no CORS headers for album images, so they can be shown
@@ -218,7 +227,7 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
   old one. It lasts an hour and renews on a tap, like Drive; when both
   need renewing, Drive takes the first tap and Photos the next. The album's id is `settings.photosAlbum`.
 - **Scopes**: `photoslibrary.appendonly`, `photoslibrary.readonly.appcreateddata`,
-  `photoslibrary.edit.appcreateddata` (to take photos out of the album) and `photospicker.mediaitems.readonly` (for
+  `photoslibrary.edit.appcreateddata` (to take photos out of the album and set their descriptions) and `photospicker.mediaitems.readonly` (for
   *From Google Photos*), plus `userinfo.email` to show which account is connected. The Library API only sees photos this app uploaded.
 
 **One-off setup** in Google Cloud Console, in the project of the shared OAuth client: enable the **Photos Library API**

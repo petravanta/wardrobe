@@ -10,7 +10,11 @@ const Zoom = (() => {
     view.classList.remove('big'); img.style.width = ''; img.classList.toggle('cut', !!p.cut);
     if (own) { URL.revokeObjectURL(own); own = ''; }
     let u = p.src || '';
-    if (!u) { const b = await Photos.full(p.id); if (b) u = own = URL.createObjectURL(b); else u = await Photos.thumb(p.id) || GPhotos.direct(p.id) || ''; }
+    let rec = null;
+    if (!u) { let b = await Photos.full(p.id); if (!b && regenerable(rec = photoRec(p.id)) && await regenCrop(rec).catch(() => false)) b = await Photos.full(p.id);
+      if (b) u = own = URL.createObjectURL(b); else u = await Photos.thumb(p.id) || GPhotos.direct(p.id) || ''; }
+    img.style.objectViewBox = '';
+    if (!u && regenerable(rec) && GPhotos.direct(rec.from)) { u = GPhotos.direct(rec.from); cropView(img, rec); }
     if (n !== seq || !el) { if (u && u === own && !el) URL.revokeObjectURL(u); return; }
     img.src = u; img.alt = label || 'Photo';
     q('.zoom-cap').textContent = [label, set.length > 1 ? `${at + 1} / ${set.length}` : ''].filter(Boolean).join(' · ');

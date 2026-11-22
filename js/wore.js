@@ -433,7 +433,9 @@ async function saveWore() {
   // New items from the photo: the crop is their photo until a clean one is added (followUp), with a type and colours to start
   for (const pc of make) {
     const k = KINDS[pc.kind] || {}, type = K.byId.types.has(k.type) ? k.type : newItem().type;
-    const photo = { id: await Photos.add(new File([pc.blob], 'crop.png', { type: 'image/png' })), role: 'crop', ...(pc.vec ? { vec: packVec(pc.vec) } : {}) };
+    // from/box/of: which outfit photo it was cut from and where (in that photo's pixels), so it can be made again
+    // instead of going to Google Photos (regenerable())
+    const photo = { id: await Photos.add(new File([pc.blob], 'crop.png', { type: 'image/png' })), role: 'crop', from: w.photo, box: pc.box.map(Math.round), of: [w.W, w.H], ...(pc.vec ? { vec: packVec(pc.vec) } : {}) };
     const it = { id: uid(), added: now(), name: `${k.name || kname('types', type)}, worn ${at}`, type, colours: await guessColours(pc.blob).catch(() => []), photos: [photo], followUp: true };
     put('items', it); chosen.add(it.id);
   }
