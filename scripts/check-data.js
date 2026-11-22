@@ -4,7 +4,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const DATA = path.join(__dirname, '..', 'data');
-const SETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags'];
+const SETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags', 'colour-seasons', 'colour-quiz'];
 const errors = [];
 const load = set => {
   try { return JSON.parse(fs.readFileSync(path.join(DATA, `${set}.json`), 'utf8')); }
@@ -43,6 +43,17 @@ for (const set of ['types', 'colours', 'materials', 'occasions']) {
     owner.set(w, r.id);
   }));
 }
+
+// Colour quiz: option ids unique within a question; the photo code relies on the undertone and contrast option ids
+data['colour-quiz'].forEach(q => {
+  const ids = q.options.map(o => o.id);
+  if (new Set(ids).size !== ids.length) errors.push(`colour-quiz.json: "${q.id}" has an option id used twice`);
+  const need = { undertone: ['pink', 'neutral', 'golden'], contrast: ['high', 'medium', 'low'] }[q.photo] || [];
+  need.filter(id => !ids.includes(id)).forEach(id => errors.push(`colour-quiz.json: "${q.id}" is used for photo ${q.photo} but has no option "${id}"`));
+  if (['skin', 'hair', 'eyes'].includes(q.photo)) q.options.filter(o => !o.hex).forEach(o => errors.push(`colour-quiz.json: "${q.id}" option "${o.id}" needs a hex so a photo sample can be matched to it`));
+});
+const photoUses = data['colour-quiz'].map(q => q.photo).filter(Boolean);
+if (new Set(photoUses).size !== photoUses.length) errors.push('colour-quiz.json: each photo kind may be used by only one question');
 
 if (errors.length) { console.error(errors.map(e => '✗ ' + e).join('\n')); process.exit(1); }
 console.log(`✓ ${SETS.length} datasets, ${Object.values(data).reduce((n, r) => n + r.length, 0)} entries`);

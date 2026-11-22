@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/colour-quiz.schema.json",
+  "title": "Colour season questionnaire",
+  "description": "Questions on the Colour tab. Each answer moves the person's scores on the warmth, depth and clarity axes of data/colour-seasons.json; the average of every answered question decides the suggestion. Answers are kept only while the tab is open.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "question", "options"],
+    "properties": {
+      "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Stable id: lowercase letters, digits and hyphens."},
+      "question": {"type": "string", "minLength": 1, "description": "The question as shown."},
+      "help": {"type": "string", "minLength": 1, "description": "Optional hint on how to answer it."},
+      "photo": {"type": "string", "enum": ["skin", "undertone", "hair", "eyes", "contrast"], "description": "If set, photo sampling can suggest an answer: skin, hair and eyes pick the option whose hex is nearest the sampled colour; undertone and contrast are worked out from the samples by the app."},
+      "options": {
+        "type": "array",
+        "minItems": 2,
+        "description": "Answers, in display order.",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "label"],
+          "properties": {
+            "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Stable id, unique within the question. The app's photo code refers to the ids of undertone and contrast options."},
+            "label": {"type": "string", "minLength": 1, "description": "Answer as shown."},
+            "hex": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "Typical colour for this answer, shown as a swatch and matched against photo samples."},
+            "warmth": {"type": "number", "minimum": -1, "maximum": 1, "description": "How this answer moves warmth: -1 cool to 1 warm. Leave out if it says nothing about warmth."},
+            "depth": {"type": "number", "minimum": -1, "maximum": 1, "description": "How this answer moves depth: -1 light to 1 deep."},
+            "clarity": {"type": "number", "minimum": -1, "maximum": 1, "description": "How this answer moves clarity: -1 soft to 1 bright."}
+          }
+        }
+      }
+    }
+  }
+}
