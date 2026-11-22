@@ -5,7 +5,7 @@ self.APP_SHELL = ['./', 'manifest.webmanifest', 'icon-192.png', 'icon.svg',
   'data/colour-seasons.json', 'data/colour-quiz.json',
   'css/theme.css', 'css/app.css', 'js/core.js', 'js/data.js', 'js/tags.js', 'js/photos.js',
   'js/cutout.js', 'js/wore.js', 'js/filters.js', 'js/sort.js', 'js/colour.js', 'js/closet.js',
-  'js/outfits.js', 'js/worn.js', 'js/settings.js', 'js/drawers.js', 'js/zoom.js', 'js/forms.js',
+  'js/outfits.js', 'js/worn.js', 'js/stats.js', 'js/settings.js', 'js/drawers.js', 'js/zoom.js', 'js/forms.js',
   'js/arrange.js', 'js/wears.js', 'js/add-photos.js', 'js/backup.js', 'js/import.js', 'js/events.js',
   'js/toast.js', 'js/shared/google-token.js', 'js/shared/drive-store.js', 'js/drive.js', 'js/gphotos.js', 'js/start.js'];
 importScripts('../general/shared/app-sw.js');

@@ -39,6 +39,11 @@ function thumbsHtml(it) {
   const photos = it.photos || [], hasCut = id => photos.some(p => p.role === 'cutout' && p.from === id);
   return photos.map(p => `<figure><img alt="" class="zoomable${p.role === 'cutout' ? ' cut' : ''}" data-photo="${esc(p.id)}"><button type="button" class="rm" data-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button><button type="button" class="rot" data-rotate="${esc(p.id)}" aria-label="Turn photo a quarter turn clockwise" title="Turn a quarter turn">⟳</button><figcaption>${Cutout.pending.has(p.id) ? 'cleaning…' : p.role === 'crop' ? 'from an outfit' : esc(p.role)}</figcaption>${Cutout.supported && p.role !== 'cutout' && p.role !== 'crop' && !Cutout.pending.has(p.id) ? `<button type="button" class="btn sm clean" data-cutout="${esc(p.id)}">${hasCut(p.id) ? 'Clean again' : 'Clean background'}</button>` : ''}</figure>`).join('');
 }
+// Under the item's name: times worn, last worn and the running cost per wear (the price over the times worn so far)
+function itemStatLine(it) {
+  const s = itemStats().get(it.id); if (!s) return '';
+  return `<p class="item-stats small"><span><b class="mono">${s.n}×</b> worn</span><span>${s.last ? `last <b class="mono">${esc(s.last)}</b>` : 'not worn yet'}</span>${s.price != null ? `<span><b class="mono">${money(s.cpw)}</b> per wear${s.n ? '' : ' so far'}</span>` : ''}</p>`;
+}
 // Next and back from the item form, in the closet's current order. Changes in the form are saved first, as Save would.
 function itemStep(delta) {
   if (!editing) return;
@@ -110,6 +115,7 @@ function itemForm(it, nav) {
     <span class="small muted">${at + 1} of ${order.length}</span>
     <button type="button" class="btn sm" data-item-step="1"${at < order.length - 1 ? '' : ' disabled'} aria-label="Next item">Next ›</button></nav>` : ''}
   <h2>${isNew ? 'Add item' : esc(it.name || 'Item')}</h2>
+  ${isNew ? '' : itemStatLine(it)}
   <div class="thumbs" id="thumbs">${thumbsHtml(it)}</div>
   <div class="row"><button type="button" class="btn sm" data-act="photo">Add photo</button>${GPhotos.known() ? '<button type="button" class="btn sm" data-gphotos="pick">From Google Photos</button>' : ''}<span class="small muted fine-only">or drop one here</span></div>
   <form class="form" id="itemForm">

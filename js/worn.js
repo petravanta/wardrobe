@@ -16,26 +16,28 @@ function wearLog(wears) {
   return days.map(({ d, ws }) => `<div class="wlog-day"><h4>${esc(d)}</h4>${ws.map(wearEntry).join('')}</div>`).join('');
 }
 function renderWorn() {
+  if (wornView === 'breakdown') return renderBreakdown();
   const wears = [...doc.wears].filter(w => {
     if (w.item) { const it = itemById(w.item); return !it || visible(it); }
     const o = w.outfit && doc.outfits.find(x => x.id === w.outfit), its = o ? (o.items || []).map(itemById).filter(Boolean) : [];
     return !its.length || its.some(visible);
   }).sort((a, b) => (b.at || '').localeCompare(a.at || ''));
   const items = doc.items.filter(visible);
-  const counts = new Map(items.map(it => [it.id, wearsOf(it.id).length]));
-  const cpw = items.filter(it => it.price > 0 && counts.get(it.id)).map(it => ({ it, v: it.price / counts.get(it.id) })).sort((a, b) => b.v - a.v);
-  const least = [...items].sort((a, b) => counts.get(a.id) - counts.get(b.id)).slice(0, 6);
+  const st = itemStats(), n = id => st.get(id).n;
+  const cpw = items.filter(it => st.get(it.id).price > 0 && n(it.id)).map(it => ({ it, v: st.get(it.id).cpw })).sort((a, b) => b.v - a.v);
+  const least = [...items].sort((a, b) => n(a.id) - n(b.id) || (st.get(a.id).last || '').localeCompare(st.get(b.id).last || '')).slice(0, 6);
   $('#main').innerHTML = `
   <div class="bar"><button type="button" class="btn primary" data-act="log-wear">Log what I wore</button>${Recognise.supported ? '<button type="button" class="btn" data-act="wore-photo">From a photo</button><span class="small muted fine-only">or drop a photo of your outfit here</span>' : ''}</div>
   <div class="stats" style="margin-bottom:16px">
     <div class="stat panel"><b>${items.length}</b><span>Items</span></div>
     <div class="stat panel"><b>${doc.outfits.length}</b><span>Outfits</span></div>
     <div class="stat panel"><b>${wears.length}</b><span>Times worn</span></div>
-    <div class="stat panel"><b>${items.filter(it => !counts.get(it.id)).length}</b><span>Never worn</span></div>
+    <div class="stat panel"><b>${items.filter(it => !n(it.id)).length}</b><span>Never worn</span></div>
   </div>
+  ${items.length ? costChart() : ''}
   <div class="two">
     <section class="panel stack"><h3>Wear log</h3>${wears.length ? wearLog(wears.slice(0, 60)) : '<p class="muted">Nothing logged yet.</p>'}</section>
-    <section class="panel stack"><h3>Least worn</h3>${least.map(it => `<div class="entry"><span>${esc(it.name || kname('types', it.type))}</span><span class="meta">${counts.get(it.id)}×</span></div>`).join('') || '<p class="muted">Add items to see this.</p>'}
-      <h3>Cost per wear</h3>${cpw.slice(0, 6).map(({ it, v }) => `<div class="entry"><span>${esc(it.name || kname('types', it.type))}</span><span class="meta mono">${v.toFixed(2)}</span></div>`).join('') || '<p class="muted">Add a price to an item and log a wear to see this.</p>'}</section>
+    <section class="panel stack"><h3>Least worn</h3>${least.length ? `<div class="slist">${least.map(it => statRow(it, `${n(it.id)}×`)).join('')}</div><button type="button" class="linkbtn" data-breakdown="breakdown" data-bsort="-n">See full breakdown</button>` : '<p class="muted">Add items to see this.</p>'}
+      <h3>Cost per wear</h3>${cpw.length ? `<div class="slist">${cpw.slice(0, 6).map(({ it, v }) => statRow(it, money(v))).join('')}</div><button type="button" class="linkbtn" data-breakdown="breakdown" data-bsort="cpw">See full breakdown</button>` : '<p class="muted">Add a price to an item and log a wear to see this.</p>'}</section>
   </div>`;
 }

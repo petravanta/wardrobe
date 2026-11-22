@@ -66,6 +66,13 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 - **Wear log**: log an outfit or items for a day; basic stats (never worn, least worn, cost per wear). The log groups
   wears by day and shows each one's pictures: that day's photo first, then the items worn (up to six, then *+n*). Tap
   a picture for a close-up, or the name to open the outfit or item.
+- **Cost and wear** (Worn tab): a chart with a dot per priced item, times worn across and price up (hover or focus a
+  dot for its numbers, tap it to open the item). It shows what the closet shows, so the closet's filters apply, and
+  its *Group* (the closet's group setting) adds a table per group: items, cost, times worn and cost per wear; tap a
+  group to pick out its dots. *Least worn* and *Cost per wear* list items with their pictures, and *See full
+  breakdown* opens every item's price, times worn, last worn and cost per wear, sortable by any column. Wear counts
+  include a count brought in by an import (`wearStats()`); an item not worn yet costs its whole price per wear.
+- **Item stats**: an item's form shows how many times it was worn, when last, and its cost per wear so far.
 - **Close-up**: the magnifier on a card, tile or row (and the photos in an item, outfit or *What I wore*) opens the
   photos full size; tap to zoom, drag to look around. Opened from a closet card, *‹ Item* and *Item ›* (or ↑ ↓)
   step to the closet's other items that have photos. *Close* at the top right, Esc, a tap beside the photo or the

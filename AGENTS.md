@@ -40,6 +40,8 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   while stepping. The close-up gets the same list when opened from a closet card.
 - **Turning photos**: `rotatePhoto()` never edits bytes in place: it adds turned copies (new ids, no `mediaItemId` or `vec`),
   swaps them into the form and the saved item, then drops and unlinks the old ones.
+- **Cost and wear**: `js/stats.js` (`itemStats()`, `costChart()`, `renderBreakdown()`). The chart uses `matches()` and
+  `groupItems()`, so it follows the closet's filters and group setting; it is drawn at its on-screen width.
 - **Purchase date**: `item.purchased` is `YYYY-MM-DD` from a date input; older month-only values are kept, never rewritten.
 - **Missed pieces**: `WoreCrop` adds a hand-drawn piece (`manual: true`) to `wore.pieces`; its `vec` may be null when the
   model can't run, so `rankFor()` and `saveWore()` must cope with that.

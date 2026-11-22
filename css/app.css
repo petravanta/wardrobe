@@ -253,3 +253,36 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
   .op-fig .fig-lg{max-width:min(320px,100%)}
   .op-side{overflow:visible;padding:16px 16px 0}
 }
+/* Worn tab: cost and wear chart, short lists with pictures, the full breakdown */
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:var(--accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.linkbtn[aria-pressed="true"]{font-weight:700;text-decoration-thickness:2px}
+.cost-chart{margin-bottom:16px}
+.cplot{position:relative}
+.cplot svg{width:100%;max-width:100%;height:auto;display:block;overflow:visible}
+.cgrid{stroke:var(--line);stroke-width:1}
+.caxis{stroke:var(--muted);stroke-width:1}
+.ctick,.clabel{fill:var(--muted);font-size:12px;font-family:var(--f-mono)}
+.clabel{font-family:inherit;font-weight:600}
+.cdot{fill:var(--accent);stroke:var(--surface);stroke-width:2;fill-opacity:.85;cursor:pointer}
+.cdot:hover,.cdot:focus-visible{fill-opacity:1;stroke:var(--ink);outline:none}
+.cdot.dim{fill:var(--faint);fill-opacity:.35;cursor:default}
+.ctip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;display:flex;flex-direction:column;gap:2px;max-width:240px;z-index:2}
+.ctable,.btable{width:100%;border-collapse:collapse;font-size:14px}
+.ctable th,.ctable td,.btable th,.btable td{padding:6px 8px;border-top:1px solid var(--line);text-align:left;font-weight:500}
+.ctable thead th,.btable thead th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-top:0}
+.ctable .num,.btable .num{text-align:right;white-space:nowrap}
+.ctable tr.on{background:var(--sunk)}
+.cbar{display:inline-block;vertical-align:middle;height:8px;width:calc(var(--w) * 60px);margin-right:6px;border-radius:0 4px 4px 0;background:var(--accent);opacity:.7}
+.slist{display:flex;flex-direction:column}
+.srow{display:flex;align-items:center;gap:10px;width:100%;padding:6px 0;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.btable .srow{border-top:0;padding:0}
+.srow .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow .meta{font-size:12px;color:var(--muted)}
+.sthumb{width:36px;height:48px;flex:none;border-radius:6px;background:var(--sunk);overflow:hidden;display:block}
+.sthumb img{width:100%;height:100%;object-fit:contain;display:block}
+.btable-wrap{overflow-x:auto}
+.btable .btn,.btable .linkbtn{white-space:nowrap}
+.btable thead .linkbtn{color:inherit;text-decoration:none;text-transform:inherit;letter-spacing:inherit;font-weight:600}
+.item-stats{display:flex;flex-wrap:wrap;gap:4px 16px;margin:-6px 0 10px;color:var(--muted)}
+.item-stats b{color:var(--ink);font-weight:600}
+@media (max-width:480px){.cbar{display:none}.ctable th,.ctable td{padding:6px 4px}}
