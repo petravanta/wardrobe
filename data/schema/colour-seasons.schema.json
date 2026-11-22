@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/colour-seasons.schema.json",
+  "title": "Colour seasons",
+  "description": "The 12 colour seasons the Colour tab can suggest, with the palette shown for each. The person's chosen season is saved by id in settings.colourSeason.",
+  "type": "array",
+  "definitions": {
+    "swatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "hex"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "description": "Colour name shown under the swatch."},
+        "hex": {"type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "Swatch colour as #rrggbb. Closet items are compared with it."}
+      }
+    },
+    "axis": {"type": "number", "minimum": -1, "maximum": 1}
+  },
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "name", "family", "lead", "traits", "summary", "colours", "neutrals", "metals", "avoid"],
+    "properties": {
+      "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "description": "Stable id: lowercase letters, digits and hyphens. Saved settings refer to it, so it is never renamed or reused once shipped."},
+      "name": {"type": "string", "minLength": 1, "description": "Season name shown in the app."},
+      "family": {"type": "string", "enum": ["spring", "summer", "autumn", "winter"], "description": "The classic four-season group this season belongs to."},
+      "lead": {"type": "string", "enum": ["light", "warm", "bright", "cool", "soft", "deep"], "description": "The season's strongest characteristic, used to explain it."},
+      "traits": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["warmth", "depth", "clarity"],
+        "description": "Where this season sits on the three axes the questionnaire and photo sampling score. The suggestion is the season nearest to the person's scores.",
+        "properties": {
+          "warmth": {"$ref": "#/definitions/axis", "description": "-1 cool (blue undertone) to 1 warm (golden undertone)."},
+          "depth": {"$ref": "#/definitions/axis", "description": "-1 light to 1 deep."},
+          "clarity": {"$ref": "#/definitions/axis", "description": "-1 soft and muted to 1 bright and clear."}
+        }
+      },
+      "summary": {"type": "string", "minLength": 1, "description": "One or two sentences describing the season in plain words."},
+      "colours": {"type": "array", "minItems": 6, "items": {"$ref": "#/definitions/swatch"}, "description": "The season's main palette, in display order."},
+      "neutrals": {"type": "array", "minItems": 3, "items": {"$ref": "#/definitions/swatch"}, "description": "Base colours for basics, trousers, coats and shoes."},
+      "metals": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "description": "Jewellery and hardware metals that suit the season."},
+      "avoid": {"type": "array", "items": {"$ref": "#/definitions/swatch"}, "description": "Colours that tend to be hardest to wear for this season. Closet items nearest one of these are listed as outside the palette."},
+      "why": {"type": "string", "minLength": 1, "description": "Why the colours to avoid don't suit, so people can judge colours not listed."}
+    }
+  }
+}

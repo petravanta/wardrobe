@@ -1,0 +1,218 @@
+[
+  {
+    "id": "light-spring", "name": "Light Spring", "family": "spring", "lead": "light",
+    "traits": {"warmth": 0.4, "depth": -1, "clarity": 0.3},
+    "summary": "Light, warm and fresh. Your colouring is delicate, so soft clear colours with a touch of warmth look best, and heavy dark shades can overwhelm you.",
+    "colours": [
+      {"name": "Peach", "hex": "#f6b89a"}, {"name": "Light coral", "hex": "#f4978e"}, {"name": "Warm pink", "hex": "#f7a1b0"},
+      {"name": "Apricot", "hex": "#f9c08b"}, {"name": "Butter yellow", "hex": "#f6e27a"}, {"name": "Mint", "hex": "#a8e6b8"},
+      {"name": "Spring green", "hex": "#9ccc65"}, {"name": "Light aqua", "hex": "#8fd6c9"}, {"name": "Light turquoise", "hex": "#6fd0d0"},
+      {"name": "Periwinkle", "hex": "#9fb4e8"}, {"name": "Light warm violet", "hex": "#c7a6dd"}, {"name": "Salmon", "hex": "#fa9e7c"}
+    ],
+    "neutrals": [
+      {"name": "Ivory", "hex": "#fff6e5"}, {"name": "Cream beige", "hex": "#eedcbf"}, {"name": "Light camel", "hex": "#d9b98c"},
+      {"name": "Warm light grey", "hex": "#c9c2b5"}, {"name": "Light navy", "hex": "#4a5f8a"}
+    ],
+    "metals": ["Light gold", "Rose gold"],
+    "avoid": [{"name": "Black", "hex": "#111111"}, {"name": "Charcoal", "hex": "#3a3d42"}, {"name": "Burgundy", "hex": "#6d1a2c"}, {"name": "Dark olive", "hex": "#4b5320"}],
+    "why": "Very dark or heavy colours are much deeper than your own colouring, so they draw the eye away from your face."
+  },
+  {
+    "id": "warm-spring", "name": "Warm Spring", "family": "spring", "lead": "warm",
+    "traits": {"warmth": 1, "depth": -0.3, "clarity": 0.5},
+    "summary": "Warm, golden and lively. Clear colours with a yellow base suit you, like coral, golden yellow and warm turquoise.",
+    "colours": [
+      {"name": "Coral", "hex": "#ff7f50"}, {"name": "Poppy", "hex": "#ef5a3c"}, {"name": "Tomato red", "hex": "#e8483b"},
+      {"name": "Apricot", "hex": "#f7a35c"}, {"name": "Bright peach", "hex": "#ffa577"}, {"name": "Marigold", "hex": "#f2a900"},
+      {"name": "Golden yellow", "hex": "#f9c22e"}, {"name": "Lime", "hex": "#b5cc3f"}, {"name": "Grass green", "hex": "#4cae4c"},
+      {"name": "Warm turquoise", "hex": "#2bb3a6"}, {"name": "Warm aqua", "hex": "#4fc1b7"}, {"name": "Warm violet blue", "hex": "#6a7fd6"}
+    ],
+    "neutrals": [
+      {"name": "Ivory", "hex": "#fff3dc"}, {"name": "Warm beige", "hex": "#e2c79c"}, {"name": "Camel", "hex": "#c69c6d"},
+      {"name": "Golden brown", "hex": "#9a6a3a"}, {"name": "Warm navy", "hex": "#3b4f7a"}
+    ],
+    "metals": ["Yellow gold", "Brass"],
+    "avoid": [{"name": "Black", "hex": "#111111"}, {"name": "Cool grey", "hex": "#8b8f94"}, {"name": "Icy pink", "hex": "#f3d6e4"}, {"name": "Magenta", "hex": "#c2187a"}],
+    "why": "Cool, icy colours fight the golden warmth in your skin and can make it look sallow."
+  },
+  {
+    "id": "bright-spring", "name": "Bright Spring", "family": "spring", "lead": "bright",
+    "traits": {"warmth": 0.4, "depth": -0.1, "clarity": 1},
+    "summary": "Clear, bright and slightly warm. You carry strong, saturated colours well; dusty or muted shades can make you look tired.",
+    "colours": [
+      {"name": "Hot coral", "hex": "#ff5a5f"}, {"name": "True red", "hex": "#e3202b"}, {"name": "Bright orange", "hex": "#ff7a1a"},
+      {"name": "Bright yellow", "hex": "#ffd400"}, {"name": "Lime", "hex": "#9bd53a"}, {"name": "Kelly green", "hex": "#1fa34a"},
+      {"name": "Clear turquoise", "hex": "#00b5ad"}, {"name": "Clear aqua", "hex": "#2ad1d1"}, {"name": "Royal blue", "hex": "#2d5be3"},
+      {"name": "Violet", "hex": "#7b4ddb"}, {"name": "Hot pink", "hex": "#f0368a"}, {"name": "Warm fuchsia", "hex": "#e0409a"}
+    ],
+    "neutrals": [
+      {"name": "Ivory", "hex": "#fff8ec"}, {"name": "Light camel", "hex": "#d2ad7e"}, {"name": "Warm mid grey", "hex": "#8f8a84"},
+      {"name": "Chocolate", "hex": "#5a3a22"}, {"name": "Bright navy", "hex": "#24304f"}
+    ],
+    "metals": ["Bright gold", "Polished silver"],
+    "avoid": [{"name": "Dusty rose", "hex": "#c28e98"}, {"name": "Taupe", "hex": "#a39a8f"}, {"name": "Khaki", "hex": "#b5ac6b"}, {"name": "Mushroom", "hex": "#9b8b7a"}],
+    "why": "Your features are high in contrast and colour, so soft greyed shades look flat next to them."
+  },
+  {
+    "id": "light-summer", "name": "Light Summer", "family": "summer", "lead": "light",
+    "traits": {"warmth": -0.5, "depth": -1, "clarity": -0.2},
+    "summary": "Light, cool and gentle. Soft pastels with a blue or pink base suit you, like powder blue, lavender and soft rose.",
+    "colours": [
+      {"name": "Powder blue", "hex": "#a7c7e7"}, {"name": "Sky blue", "hex": "#8ec5e6"}, {"name": "Soft periwinkle", "hex": "#a3aee0"},
+      {"name": "Lavender", "hex": "#c3b1e1"}, {"name": "Light orchid", "hex": "#d6a6d6"}, {"name": "Cool pink", "hex": "#f4b6c8"},
+      {"name": "Soft rose", "hex": "#e8a3b5"}, {"name": "Light raspberry", "hex": "#d97a9e"}, {"name": "Seafoam", "hex": "#a9d8c8"},
+      {"name": "Soft aqua", "hex": "#9fd8d8"}, {"name": "Light teal", "hex": "#78b8b5"}, {"name": "Pale lemon", "hex": "#f2ecaa"}
+    ],
+    "neutrals": [
+      {"name": "Soft white", "hex": "#f7f6f2"}, {"name": "Light cool grey", "hex": "#c8cbd0"}, {"name": "Rose beige", "hex": "#d9c2b8"},
+      {"name": "Grey blue", "hex": "#7d8ea3"}, {"name": "Soft navy", "hex": "#44546e"}
+    ],
+    "metals": ["Silver", "Rose gold", "Platinum"],
+    "avoid": [{"name": "Black", "hex": "#111111"}, {"name": "Orange", "hex": "#ef7d22"}, {"name": "Mustard", "hex": "#d4a017"}, {"name": "Rust", "hex": "#b7472a"}],
+    "why": "Strong warm or very dark colours are heavier than your light, cool colouring and take over."
+  },
+  {
+    "id": "cool-summer", "name": "Cool Summer", "family": "summer", "lead": "cool",
+    "traits": {"warmth": -1, "depth": -0.2, "clarity": -0.3},
+    "summary": "Cool and soft. Blue-based colours of medium depth look best, like rose, raspberry, cornflower and slate blue.",
+    "colours": [
+      {"name": "Rose", "hex": "#d16a8c"}, {"name": "Raspberry", "hex": "#b8336a"}, {"name": "Soft watermelon", "hex": "#e06377"},
+      {"name": "Plum", "hex": "#7d4a77"}, {"name": "Lavender", "hex": "#a99bd2"}, {"name": "Periwinkle", "hex": "#8b9ad6"},
+      {"name": "Cornflower", "hex": "#6c8fd9"}, {"name": "Cool blue", "hex": "#4f7cc2"}, {"name": "Slate blue", "hex": "#6a7fa8"},
+      {"name": "Cool aqua", "hex": "#6bbac2"}, {"name": "Soft teal", "hex": "#3f8f8f"}, {"name": "Spruce", "hex": "#3b6e6a"}
+    ],
+    "neutrals": [
+      {"name": "Soft white", "hex": "#f5f5f2"}, {"name": "Blue grey", "hex": "#6e7f91"}, {"name": "Rose brown", "hex": "#8a6b6b"},
+      {"name": "Blue charcoal", "hex": "#4a5563"}, {"name": "Navy", "hex": "#2c3e5c"}
+    ],
+    "metals": ["Silver", "Pewter", "White gold"],
+    "avoid": [{"name": "Orange", "hex": "#ef7d22"}, {"name": "Gold yellow", "hex": "#f2a900"}, {"name": "Camel", "hex": "#c19a6b"}, {"name": "Rust", "hex": "#b7472a"}],
+    "why": "Yellow-based colours clash with the pink-blue undertone of your skin."
+  },
+  {
+    "id": "soft-summer", "name": "Soft Summer", "family": "summer", "lead": "soft",
+    "traits": {"warmth": -0.4, "depth": 0, "clarity": -1},
+    "summary": "Soft, muted and slightly cool. Greyed, smoky colours suit you, like dusty rose, sage, slate and soft teal.",
+    "colours": [
+      {"name": "Dusty rose", "hex": "#c28e98"}, {"name": "Soft raspberry", "hex": "#b06a82"}, {"name": "Mauve", "hex": "#a7849a"},
+      {"name": "Soft plum", "hex": "#7e5f7a"}, {"name": "Dusty lavender", "hex": "#a69bb8"}, {"name": "Blue grey", "hex": "#8ba0b4"},
+      {"name": "Smoky blue", "hex": "#5e7a99"}, {"name": "Slate", "hex": "#6f8296"}, {"name": "Soft teal", "hex": "#5f9a96"},
+      {"name": "Sage", "hex": "#9caf9a"}, {"name": "Grey green", "hex": "#7f9184"}, {"name": "Rose cocoa", "hex": "#9a7b7f"}
+    ],
+    "neutrals": [
+      {"name": "Off-white", "hex": "#eeeae4"}, {"name": "Taupe", "hex": "#a39a8f"}, {"name": "Pewter", "hex": "#8a8f94"},
+      {"name": "Charcoal", "hex": "#4b4f55"}, {"name": "Soft navy", "hex": "#46546a"}
+    ],
+    "metals": ["Brushed silver", "Pewter", "Rose gold"],
+    "avoid": [{"name": "Black", "hex": "#111111"}, {"name": "Bright orange", "hex": "#ff7a1a"}, {"name": "Hot pink", "hex": "#e1258a"}, {"name": "Bright yellow", "hex": "#ffd400"}],
+    "why": "Your features blend softly, so bright, pure colours stand out more than you do."
+  },
+  {
+    "id": "soft-autumn", "name": "Soft Autumn", "family": "autumn", "lead": "soft",
+    "traits": {"warmth": 0.4, "depth": 0, "clarity": -1},
+    "summary": "Soft, muted and slightly warm. Earthy colours with a gentle, hazy quality suit you, like sage, camel, salmon and soft teal.",
+    "colours": [
+      {"name": "Salmon", "hex": "#e39b7b"}, {"name": "Dusty coral", "hex": "#d88a74"}, {"name": "Soft terracotta", "hex": "#c27a5c"},
+      {"name": "Soft gold", "hex": "#d1b06b"}, {"name": "Camel", "hex": "#c19a6b"}, {"name": "Soft khaki", "hex": "#b5ac7e"},
+      {"name": "Sage", "hex": "#9caf88"}, {"name": "Moss", "hex": "#7c8a4f"}, {"name": "Soft jade", "hex": "#6fa08c"},
+      {"name": "Soft teal", "hex": "#4f8a83"}, {"name": "Warm taupe", "hex": "#a38d76"}, {"name": "Dusty plum", "hex": "#8a6470"}
+    ],
+    "neutrals": [
+      {"name": "Oyster", "hex": "#ede4d3"}, {"name": "Mushroom", "hex": "#9b8b7a"}, {"name": "Olive grey", "hex": "#7d7a68"},
+      {"name": "Coffee", "hex": "#6b5444"}, {"name": "Warm charcoal", "hex": "#4d4842"}
+    ],
+    "metals": ["Soft gold", "Bronze", "Antique brass"],
+    "avoid": [{"name": "Black", "hex": "#111111"}, {"name": "Pure white", "hex": "#ffffff"}, {"name": "Hot pink", "hex": "#e1258a"}, {"name": "Royal blue", "hex": "#2d5be3"}],
+    "why": "Stark or electric colours are much sharper than your blended colouring, so they look harsh."
+  },
+  {
+    "id": "warm-autumn", "name": "Warm Autumn", "family": "autumn", "lead": "warm",
+    "traits": {"warmth": 1, "depth": 0.4, "clarity": -0.4},
+    "summary": "Warm, rich and earthy. Golden, spicy colours suit you, like rust, pumpkin, mustard, olive and teal.",
+    "colours": [
+      {"name": "Rust", "hex": "#b7472a"}, {"name": "Warm red", "hex": "#c8452c"}, {"name": "Brick", "hex": "#a44a3f"},
+      {"name": "Terracotta", "hex": "#c4623f"}, {"name": "Pumpkin", "hex": "#d9772b"}, {"name": "Mustard", "hex": "#d4a017"},
+      {"name": "Golden brown", "hex": "#9a6b2e"}, {"name": "Olive", "hex": "#6b7a2a"}, {"name": "Moss", "hex": "#707d3c"},
+      {"name": "Forest olive", "hex": "#4f5f2a"}, {"name": "Teal", "hex": "#1e6f6b"}, {"name": "Petrol", "hex": "#24606a"}
+    ],
+    "neutrals": [
+      {"name": "Cream", "hex": "#f3e7cf"}, {"name": "Khaki", "hex": "#a69a6b"}, {"name": "Camel", "hex": "#b8875a"},
+      {"name": "Bronze brown", "hex": "#8c6a3a"}, {"name": "Chocolate", "hex": "#5a3a22"}
+    ],
+    "metals": ["Yellow gold", "Copper", "Bronze"],
+    "avoid": [{"name": "Black", "hex": "#111111"}, {"name": "Icy blue", "hex": "#cfe3f3"}, {"name": "Cool pink", "hex": "#f4b6c8"}, {"name": "Fuchsia", "hex": "#d4237a"}],
+    "why": "Cool and icy colours drain the golden warmth that is the strongest part of your colouring."
+  },
+  {
+    "id": "deep-autumn", "name": "Deep Autumn", "family": "autumn", "lead": "deep",
+    "traits": {"warmth": 0.5, "depth": 1, "clarity": -0.2},
+    "summary": "Deep, rich and warm. Dark earthy colours suit you, like forest green, deep teal, mahogany, rust and aubergine.",
+    "colours": [
+      {"name": "Tomato", "hex": "#b83a2a"}, {"name": "Rust", "hex": "#a0401f"}, {"name": "Burnt orange", "hex": "#c25a1b"},
+      {"name": "Mahogany", "hex": "#5b2a20"}, {"name": "Brown burgundy", "hex": "#6e2a2a"}, {"name": "Warm aubergine", "hex": "#5a2a40"},
+      {"name": "Mustard", "hex": "#c49a22"}, {"name": "Deep olive", "hex": "#4b5320"}, {"name": "Forest green", "hex": "#2f5233"},
+      {"name": "Pine", "hex": "#1f4d3a"}, {"name": "Dark teal", "hex": "#12505a"}, {"name": "Deep turquoise", "hex": "#1a6e6e"}
+    ],
+    "neutrals": [
+      {"name": "Cream", "hex": "#f1e6cf"}, {"name": "Olive grey", "hex": "#5e5a47"}, {"name": "Dark chocolate", "hex": "#4a3326"},
+      {"name": "Espresso", "hex": "#3b2a20"}, {"name": "Warm charcoal", "hex": "#3d3833"}
+    ],
+    "metals": ["Antique gold", "Copper", "Bronze"],
+    "avoid": [{"name": "Pastel pink", "hex": "#f4b6c8"}, {"name": "Icy blue", "hex": "#cfe3f3"}, {"name": "Lavender", "hex": "#c3b1e1"}, {"name": "Light grey", "hex": "#c8cbd0"}],
+    "why": "Light pastels are much paler than your own depth, so they wash you out."
+  },
+  {
+    "id": "deep-winter", "name": "Deep Winter", "family": "winter", "lead": "deep",
+    "traits": {"warmth": -0.5, "depth": 1, "clarity": 0.4},
+    "summary": "Deep, cool and striking. Dark, rich jewel tones and black and white suit you, like emerald, burgundy, sapphire and true red.",
+    "colours": [
+      {"name": "True red", "hex": "#c8102e"}, {"name": "Burgundy", "hex": "#6d1a36"}, {"name": "Deep fuchsia", "hex": "#b0186a"},
+      {"name": "Plum", "hex": "#5a1e4e"}, {"name": "Royal purple", "hex": "#4b2c82"}, {"name": "Sapphire", "hex": "#1f4fa0"},
+      {"name": "Deep navy", "hex": "#1a2340"}, {"name": "Deep teal", "hex": "#0e5e66"}, {"name": "Emerald", "hex": "#0f6e4f"},
+      {"name": "Pine", "hex": "#12463a"}, {"name": "Icy pink", "hex": "#f3d6e4"}, {"name": "Icy blue", "hex": "#d6e6f5"}
+    ],
+    "neutrals": [
+      {"name": "Pure white", "hex": "#fafafa"}, {"name": "Black", "hex": "#111111"}, {"name": "Charcoal", "hex": "#33363b"},
+      {"name": "Navy", "hex": "#1c2a4d"}, {"name": "Cool dark brown", "hex": "#3a2a2a"}
+    ],
+    "metals": ["Silver", "Platinum", "Gunmetal"],
+    "avoid": [{"name": "Camel", "hex": "#c19a6b"}, {"name": "Orange", "hex": "#ef7d22"}, {"name": "Mustard", "hex": "#d4a017"}, {"name": "Dusty rose", "hex": "#c28e98"}],
+    "why": "Warm and muted colours are softer and yellower than your cool, high-depth colouring."
+  },
+  {
+    "id": "cool-winter", "name": "Cool Winter", "family": "winter", "lead": "cool",
+    "traits": {"warmth": -1, "depth": 0.4, "clarity": 0.6},
+    "summary": "Cool, clear and crisp. Blue-based colours at full strength suit you, like royal blue, magenta, emerald and icy pastels.",
+    "colours": [
+      {"name": "True red", "hex": "#c8102e"}, {"name": "Berry", "hex": "#8b1e4a"}, {"name": "Magenta", "hex": "#c2187a"},
+      {"name": "Fuchsia", "hex": "#d4237a"}, {"name": "Cool violet", "hex": "#6a3fa0"}, {"name": "Royal blue", "hex": "#2846b4"},
+      {"name": "Cobalt", "hex": "#0047ab"}, {"name": "Emerald", "hex": "#009473"}, {"name": "Pine", "hex": "#1b5e4a"},
+      {"name": "Icy blue", "hex": "#cfe3f3"}, {"name": "Icy pink", "hex": "#f3d6e4"}, {"name": "Icy lavender", "hex": "#e1dcf2"}
+    ],
+    "neutrals": [
+      {"name": "Pure white", "hex": "#fafafa"}, {"name": "Cool grey", "hex": "#8a8f99"}, {"name": "Charcoal", "hex": "#33363b"},
+      {"name": "Navy", "hex": "#1c2a4d"}, {"name": "Black", "hex": "#111111"}
+    ],
+    "metals": ["Silver", "Platinum", "White gold"],
+    "avoid": [{"name": "Orange", "hex": "#ef7d22"}, {"name": "Golden yellow", "hex": "#f9c22e"}, {"name": "Warm brown", "hex": "#9a6b2e"}, {"name": "Olive", "hex": "#6b7a2a"}],
+    "why": "Yellow and golden colours fight the cool blue undertone of your skin."
+  },
+  {
+    "id": "bright-winter", "name": "Bright Winter", "family": "winter", "lead": "bright",
+    "traits": {"warmth": -0.4, "depth": 0.2, "clarity": 1},
+    "summary": "Bright, cool and high in contrast. Vivid, pure colours and black and white suit you, like electric blue, hot pink and emerald.",
+    "colours": [
+      {"name": "True red", "hex": "#e0002a"}, {"name": "Hot pink", "hex": "#ff1493"}, {"name": "Shocking pink", "hex": "#e0218a"},
+      {"name": "Violet", "hex": "#8a2be2"}, {"name": "Electric blue", "hex": "#0066ff"}, {"name": "Cobalt", "hex": "#0047ab"},
+      {"name": "Bright turquoise", "hex": "#00c5cd"}, {"name": "Emerald", "hex": "#00a36c"}, {"name": "Cool kelly", "hex": "#00a86b"},
+      {"name": "Lemon", "hex": "#fff44f"}, {"name": "Icy mint", "hex": "#c8f3e1"}, {"name": "Icy violet", "hex": "#e4d8fb"}
+    ],
+    "neutrals": [
+      {"name": "Pure white", "hex": "#ffffff"}, {"name": "Icy grey", "hex": "#dfe4ea"}, {"name": "Charcoal", "hex": "#33363b"},
+      {"name": "Navy", "hex": "#1c2a4d"}, {"name": "Black", "hex": "#111111"}
+    ],
+    "metals": ["Polished silver", "Platinum"],
+    "avoid": [{"name": "Dusty rose", "hex": "#c28e98"}, {"name": "Khaki", "hex": "#b5ac6b"}, {"name": "Camel", "hex": "#c19a6b"}, {"name": "Mushroom", "hex": "#9b8b7a"}],
+    "why": "Your colouring is vivid and contrasted, so muted, earthy colours look dull next to it."
+  }
+]

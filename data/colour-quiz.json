@@ -1,0 +1,85 @@
+[
+  {
+    "id": "skin-depth", "question": "How light or deep is your skin?", "photo": "skin",
+    "help": "Look at bare skin on your face or inner arm in daylight.",
+    "options": [
+      {"id": "fair", "label": "Fair", "hex": "#f3d9c8", "depth": -1},
+      {"id": "light", "label": "Light", "hex": "#e6c3a5", "depth": -0.5},
+      {"id": "medium", "label": "Medium", "hex": "#c99a74", "depth": 0},
+      {"id": "tan", "label": "Tan or olive", "hex": "#a5744d", "depth": 0.5},
+      {"id": "deep", "label": "Deep", "hex": "#6b4630", "depth": 1}
+    ]
+  },
+  {
+    "id": "skin-undertone", "question": "In daylight, which way does your skin lean?", "photo": "undertone",
+    "help": "Compare your face to a sheet of white paper. Olive skin often looks greenish or grey next to it.",
+    "options": [
+      {"id": "pink", "label": "Pink, rosy or bluish", "warmth": -1},
+      {"id": "neutral", "label": "Neither, or olive", "warmth": 0},
+      {"id": "golden", "label": "Golden, peachy or yellow", "warmth": 1}
+    ]
+  },
+  {
+    "id": "veins", "question": "What colour do the veins on your inner wrist look?",
+    "options": [
+      {"id": "blue", "label": "Blue or purple", "warmth": -0.8},
+      {"id": "mixed", "label": "A mix, or hard to tell", "warmth": 0},
+      {"id": "green", "label": "Green or olive", "warmth": 0.8}
+    ]
+  },
+  {
+    "id": "jewellery", "question": "Which jewellery makes your skin look better?",
+    "options": [
+      {"id": "silver", "label": "Silver", "warmth": -0.8},
+      {"id": "both", "label": "Both look fine", "warmth": 0},
+      {"id": "gold", "label": "Gold", "warmth": 0.8}
+    ]
+  },
+  {
+    "id": "white", "question": "Held under your face, which white looks better?",
+    "help": "A bright white T-shirt next to an ivory or cream one, in daylight.",
+    "options": [
+      {"id": "pure", "label": "Bright, pure white", "warmth": -0.6, "clarity": 0.4},
+      {"id": "either", "label": "No real difference", "warmth": 0},
+      {"id": "cream", "label": "Ivory or cream", "warmth": 0.6, "clarity": -0.2}
+    ]
+  },
+  {
+    "id": "hair", "question": "What is your natural hair colour?", "photo": "hair",
+    "help": "Your own colour as an adult. If you are going grey, pick the colour you had before, or Grey if it still feels like you.",
+    "options": [
+      {"id": "platinum", "label": "Platinum or white blonde", "hex": "#e8dcc0", "depth": -1, "warmth": -0.2},
+      {"id": "golden-blonde", "label": "Golden blonde", "hex": "#d4a95a", "depth": -0.7, "warmth": 0.8},
+      {"id": "ash-blonde", "label": "Ash or dark blonde", "hex": "#b4a48a", "depth": -0.6, "warmth": -0.6, "clarity": -0.4},
+      {"id": "strawberry", "label": "Strawberry blonde or copper", "hex": "#c06a3a", "depth": -0.2, "warmth": 1},
+      {"id": "ash-brown", "label": "Light or ash brown", "hex": "#8a7560", "depth": -0.1, "warmth": -0.4, "clarity": -0.6},
+      {"id": "golden-brown", "label": "Golden or chestnut brown", "hex": "#6b4428", "depth": 0.3, "warmth": 0.5},
+      {"id": "auburn", "label": "Auburn or deep red", "hex": "#7a3b22", "depth": 0.4, "warmth": 0.9},
+      {"id": "dark-brown", "label": "Dark brown", "hex": "#3b2a1f", "depth": 0.8},
+      {"id": "black", "label": "Black", "hex": "#15120f", "depth": 1, "warmth": -0.3, "clarity": 0.3},
+      {"id": "grey", "label": "Grey, silver or white", "hex": "#c9c9c9", "depth": -0.3, "warmth": -0.5, "clarity": -0.3}
+    ]
+  },
+  {
+    "id": "eyes", "question": "What colour are your eyes?", "photo": "eyes",
+    "options": [
+      {"id": "bright-blue", "label": "Bright, clear blue", "hex": "#3f7fd0", "warmth": -0.4, "clarity": 0.8, "depth": -0.3},
+      {"id": "grey-blue", "label": "Grey or grey blue", "hex": "#8a9aa6", "warmth": -0.5, "clarity": -0.6, "depth": -0.3},
+      {"id": "blue-green", "label": "Soft blue green or teal", "hex": "#5f8f86", "clarity": -0.3},
+      {"id": "green", "label": "Clear green", "hex": "#4f9a4a", "warmth": 0.4, "clarity": 0.6},
+      {"id": "hazel", "label": "Hazel", "hex": "#8a6b3a", "warmth": 0.5, "clarity": -0.5},
+      {"id": "amber", "label": "Amber or golden brown", "hex": "#a8692a", "warmth": 0.8, "depth": 0.2},
+      {"id": "dark-brown", "label": "Dark brown", "hex": "#3d2414", "depth": 0.8, "clarity": 0.2},
+      {"id": "black-brown", "label": "Black brown", "hex": "#1d120c", "depth": 1, "warmth": -0.2, "clarity": 0.6}
+    ]
+  },
+  {
+    "id": "contrast", "question": "How much contrast is there between your hair, skin and eyes?", "photo": "contrast",
+    "help": "Look at a black and white photo of yourself: is it striking, or soft and blended?",
+    "options": [
+      {"id": "high", "label": "High: striking, like dark hair with fair skin", "clarity": 1, "depth": 0.2},
+      {"id": "medium", "label": "Medium", "clarity": 0.1},
+      {"id": "low", "label": "Low: soft, everything is close in depth", "clarity": -1}
+    ]
+  }
+]

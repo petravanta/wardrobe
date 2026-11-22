@@ -35,6 +35,9 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 - **Clean background** on this device: a new item's main photo gets a transparent cut-out next to the
   original, and any photo can be cleaned from the item form (see *Clean background* below).
 - **Google Drive sync** of `Wardrobe data.json`, **Export backup** and **Import backup** (merge).
+- **Colour season**: find your colour season (12-season system) with a short questionnaire, optionally helped by
+  tapping skin, hair and eyes on a photo, or pick it yourself; then see its palette and which closet items are in it
+  (see *Colour season* below).
 - Light and dark themes, the hub's *All apps* menu, and install as an app (shortcuts *Add item* and *Log
   what I wore*).
 
@@ -113,6 +116,25 @@ From the spec, roughly in order:
 
 The open question from the spec about duplicate copies on Picker import still needs Petra's answer.
 
+## Colour season
+
+The *Colour* tab suggests one of the 12 colour seasons (Light, Warm and Bright Spring; Light, Cool and Soft Summer;
+Soft, Warm and Deep Autumn; Deep, Cool and Bright Winter), shows its palette, neutrals, metals and the colours that are
+harder to wear, and lists the closet items whose main colour is in the palette.
+
+- **Questionnaire**: questions from `data/colour-quiz.json` (skin depth and undertone, veins, jewellery, white or
+  cream, hair, eyes, contrast). Each answer scores warmth, depth and clarity; the suggestion is the season in
+  `data/colour-seasons.json` nearest the average, with the next two closest. Any question can be skipped.
+- **Photo help, on this device**: tap skin, hair, an eye and optionally something white on a photo. The app reads the
+  colours under the taps (the white corrects for the colour of the light) and suggests answers, marked as from the
+  photo, which you can change. The photo is only drawn on a canvas in the open panel: it is never saved, uploaded,
+  kept in IndexedDB or added to the closet, and it is gone when the panel closes.
+- **Override**: pick any season yourself. Only the chosen season id is saved, as `settings.colourSeason`, so it syncs;
+  answers and samples are never saved.
+- **In your palette**: an item counts when its main colour is within ΔE 20 of a palette or neutral swatch and nearer
+  to one than to a colour to avoid. Prints and items with no colour aren't counted.
+- The app says plainly that this is a guide, not a verdict.
+
 ## User data
 
 One document, the same shape as the other apps (see STANDARDS.md, *User data*):
@@ -149,6 +171,8 @@ What the app knows is data, in `data/`. Each file has a JSON Schema in `data/sch
 | Care | `data/care.json` | `data/schema/care.schema.json` | Care instructions, with an optional `why` |
 | Size systems | `data/size-systems.json` | `data/schema/size-systems.schema.json` | Size systems and, where closed, their values |
 | Gender tags | `data/gender-tags.json` | `data/schema/gender-tags.schema.json` | Built-in tags (Masc, Fem, Androgynous); people add their own in the item form, and they are offered again |
+| Colour seasons | `data/colour-seasons.json` | `data/schema/colour-seasons.schema.json` | The 12 seasons on the *Colour* tab: where each sits on warmth, depth and clarity, its palette, neutrals, metals and colours to avoid, with a `why` |
+| Colour questions | `data/colour-quiz.json` | `data/schema/colour-quiz.schema.json` | The *Colour* tab's questions and answers, how each answer scores, and which ones a photo sample can suggest |
 
 Check the data locally with `node scripts/check-data.js`.
 

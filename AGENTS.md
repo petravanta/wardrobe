@@ -25,4 +25,8 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   consent for every app. A photo's `mediaItemId` is never dropped by a merge (`keepMedia()`), so nothing uploads twice.
 - **Wardrobe words**: records in `doc.words` (`id`, `name`, `colour`, optional `emoji`); items hold word ids in `item.words`. Rename and
   colour live on the word only. `deleteWord()` strips the id from every item. Ids with no word are skipped (`wordsOf()`).
+- **Colour season**: `renderColour()` and the `cs…` functions in `index.html`, data in `data/colour-seasons.json` and
+  `data/colour-quiz.json`. Only `settings.colourSeason` (a season id) is saved. A photo used for sampling lives only on
+  the sampler's canvas: never pass it to `Photos.add()`, IndexedDB, Drive or Google Photos, and never save answers or
+  samples. On the Colour tab a drop goes to the sampler (capture-phase listener), never into the closet.
 - The design and roadmap are in the README (*Next steps*).
