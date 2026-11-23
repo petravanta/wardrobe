@@ -133,6 +133,8 @@ function itemForm(it, nav) {
     ${wordsField(it)}
     <div class="row"><button type="submit" class="btn primary">Save</button>${isNew ? '' : `<button type="button" class="btn" data-wear-item="${esc(it.id)}">Wore it today</button><span class="grow" style="flex:1"></span><button type="button" class="btn danger" data-del-item="${esc(it.id)}">Delete</button>`}</div>
   </form>`);
+  // Stepping through the closet: start on Next (or Back) rather than in the name box, so ← → work straight away
+  const step = $('#layer [data-item-step="1"]:not(:disabled)') || $('#layer [data-item-step="-1"]:not(:disabled)'); if (step) step.focus();
   // Suggest the spicy flag when a spicy-leaning type or material is picked
   $('#itemForm').addEventListener('change', e => {
     const fd = new FormData($('#itemForm')), sp = $('#itemForm [name=spicy]');

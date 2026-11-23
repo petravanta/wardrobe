@@ -45,15 +45,20 @@
   {"id": "tights", "name": "Tights and stockings", "parent": "underwear", "aliases": ["tights"]},
   {"id": "lingerie-set", "name": "Lingerie set", "parent": "underwear", "spicy": true},
   {"id": "accessories", "name": "Accessories", "region": "accessory", "sizeSystems": ["letter"], "aliases": ["other-other"]},
-  {"id": "bag", "name": "Bag", "parent": "accessories", "region": "bag", "aliases": ["bum-bag"]},
   {"id": "hat", "name": "Hat", "parent": "accessories", "region": "hat"},
   {"id": "belt", "name": "Belt", "parent": "accessories", "region": "belt", "sizeSystems": ["waist"], "aliases": ["belt", "waist-belt", "wide-belt"]},
   {"id": "scarf", "name": "Scarf", "parent": "accessories", "region": "scarf"},
   {"id": "gloves", "name": "Gloves", "parent": "accessories"},
   {"id": "tie", "name": "Tie", "parent": "accessories", "aliases": ["tie"]},
   {"id": "watch", "name": "Watch", "parent": "accessories", "aliases": ["watch"]},
-  {"id": "jewellery", "name": "Jewellery", "parent": "accessories", "aliases": ["bracelet", "necklace", "ring"]},
   {"id": "harness", "name": "Harness", "parent": "accessories", "spicy": true},
   {"id": "collar", "name": "Collar", "parent": "accessories", "spicy": true},
-  {"id": "wig", "name": "Wig", "parent": "accessories", "region": "hat", "aliases": ["wigs", "hairpiece"]}
+  {"id": "wig", "name": "Wig", "parent": "accessories", "region": "hat", "aliases": ["wigs", "hairpiece"]},
+  {"id": "jewellery", "name": "Jewellery", "region": "accessory", "sizeSystems": ["letter", "one-size"]},
+  {"id": "ring", "name": "Ring", "parent": "jewellery", "region": "hands", "aliases": ["rings"]},
+  {"id": "bracelet", "name": "Bracelet", "parent": "jewellery", "region": "hands", "aliases": ["bracelets", "bangle"]},
+  {"id": "earrings", "name": "Earrings", "parent": "jewellery", "region": "ears", "aliases": ["earring"]},
+  {"id": "necklace", "name": "Necklace", "parent": "jewellery", "region": "neck", "aliases": ["necklaces", "pendant"]},
+  {"id": "bag", "name": "Bags", "region": "bag", "sizeSystems": ["letter", "one-size"], "aliases": ["bum-bag"]},
+  {"id": "crossbody-bag", "name": "Crossbody bag", "parent": "bag", "aliases": ["crossbody", "cross-body-bag"]}
 ]

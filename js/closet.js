@@ -24,9 +24,8 @@ function closetOrder() {
 const THUMB_SIZES = { s: 'S', m: 'M', l: 'L' };
 const thumbClass = () => `grid th-${THUMB_SIZES[doc.settings.thumbSize] ? doc.settings.thumbSize : 'm'}`;
 function renderCloset() {
-  migrateSizeFilter();
+  migrateSizeFilter(); migrateTypeFilter();
   const f = F(), items = sortItems(doc.items.filter(it => matches(it))), st = doc.settings;
-  const groups = K.types.filter(t => !t.parent && (doc.settings.showSpicy || !t.spicy));
   const fams = [...new Set(K.colours.map(c => c.family))];
   const gtags = K.genderTags.map(g => g.id);
   $('#main').innerHTML = `
@@ -38,8 +37,7 @@ function renderCloset() {
     <label class="sr-only" for="q">Search</label><input type="text" id="q" placeholder="Search" value="${esc(f.q || '')}" style="max-width:180px">
   </div>
   <div class="bar" role="group" aria-label="Filters">
-    <label class="sr-only" for="fGroup">Item type</label>
-    <select id="fGroup"><option value="">All types</option>${groups.map(g => `<option value="${g.id}"${f.group === g.id ? ' selected' : ''}>${esc(g.name)}</option>`).join('')}</select>
+    ${typePicker(f)}
     ${sizePicker(f)}
     <div class="chips">${fams.map(x => { const w = famSwatch(x); return `<button type="button" class="chip fam${w.light ? ' fam-light' : ''}${w.dark ? ' fam-dark' : ''}" data-fam="${x}" aria-pressed="${(f.families || []).includes(x)}" style="--fill:${w.fill};--on:${w.on}">${esc(x)}</button>`; }).join('')}</div>
     <div class="chips">${gtags.map(x => `<button type="button" class="chip" data-gender="${esc(x)}" aria-pressed="${(f.gender || []).includes(x)}">${esc(gname(x))}</button>`).join('')}</div>

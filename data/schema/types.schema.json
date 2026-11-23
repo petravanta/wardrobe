@@ -39,6 +39,9 @@
           "belt",
           "scarf",
           "accessory",
+          "ears",
+          "neck",
+          "hands",
           "other"
         ],
         "description": "Body region the photo recogniser looks for. A type without one uses its group’s. Only regions the code knows are allowed."

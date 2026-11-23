@@ -13,7 +13,7 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 
 ## What works today
 
-- **Closet**: add items with photos, type (two levels, such as Tops › Corset), colours, size, brand,
+- **Closet**: add items with photos, type (two levels, such as Tops › Corset or Jewellery › Earrings), colours, size, brand,
   price, purchase date (a date picker, saved as `YYYY-MM-DD`; an older month-only value such as `2025-03` is kept until a
   day is picked), spicy flag and gender (Masc, Fem, Androgynous). Brand and size suggest the
   values already on your items (most used first; for sizes, then the size system's usual values), and any new value can
@@ -32,12 +32,14 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   your settings and synced. Colour families are swatches filled with their colour (label in black or white, whichever
   contrasts more; a picked one gets a ring and a check). *Size* opens a picker of the sizes your items actually have,
   grouped by size system with a count each (`filters.sizes: ["letter:M", "eu:38"]`; an older typed `filters.size` is
-  turned into these). Built-in gender tags show their emoji (`emoji` in `data/gender-tags.json`: ♂️ Masc, ♀️ Fem,
+  turned into these). *All types* opens a picker by category: *All jewellery* (a whole category, every type in it) or
+  single types such as *Ring*, with a count each; categories and types mix, OR among them (`filters.types:
+  ["jewellery", "sneakers"]`; an older one-category `filters.group` is turned into this). Built-in gender tags show their emoji (`emoji` in `data/gender-tags.json`: ♂️ Masc, ♀️ Fem,
   ⚧️ Androgynous).
 - **Review**: *✎ Review* in the closet's filters opens checks for what items still lack: photo, price, brand, gender, size,
   colour, purchase date, each with a count. Pick one or more and the closet shows items missing any of them, each card
   saying what's missing; tap one to fill it in. Saved as `filters.missing` (`["price", "purchased"]`).
-- **Next and back**: an item opened from the closet has *‹ Back* and *Next ›* (and the ← → keys outside a text box),
+- **Next and back**: an item opened from the closet has *‹ Back* and *Next ›* (and the ← → keys while no text box, list or menu has focus),
   in the closet's current order, so they walk through the current filter or Review. Changes are saved first, as *Save*
   would. The list stays as it was when the item was opened, so an item that was just fixed can still be gone back to.
 - **Picture size**: *Pictures S M L* in the closet's sort bar sets the size of the closet's cards (`settings.thumbSize`,
@@ -49,7 +51,8 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
   materials (latex, PVC, harness…) suggest the flag when you add an item.
 - **Outfits**: combine items, name them and tag occasions. Each outfit shows as a *figure*: its items' photos (cut-outs
   first) laid out roughly where they're worn, by each type's `region` in `data/types.json` (hat on top, tops and outer
-  layers, a dress across top and middle, bottoms, shoes at the foot; bags, belts and accessories in a side column). The
+  layers, a dress across top and middle, bottoms, shoes at the foot; earrings by the head, a necklace at the neck, rings
+  and bracelets at the wrist; bags, belts and other accessories in a side column). The
   Outfits tab is a grid of cards (two across on a phone), each with the figure, name, wears and tags; the photo from
   the latest wearing sits in the corner and opens a close-up of the outfit's worn photos. Double-click a piece in the
   large figure (tap it on a phone, or Enter from the keyboard) to open that item's form, change its photo or details,
@@ -75,7 +78,8 @@ Live at **https://petravanta.github.io/wardrobe/**, or locally at http://localho
 - **Item stats**: an item's form shows how many times it was worn, when last, and its cost per wear so far.
 - **Close-up**: the magnifier on a card, tile or row (and the photos in an item, outfit or *What I wore*) opens the
   photos full size; tap to zoom, drag to look around. Opened from a closet card, *‹ Item* and *Item ›* (or ↑ ↓)
-  step to the closet's other items that have photos. *Close* at the top right, Esc, a tap beside the photo or the
+  step to the closet's other items that have photos; ← → go through the item's photos and on past the first or last
+  to the item before or after. *Close* at the top right, Esc, a tap beside the photo or the
   phone's Back gesture closes it.
 - **What I wore, from a photo**, on this device: the app finds the clothes in a photo of your outfit, suggests the
   matching closet items, and logs the outfit once you confirm. A piece it can't place can become a new item from the

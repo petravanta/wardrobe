@@ -50,6 +50,8 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   panel's picker does the same with `outfitReturn.draft` (the unsaved form), which `closeDrawer()` reopens instead.
 - **Outfit panel**: `outfitForm()` opens `openDrawer(html, 'outfit-panel')`; the picker's selection lives in its `sel`
   set, not in the DOM. Saving keeps items hidden by the spicy setting in the outfit.
+- **Type filter**: `filters.types` holds category ids (a group in `data/types.json`: every type in it matches) and type
+  ids, OR among them; `migrateTypeFilter()` turns an older one-category `filters.group` into it. `typePicker()` builds it.
 - **Size filter**: `filters.sizes` holds `"system:value"` keys (compared case-insensitively); `migrateSizeFilter()`
   turns an older `filters.size` string into them.
 - **Spicy**: anything with `spicy: true` must stay out of every view, stat, search and share export while
