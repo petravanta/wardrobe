@@ -1,7 +1,7 @@
 'use strict';
 /* ---------- Close-up ---------- */
 // Any item photo opens full size over everything else: tap or click to zoom in at that spot (again to zoom out), drag or
-// scroll to look around, arrows for the item's other photos, and Esc, × or a tap beside the photo to close
+// scroll to look around, arrows for the item's other photos (and on to the next item, from the closet), and Esc, × or a tap beside the photo to close
 const Zoom = (() => {
   let el = null, set = [], at = 0, label = '', back = null, own = '', drag = null, seq = 0, pushed = false, items = null;
   const q = s => el.querySelector(s);
@@ -25,11 +25,11 @@ const Zoom = (() => {
       q('[data-zitem="-1"]').disabled = !before; q('[data-zitem="1"]').disabled = !has(ia + 1); q('.zoom-cap').textContent += ` · item ${ia + 1} of ${items.ids.length}`; }
   }
   // Next and back through the closet's items (items: {ids, id, load: id => {photos, name}}), starting on each one's cover
-  function itemStep(delta) {
+  function itemStep(delta, last = false) {
     if (!items) return; // items without photos are passed over
     for (let i = items.ids.indexOf(items.id) + delta; i >= 0 && i < items.ids.length; i += delta) {
       const r = items.load(items.ids[i]); if (!r || !r.photos.length) continue;
-      items.id = items.ids[i]; set = r.photos; at = Math.max(0, r.start); label = r.name; return show();
+      items.id = items.ids[i]; set = r.photos; at = last ? set.length - 1 : Math.max(0, r.start); label = r.name; return show();
     }
     toast(delta > 0 ? 'No more items with photos after this one' : 'No items with photos before this one');
   }
@@ -74,11 +74,17 @@ const Zoom = (() => {
     addEventListener('pointermove', move); addEventListener('pointerup', up);
     show(); q('[data-zclose]').focus();
   }
-  // Keys while it's open: Esc closes it (not the drawer behind), ← → step through photos, ↑ ↓ through items, Tab stays inside
+  // Keys while it's open: Esc closes it (not the drawer behind), ← → step through photos and then items, ↑ ↓ through
+  // items, Tab stays inside
   function key(e) {
     if (!el) return false;
     if (e.key === 'Escape') { e.preventDefault(); close(); }
-    else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && set.length > 1) { at = (at + (e.key === 'ArrowRight' ? 1 : -1) + set.length) % set.length; show(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      // Through the item's photos; from the closet, past its first or last photo on to the item before or after
+      const d = e.key === 'ArrowRight' ? 1 : -1;
+      if (items && (at + d < 0 || at + d >= set.length)) { e.preventDefault(); itemStep(d, d < 0); }
+      else if (set.length > 1) { at = (at + d + set.length) % set.length; show(); }
+    }
     else if ((e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'PageUp' || e.key === 'PageDown') && items) { e.preventDefault(); itemStep(e.key === 'ArrowDown' || e.key === 'PageDown' ? 1 : -1); }
     else if (e.key === 'Tab') { const b = [...el.querySelectorAll('button:not([hidden])')], i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? -1 : 1) + b.length) % b.length].focus(); }
     return true;

@@ -22,7 +22,8 @@ function reviewBar(f) {
 }
 function matches(it, f = F()) {
   if (!visible(it)) return false;
-  if (f.group && typeGroup(it.type) !== f.group && it.type !== f.group) return false;
+  if (typeof f.group === 'string' && f.group && typeGroup(it.type) !== f.group && it.type !== f.group) return false; // until migrated
+  if (f.types && f.types.length && !f.types.includes(it.type) && !f.types.includes(typeGroup(it.type))) return false;
   if (f.families && f.families.length && !(it.colours || []).some(c => f.families.includes((K.byId.colours.get(c) || {}).family))) return false;
   // Androgynous items belong under Masc and Fem too, so either filter finds them
   if (f.gender && f.gender.length) {
@@ -90,5 +91,59 @@ document.addEventListener('click', e => {
     return;
   }
   if (sizePopOpen && !e.target.closest('#fSizePop')) setSizePop(false);
+});
+// Type filter: filters.types holds category ids (a group: every type in it matches) and single type ids, OR among them
+const typeFilterGroups = () => K.types.filter(t => !t.parent && (doc.settings.showSpicy || !t.spicy));
+function typeChoices(f) {
+  const sel = new Set(f.types || []), count = new Map();
+  for (const it of doc.items.filter(visible)) { count.set(it.type, (count.get(it.type) || 0) + 1); const g = typeGroup(it.type); if (g && g !== it.type) count.set('=' + g, (count.get('=' + g) || 0) + 1); }
+  return typeFilterGroups().map(g => {
+    const kids = K.types.filter(t => t.parent === g.id && (doc.settings.showSpicy || !t.spicy) && (count.get(t.id) || sel.has(t.id)));
+    return { g, n: (count.get(g.id) || 0) + (count.get('=' + g.id) || 0), kids: kids.map(t => ({ t, n: count.get(t.id) || 0 })) };
+  }).filter(x => x.n || sel.has(x.g.id) || x.kids.length);
+}
+// An older device saved the type filter as one category (filters.group): turn it into filters.types
+function migrateTypeFilter() {
+  const f = F(); if (!('group' in f)) return;
+  const { group, ...rest } = f, cur = rest.types || [];
+  setSetting('filters', { ...rest, types: group && !cur.includes(group) ? [...cur, group] : cur });
+}
+let typePopOpen = false;
+function typePicker(f) {
+  const groups = typeChoices(f), sel = f.types || [], on = new Set(sel);
+  const label = !sel.length ? 'All types' : sel.length <= 2 ? `Type: ${sel.map(id => kname('types', id)).join(', ')}` : `Type: ${sel.length}`;
+  const chip = (id, name, n, pressed, cls = '') => `<button type="button" class="chip${cls}" data-ftype="${esc(id)}" aria-pressed="${pressed}">${esc(name)}<span class="n">${n}</span></button>`;
+  return `<div class="szpick"><button type="button" class="chip" id="fTypeBtn" aria-haspopup="dialog" aria-expanded="${typePopOpen}" aria-controls="fTypePop" aria-pressed="${!!sel.length}">${esc(label)} ▾</button>
+    <div class="szpop" id="fTypePop" role="dialog" aria-label="Item types"${typePopOpen ? '' : ' hidden'}>${groups.map(({ g, n, kids }) => `<h4 class="shelf-h">${esc(g.name)}</h4><div class="chips">${chip(g.id, `All ${g.name.toLowerCase()}`, n, on.has(g.id), ' tcat')}${kids.map(({ t, n }) => chip(t.id, t.name, n, on.has(t.id) || on.has(g.id))).join('')}</div>`).join('') || '<p class="small muted">Your closet is empty.</p>'}
+    ${sel.length ? '<div class="row" style="margin-top:10px"><button type="button" class="btn ghost sm" data-ftype="">Clear types</button></div>' : ''}</div></div>`;
+}
+function setTypePop(open) {
+  typePopOpen = open; const pop = $('#fTypePop'), btn = $('#fTypeBtn'); if (!pop) return;
+  pop.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+  if (open) { const c = $('[data-ftype]', pop); if (c) c.focus(); } else btn.focus();
+}
+// Picking a category covers its types (they drop out of the list); a type tapped while its category is on leaves the
+// category for the rest of its types
+function toggleType(id) {
+  const cur = F().types || [], t = K.byId.types.get(id); if (!id) return [];
+  if (cur.includes(id)) return cur.filter(x => x !== id);
+  if (!t) return cur;
+  if (!t.parent) return [...cur.filter(x => typeGroup(x) !== id), id];
+  if (cur.includes(t.parent)) {
+    const rest = K.types.filter(x => x.parent === t.parent && x.id !== id && (doc.settings.showSpicy || !x.spicy)).map(x => x.id);
+    return [...cur.filter(x => x !== t.parent), ...rest];
+  }
+  return [...cur, id];
+}
+document.addEventListener('click', e => {
+  if (!$('#fTypeBtn')) return;
+  if (e.target.closest('#fTypeBtn')) return setTypePop(!typePopOpen);
+  const c = e.target.closest('[data-ftype]');
+  if (c) {
+    const k = c.dataset.ftype; setFilter('types', toggleType(k));
+    const again = k && $(`#fTypePop [data-ftype="${CSS.escape(k)}"]`); if (again) again.focus(); else if ($('#fTypePop [data-ftype]')) $('#fTypePop [data-ftype]').focus();
+    return;
+  }
+  if (typePopOpen && !e.target.closest('#fTypePop')) setTypePop(false);
 });
 function setFilter(k, v) { setSetting('filters', { ...F(), [k]: v }); render(); }

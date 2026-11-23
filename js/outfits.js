@@ -2,8 +2,11 @@
 /* ---------- Outfit figure ---------- */
 // An outfit laid out roughly as worn, by each item's region (data/types.json): where each band sits, in percent of a
 // 3:4 box [left, top, width, height]. Regions not listed here (bag, belt, accessory, other…) go in the side column.
-const FIG_BANDS = { hat: [34, 1, 30, 11], top: [6, 12, 70, 36], scarf: [28, 11, 34, 22], dress: [14, 12, 56, 62], bottom: [14, 45, 56, 38], shoes: [14, 82, 56, 17] };
-const FIG_REGION = { hat: 'hat', top: 'top', scarf: 'scarf', dress: 'dress', bottom: 'bottom', skirt: 'bottom', shoes: 'shoes' };
+// Jewellery is small, so it sits where it's worn: earrings by the head, a necklace at the neck, rings and
+// bracelets at the left wrist (the side column keeps the right)
+const FIG_BANDS = { hat: [34, 1, 30, 11], top: [6, 12, 70, 36], scarf: [28, 11, 34, 22], dress: [14, 12, 56, 62], bottom: [14, 45, 56, 38], shoes: [14, 82, 56, 17],
+  ears: [30, 4, 12, 8], neck: [42, 11, 16, 9], hands: [1, 42, 12, 11] };
+const FIG_REGION = { hat: 'hat', top: 'top', scarf: 'scarf', dress: 'dress', bottom: 'bottom', skirt: 'bottom', shoes: 'shoes', ears: 'ears', neck: 'neck', hands: 'hands' };
 const FIG_SIDE = [78, 6, 20, 88];
 // In the top band, outer layers go behind (left)
 const figLayer = it => (typeGroup(it.type) === 'outerwear' ? 0 : 1);
@@ -19,7 +22,7 @@ function outfitFigure(o, size = 'lg') {
     return `<span${st ? ' class="lay"' : ''} data-lay-item="${esc(it.id)}"${edit(it)} style="${style}">${p ? `<img alt="" data-photo="${esc(p.id)}">` : `<i class="fig-ph">${esc(itemLabel(it))}</i>`}</span>`; };
   let z = 1; const out = [];
   // Drawn top to bottom, so lower bands overlap the hem of the one above a little, like a flat lay; a scarf lies over the neckline
-  for (const band of ['dress', 'top', 'bottom', 'shoes', 'scarf', 'hat']) {
+  for (const band of ['dress', 'top', 'bottom', 'shoes', 'scarf', 'hat', 'neck', 'ears', 'hands']) {
     const list = (bands.get(band) || []).sort((a, b) => figLayer(a) - figLayer(b)); if (!list.length) continue;
     const [L, T, W, H] = FIG_BANDS[band], n = list.length, w = W / (1 + (n - 1) * 0.6);
     list.forEach((it, i) => out.push(piece(it, [L + i * w * 0.6, T, w, H], z++)));

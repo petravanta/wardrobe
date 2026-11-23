@@ -7,7 +7,7 @@ document.addEventListener('click', async e => {
   if (d.tab) { tab = d.tab; lsSet(TAB_KEY, tab); return render(); }
   if (d.act === 'add') return itemForm(newItem());
   if (d.act === 'photo') return $('#photoIn').click();
-  if (d.act === 'clear') { setSetting('filters', {}); sizePopOpen = false; reviewOpen = false; return render(); }
+  if (d.act === 'clear') { setSetting('filters', {}); sizePopOpen = false; typePopOpen = false; reviewOpen = false; return render(); }
   if (d.thumbSize) { setSetting('thumbSize', d.thumbSize); return render(); }
   if (d.act === 'reverse') { setSetting('sortReverse', !doc.settings.sortReverse); return render(); }
   if (d.act === 'new-outfit') return outfitForm({ id: uid(), items: [] });
@@ -74,7 +74,6 @@ document.addEventListener('change', e => {
   if (e.target.id === 'showSpicy') { setSetting('showSpicy', e.target.checked); render(); }
   if (e.target.id === 'autoCutout') setSetting('autoCutout', e.target.checked);
   if (e.target.dataset.kind !== undefined && wore) setPieceKind(+e.target.dataset.kind, e.target.value);
-  if (e.target.id === 'fGroup') setFilter('group', e.target.value);
   if (e.target.id === 'sSort') { setSetting('sort', e.target.value); render(); }
   if (e.target.id === 'sGroup') { setSetting('groupBy', e.target.value); render(); }
   const wd = e.target.dataset || {};
@@ -94,6 +93,7 @@ document.addEventListener('keydown', e => {
   if (typeof WoreCrop !== 'undefined' && WoreCrop.key(e)) return;
   if (Arrange.key(e)) return;
   if (e.key === 'Escape' && sizePopOpen && $('#fSizePop')) { e.preventDefault(); return setSizePop(false); }
+  if (e.key === 'Escape' && typePopOpen && $('#fTypePop')) { e.preventDefault(); return setTypePop(false); }
   // What I wore: the arrow keys step between pieces, except while typing or choosing in a field
   if (wore && wore.step >= 0 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !(e.target.closest && e.target.closest('input,select,textarea'))) { e.preventDefault(); return woreGo(e.key === 'ArrowRight' ? 1 : -1); }
   if (e.key === 'Escape' && $('#layer').innerHTML) closeDrawer();
