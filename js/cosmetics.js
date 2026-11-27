@@ -41,7 +41,7 @@ function cosShelves(list) {
   const order = K.cosmeticTypes.map(t => t.id), m = new Map();
   list.forEach(c => { const k = c.ownType ? 'own:' + c.ownType : c.type; (m.get(k) || m.set(k, []).get(k)).push(c); });
   return [...m.entries()].sort(([a], [b]) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 1e4 : ia) - (ib < 0 ? 1e4 : ib) || a.localeCompare(b); })
-    .map(([k, cs]) => ({ label: k.startsWith('own:') ? k.slice(4) : kname('cosmeticTypes', k), items: cs.sort((a, b) => (b.added || '').localeCompare(a.added || '')) }));
+    .map(([k, cs]) => ({ key: k, label: k.startsWith('own:') ? k.slice(4) : kname('cosmeticTypes', k), items: cs.sort((a, b) => (b.added || '').localeCompare(a.added || '')) }));
 }
 const shadeStrip = (c, n = 8) => (c.shades || []).filter(s => okHex(s.hex)).slice(0, n).map(s => `<i class="swatch" style="background:${esc(shadeBg(s))}"></i>`).join(' ');
 function cosCard(c) {
@@ -53,13 +53,21 @@ function cosCard(c) {
 }
 // Every shade as a tile, lightest first within each type, so similar lipsticks sit side by side
 function shadeTiles(list) {
-  return cosShelves(list).map(s => {
+  const gaps = cosF().gapsOff ? null : gapRows(), left = new Set(gaps && gaps.rows || []);
+  const fits = (r, t) => r.z.types.includes(t) || r.z.types.includes((K.byId.cosmeticTypes.get(t) || {}).parent);
+  const shelves = cosShelves(list).map(s => {
     const tiles = s.items.flatMap(c => (c.shades || []).filter(x => okHex(x.hex)).map(x => ({ c, x, l: labOf(x.hex) }))).sort((a, b) => b.l[0] - a.l[0]);
     if (!tiles.length) return '';
-    return `<section class="shelf"><h3>${esc(s.label)} <span class="count">${tiles.length}</span></h3><ul class="shade-grid">${tiles.map(({ c, x }) => `<li><button type="button" class="shade-tile" data-cos="${esc(c.id)}" title="${esc(x.hex)}">
+    const mine = [...left].filter(r => fits(r, s.key)); mine.forEach(r => left.delete(r));
+    return `<section class="shelf"><h3>${esc(s.label)} <span class="count">${tiles.length}</span></h3>${mine.map(r => gapRow(r, gaps.s)).join('')}<ul class="shade-grid">${tiles.map(({ c, x }) => `<li><button type="button" class="shade-tile" data-cos="${esc(c.id)}" title="${esc(x.hex)}">
       <i style="background:${esc(shadeBg(x))};color:${inkOn(x.hex)}">${x.finish ? esc(kname('finishes', x.finish)) : ''}${x.multi ? ' ✦' : ''}</i>
       <b>${esc(x.name || 'Unnamed shade')}</b><span>${esc([c.brand, c.name].filter(Boolean).join(' · ') || cosTypeName(c))}</span></button></li>`).join('')}</ul></section>`;
   }).join('');
+  // Parts of the face with no shelf here get their own, unless the type filter leaves them out
+  const groups = cosF().groups || [], groupOf = t => (K.byId.cosmeticTypes.get(t) || {}).parent || t;
+  const rest = [...left].filter(r => !groups.length || r.z.types.some(t => groups.includes(groupOf(t))))
+    .map(r => `<section class="shelf"><h3>${esc(r.z.name)} <span class="count">none yet</span></h3>${gapRow(r, gaps.s)}</section>`).join('');
+  return (gaps && !gaps.s ? gapHint() : '') + shelves + rest;
 }
 function renderCosmetics() {
   const f = cosF(), list = doc.cosmetics.filter(cosMatches), view = ['shades', 'looks'].includes(f.view) ? f.view : 'products';
@@ -69,6 +77,7 @@ function renderCosmetics() {
   const on = (k, v) => (f[k] || []).includes(v);
   const filtered = (f.groups || []).length || (f.finishes || []).length || (f.words || []).length || f.q;
   const views = `<div class="chips seg" role="group" aria-label="Show">${[['products', 'Products'], ['shades', 'Shades'], ['looks', 'Looks']].map(([k, n]) => `<button type="button" class="chip" data-cos-view="${k}" aria-pressed="${view === k}">${n}</button>`).join('')}</div>`;
+  const shelves = view === 'shades' ? shadeTiles(list) : '';
   if (view === 'looks') { $('#main').innerHTML = `<div class="bar"><span class="grow"></span>${views}</div>${renderLooks()}`; return; }
   $('#main').innerHTML = `
   <div class="bar">
@@ -85,11 +94,12 @@ function renderCosmetics() {
     ${tags.length ? `<div class="chips">${tags.map(w => `<button type="button" class="chip" data-cos-word="${esc(w.id)}" aria-pressed="${on('words', w.id)}">${wordChip(w)}</button>`).join('')}</div>` : ''}
     ${filtered ? '<button type="button" class="btn ghost sm" data-cos-act="clear">Clear filters</button>' : ''}
     <span class="grow"></span>
+    ${view === 'shades' ? `<button type="button" class="chip" data-cos-gaps aria-pressed="${!f.gapsOff}" title="Colours from your season you don’t own yet, under the make-up they’d be">Season suggestions</button>` : ''}
     ${views}
   </div>
-  ${!list.length && view === 'shades' && !doc.cosmetics.length ? seasonGaps() : ''}
-  ${!list.length ? `<div class="empty">${doc.cosmetics.length ? 'Nothing matches these filters.' : 'No make-up yet. Add a lipstick or a palette, or drop a photo of it (and of a paper swatch) here, then tap each shade on the photo to save its colour. Swatched several products on one sheet of paper? Use <i>Swatch sheet</i>: each swatch becomes its own product.'}</div>`
-    : view === 'shades' ? seasonGaps() + shadeTiles(list) || '<div class="empty">No shades with a colour yet. Open a product and tap its shades on a photo.</div>'
+  ${shelves && !doc.cosmetics.length ? shelves : ''}
+  ${shelves && doc.cosmetics.length ? shelves : !list.length ? `<div class="empty">${doc.cosmetics.length ? 'Nothing matches these filters.' : 'No make-up yet. Add a lipstick or a palette, or drop a photo of it (and of a paper swatch) here, then tap each shade on the photo to save its colour. Swatched several products on one sheet of paper? Use <i>Swatch sheet</i>: each swatch becomes its own product.'}</div>`
+    : view === 'shades' ? '<div class="empty">No shades with a colour yet. Open a product and tap its shades on a photo.</div>'
     : cosShelves(list).map(s => `<section class="shelf"><h3>${esc(s.label)} <span class="count">${s.items.length}</span></h3><ul class="${thumbClass()}">${s.items.map(cosCard).join('')}</ul></section>`).join('')}`;
 }
 const newCos = () => ({ id: uid(), added: now(), type: 'lipstick', shades: [], photos: [] });
@@ -445,8 +455,9 @@ document.addEventListener('click', e => {
   if (d.cosAct === 'photo') return $('#cosIn').click();
   if (d.cosAct === 'sheet') return $('#sheetIn').click();
   if (d.cosAct === 'shade') { const c = cosRead(cosEditing); c.shades = [...c.shades, { id: uid(), hex: '#c06070' }]; cosForm(c); const ins = $$('#cosShades [name=shName]'); if (ins.length) ins[ins.length - 1].focus(); return; }
-  if (d.cosAct === 'clear') { setSetting('cos', { view: cosF().view }); return render(); }
+  if (d.cosAct === 'clear') { setSetting('cos', { view: cosF().view, gapsOff: cosF().gapsOff }); return render(); }
   if (d.cosView) return setCosF('view', d.cosView);
+  if (t.matches('[data-cos-gaps]')) return setCosF('gapsOff', !cosF().gapsOff || undefined);
   if (d.cosGroup || d.cosFinish || d.cosWord) {
     const [k, v] = d.cosGroup ? ['groups', d.cosGroup] : d.cosFinish ? ['finishes', d.cosFinish] : ['words', d.cosWord], s = new Set(cosF()[k] || []);
     s.has(v) ? s.delete(v) : s.add(v); return setCosF(k, [...s]);

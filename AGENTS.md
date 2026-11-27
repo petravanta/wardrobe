@@ -87,7 +87,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
 - **Looks**: `js/looks.js`: `renderLooks()` (the Make-up tab's *Looks* view) and `lookForm()` in the outfit panel layout
   (`lookEd` while open; `closeDrawer()` clears it). Zones come from `data/face-zones.json`; `lookFace()` draws each zone
   id, so a new zone needs a place in it. A zone keeps its `hex` so a look survives its product being deleted.
-  `shadeUses()` and Suggest only take shades whose colour suits a zone (`zoneMiss()` ≤ 6). `seasonGaps()` (Shades view) uses
+  `shadeUses()` and Suggest only take shades whose colour suits a zone (`zoneMiss()` ≤ 6). `gapRows()` (Shades view, placed by `shadeTiles()` under the first shelf whose type fits each zone; `cos.gapsOff` hides them) uses
   `zoneTargets(z, s, true)`, the strict list. Multicolour shades keep `parts` and `multi`; `hex` stays the main colour,
   so anything that matches colours (looks, gaps, the Colour tab) reads `hex`, and anything that draws one uses `shadeBg()`.
 - The design and roadmap are in the README (*Next steps*).
