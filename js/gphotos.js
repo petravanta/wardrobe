@@ -63,24 +63,28 @@ const GPhotos = (() => {
     const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaItemId, mediaAccount: doc.settings.photosAccount, ...(mediaDesc ? { mediaDesc } : {}) } : p);
     const it = itemById(itemId); if (it) put('items', { ...it, photos: mark(it.photos) });
     const o = doc.outfits.find(x => x.id === itemId); if (o) put('outfits', { ...o, photos: mark(o.photos) }); // an outfit photo (What I wore)
+    const c = cosById(itemId); if (c) put('cosmetics', { ...c, photos: mark(c.photos) }); // make-up
     if (editing && editing.id === itemId) editing.photos = mark(editing.photos);
+    if (cosEditing && cosEditing.id === itemId) cosEditing.photos = mark(cosEditing.photos);
   }
   // Saved photos (of items, and outfit photos) not in this account's album yet
-  const waiting = () => [...doc.items, ...doc.outfits].flatMap(it => (it.photos || []).filter(p => !inAlbum(p) && !regenerable(p)).map(p => [it.id, p]));
+  const waiting = () => photoOwners(false).flatMap(it => (it.photos || []).filter(p => !inAlbum(p) && !regenerable(p)).map(p => [it.id, p]));
   // Each upload gets a description naming the app, the kind of photo and the item or outfit, so it can be told apart
   // in Google Photos. Photos uploaded before that get it later with mediaItems.patch, which Google allows for media
   // items the app created (photoslibrary.edit.appcreateddata, already in SCOPES). photo.mediaDesc is the text it has.
-  const KIND_TEXT = { main: 'item photo', label: 'label photo', cutout: 'clean background', crop: 'crop from an outfit photo', worn: 'outfit photo' };
+  const KIND_TEXT = { main: 'item photo', label: 'label photo', cutout: 'clean background', crop: 'crop from an outfit photo', worn: 'outfit photo', product: 'make-up photo', swatch: 'make-up swatch photo' };
   const describe = (ownerId, p) => {
-    const it = itemById(ownerId), o = !it && doc.outfits.find(x => x.id === ownerId);
-    const name = it ? itemLabel(it) : o ? (o.name || 'Outfit') : '';
+    const it = itemById(ownerId), o = !it && doc.outfits.find(x => x.id === ownerId), c = !it && !o && cosById(ownerId);
+    const name = it ? itemLabel(it) : o ? (o.name || 'Outfit') : c ? cosLabel(c) : '';
     return ['Wardrobe app', KIND_TEXT[p.role] || 'photo', name].filter(Boolean).join(' · ').slice(0, 900);
   };
   function setDesc(ownerId, photoId, mediaDesc) {
     const mark = ps => (ps || []).map(p => p.id === photoId ? { ...p, mediaDesc } : p);
     const it = itemById(ownerId); if (it) put('items', { ...it, photos: mark(it.photos) });
     const o = doc.outfits.find(x => x.id === ownerId); if (o) put('outfits', { ...o, photos: mark(o.photos) });
+    const c = cosById(ownerId); if (c) put('cosmetics', { ...c, photos: mark(c.photos) });
     if (editing && editing.id === ownerId) editing.photos = mark(editing.photos);
+    if (cosEditing && cosEditing.id === ownerId) cosEditing.photos = mark(cosEditing.photos);
   }
   async function sync() {
     clearTimeout(S.timer);
@@ -110,7 +114,7 @@ const GPhotos = (() => {
         }
       }
       // Descriptions for photos uploaded before there were any, or whose item was renamed since; a few at a time
-      const skip = new Set(st().descSkip || []), stale = [...doc.items, ...doc.outfits].flatMap(it => (it.photos || []).filter(p => inAlbum(p) && !skip.has(p.mediaItemId)).map(p => [it.id, p, describe(it.id, p)])).filter(([, p, d]) => p.mediaDesc !== d);
+      const skip = new Set(st().descSkip || []), stale = photoOwners(false).flatMap(it => (it.photos || []).filter(p => inAlbum(p) && !skip.has(p.mediaItemId)).map(p => [it.id, p, describe(it.id, p)])).filter(([, p, d]) => p.mediaDesc !== d);
       for (const [owner, p, d] of stale.slice(0, 40)) {
         try { await call(`/mediaItems/${encodeURIComponent(p.mediaItemId)}?updateMask=description`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: p.mediaItemId, description: d }) }); setDesc(owner, p.id, d); }
         catch (e) { if (e.code !== 'http') throw e; set({ descSkip: [...(st().descSkip || []), p.mediaItemId] }); } // not this app's, or gone: don't ask again

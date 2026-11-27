@@ -8,8 +8,8 @@
 /* Google Drive sync: the shared OAuth client for petravanta.github.io (see README). Leave empty to turn Drive off. */
 const GOOGLE_CLIENT_ID = '326863468616-4hf2conk0ks0s4qdva9tphphdo7ht7eh.apps.googleusercontent.com';
 const KEY = 'wardrobe.data', TAB_KEY = 'wardrobe.tab';
-const LISTS = ['items', 'outfits', 'wears', 'words'];
-const DATASETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags', 'colour-seasons', 'colour-quiz'];
+const LISTS = ['items', 'outfits', 'wears', 'words', 'cosmetics', 'looks'];
+const DATASETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags', 'colour-seasons', 'colour-quiz', 'cosmetic-types', 'finishes', 'face-zones'];
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];

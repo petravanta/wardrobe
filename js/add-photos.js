@@ -43,7 +43,8 @@ addEventListener('drop', e => {
 $('#photoIn').addEventListener('change', e => { takePhotos(e.target.files, editing); e.target.value = ''; });
 // From the user's Google Photos, chosen in Google's picker. Into the item being edited, or one new item per photo.
 let picking = false;
-async function pickPhotos(target) {
+// into: where the photos go instead of the closet (make-up uses it)
+async function pickPhotos(target, into) {
   if (picking) return toast('Google Photos is already open. Choose your photos there.');
   if (!GPhotos.live()) { // this tap opens Google's sign-in, so the picker needs the next one
     try { await GPhotos.renew(); toast('Reconnected to Google Photos. Tap again to choose photos.'); }
@@ -58,7 +59,7 @@ async function pickPhotos(target) {
     const skip = [failed && `${failed} Google Photos didn’t let this browser download`, videos && `${videos} video${videos > 1 ? 's' : ''}`].filter(Boolean).join(' and ');
     if (!files.length) return toast(failed ? 'Google Photos didn’t let this browser download the photos, so none were added.' : videos ? 'Only photos can be added, not videos.' : 'No photos chosen', 7000);
     if (target && !(editing && editing.id === target.id)) return toast('The item was closed, so the photos weren’t added. Open it and try again.', 6000);
-    await takePhotos(files, target ? editing : null);
+    if (into) await into(files); else await takePhotos(files, target ? editing : null);
     toast(`Added ${files.length} photo${files.length > 1 ? 's' : ''} from Google Photos${skip ? `; skipped ${skip}` : ''}`, 6000);
   } catch (err) {
     const c = err && err.code;

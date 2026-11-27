@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/cosmetic-types.schema.json",
+  "title": "Wardrobe cosmetic types",
+  "description": "Two-level list of make-up product types on the Make-up tab: a group (Lips, Eyes…) and the types inside it, listed after their group.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "Stable id: lowercase letters, digits and hyphens. Saved products refer to it, so it is never renamed or reused once shipped."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Name shown in the app."
+      },
+      "parent": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "The group this type belongs to (an entry without a parent). Leave out for a group."
+      },
+      "multi": {
+        "type": "boolean",
+        "description": "Usually holds several shades (a palette): the form opens the photo sampler ready to add one shade per pan."
+      },
+      "aliases": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uniqueItems": true,
+        "description": "Other names for this entry. The entry’s own id also matches."
+      }
+    }
+  }
+}

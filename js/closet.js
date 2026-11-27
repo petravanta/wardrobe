@@ -4,7 +4,7 @@ let tab = lsGet(TAB_KEY) || 'closet';
 const wearsOf = id => doc.wears.filter(w => w.item === id || (w.outfit && ((doc.outfits.find(o => o.id === w.outfit) || {}).items || []).includes(id)));
 function render() {
   $$('#tabs [data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === tab)));
-  (({ closet: renderCloset, outfits: renderOutfits, worn: renderWorn, colour: renderColour, settings: renderSettings })[tab] || renderCloset)();
+  (({ closet: renderCloset, outfits: renderOutfits, worn: renderWorn, colour: renderColour, cosmetics: renderCosmetics, settings: renderSettings })[tab] || renderCloset)();
   fillThumbs($('#main'));
 }
 function card(it, pressed) {

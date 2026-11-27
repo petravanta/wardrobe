@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://petravanta.github.io/wardrobe/data/schema/face-zones.schema.json",
+  "title": "Wardrobe face zones",
+  "description": "The parts of a make-up look (lips, cheeks, eyelid…), in the order the look editor lists them: which make-up types fit each, and which colours of a colour season to suggest for it.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name",
+      "types",
+      "from"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "Stable id: lowercase letters, digits and hyphens. Saved looks refer to it, so it is never renamed or reused once shipped."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Name shown in the app."
+      },
+      "types": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "uniqueItems": true,
+        "description": "Ids from cosmetic-types.json whose shades fit this zone; a group id (lips) takes every type in it."
+      },
+      "from": {
+        "enum": [
+          "colours",
+          "neutrals",
+          "both"
+        ],
+        "description": "Which part of the season palette suggestions come from: its colours, its neutrals, or both."
+      },
+      "hue": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "minItems": 2,
+        "maxItems": 2,
+        "description": "LCh hue angle range in degrees, [from, to]; it may wrap past 360 (from greater than to). Suggestions outside it are left out."
+      },
+      "lightness": {
+        "type": "array",
+        "items": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "minItems": 2,
+        "maxItems": 2,
+        "description": "CIE L* range [min, max] for suggestions (0 black, 100 white)."
+      },
+      "minChroma": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Least CIE chroma for suggestions, to leave greys out (lips)."
+      },
+      "maxChroma": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Most CIE chroma for suggestions, to keep a part muted (contour)."
+      },
+      "ownFirst": {
+        "type": "boolean",
+        "description": "Suggest the best-suited shade you own for this part even when it is not in your season’s palette (contour, bronzer and highlight depend more on depth than on the palette)."
+      }
+    }
+  }
+}

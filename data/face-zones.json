@@ -1,0 +1,11 @@
+[
+  {"id": "lips", "name": "Lips", "types": ["lips"], "from": "colours", "hue": [340,65], "minChroma": 20},
+  {"id": "cheeks", "name": "Cheeks", "types": ["blush", "face-palette"], "from": "colours", "hue": [345,75], "lightness": [50,92], "minChroma": 18},
+  {"id": "contour", "name": "Contour", "types": ["contour", "bronzer", "face-palette"], "from": "neutrals", "lightness": [25,62], "maxChroma": 28, "ownFirst": true, "hue": [15,110]},
+  {"id": "bronze", "name": "Bronzer", "types": ["bronzer", "face-palette"], "from": "neutrals", "lightness": [38,75], "hue": [30,95], "minChroma": 12, "ownFirst": true},
+  {"id": "highlight", "name": "Highlight", "types": ["highlighter", "face-palette", "eyeshadow-palette"], "from": "neutrals", "lightness": [78,100], "ownFirst": true, "maxChroma": 25},
+  {"id": "lid", "name": "Eyelid", "types": ["eyeshadow", "eyeshadow-palette"], "from": "both", "lightness": [45,95]},
+  {"id": "crease", "name": "Crease", "types": ["eyeshadow", "eyeshadow-palette"], "from": "neutrals", "lightness": [25,70]},
+  {"id": "liner", "name": "Liner", "types": ["eyeliner", "eyeshadow", "eyeshadow-palette"], "from": "neutrals", "lightness": [0,45]},
+  {"id": "nails", "name": "Nails", "types": ["nails"], "from": "colours"}
+]
