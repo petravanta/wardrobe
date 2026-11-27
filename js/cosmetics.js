@@ -59,7 +59,7 @@ function shadeTiles(list) {
     const tiles = s.items.flatMap(c => (c.shades || []).filter(x => okHex(x.hex)).map(x => ({ c, x, l: labOf(x.hex) }))).sort((a, b) => b.l[0] - a.l[0]);
     if (!tiles.length) return '';
     const mine = [...left].filter(r => fits(r, s.key)); mine.forEach(r => left.delete(r));
-    return `<section class="shelf"><h3>${esc(s.label)} <span class="count">${tiles.length}</span></h3>${mine.map(r => gapRow(r, gaps.s)).join('')}<ul class="shade-grid">${tiles.map(({ c, x }) => `<li><button type="button" class="shade-tile" data-cos="${esc(c.id)}" title="${esc(x.hex)}">
+    return `<section class="shelf"><h3>${esc(s.label)} <span class="count">${tiles.length}</span></h3>${mine.map(r => gapRow(r, gaps.s)).join('')}<ul class="shade-grid">${tiles.map(({ c, x }) => `<li><button type="button" class="shade-tile" data-cos="${esc(c.id)}" title="${esc([x.name, c.brand, c.name, x.hex].filter(Boolean).join(" · "))}">
       <i style="background:${esc(shadeBg(x))};color:${inkOn(x.hex)}">${x.finish ? esc(kname('finishes', x.finish)) : ''}${x.multi ? ' ✦' : ''}</i>
       <b>${esc(x.name || 'Unnamed shade')}</b><span>${esc([c.brand, c.name].filter(Boolean).join(' · ') || cosTypeName(c))}</span></button></li>`).join('')}</ul></section>`;
   }).join('');
