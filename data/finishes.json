@@ -1,0 +1,14 @@
+[
+  {"id": "matte", "name": "Matte"},
+  {"id": "satin", "name": "Satin"},
+  {"id": "cream", "name": "Cream"},
+  {"id": "sheer", "name": "Sheer"},
+  {"id": "gloss", "name": "Gloss"},
+  {"id": "velvet", "name": "Velvet"},
+  {"id": "shimmer", "name": "Shimmer"},
+  {"id": "metallic", "name": "Metallic", "aliases": ["foil"]},
+  {"id": "frost", "name": "Frost"},
+  {"id": "glitter", "name": "Glitter"},
+  {"id": "duochrome", "name": "Duochrome", "aliases": ["multichrome"]},
+  {"id": "dewy", "name": "Dewy"}
+]

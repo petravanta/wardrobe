@@ -43,7 +43,9 @@ const coverPhoto = it => { const p = it.photos || []; return p.find(x => x.role 
 // A crop cut from an outfit photo (What I wore) that records where it came from can be made again from that photo, so
 // it stays on the device and never goes to Google Photos. Older crops without from/box upload like any photo.
 const regenerable = p => !!(p && p.role === 'crop' && p.from && Array.isArray(p.box) && p.box.length === 4 && Array.isArray(p.of));
-const photoRec = id => { for (const it of [...doc.items, ...doc.outfits, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id) return p; return null; };
+// Everything that holds photos: items, outfits, make-up, and (open) whatever form is open
+const photoOwners = (open = true) => [...doc.items, ...doc.outfits, ...doc.cosmetics, ...(open && editing ? [editing] : []), ...(open && typeof cosEditing !== 'undefined' && cosEditing ? [cosEditing] : [])];
+const photoRec = id => { for (const it of photoOwners()) for (const p of it.photos || []) if (p.id === id) return p; return null; };
 async function regenCrop(p) {
   const src = await Photos.full(p.from); if (!src) return false;
   const bmp = await createImageBitmap(src), [x, y, w, h] = p.box, sx = bmp.width / p.of[0], sy = bmp.height / p.of[1];
@@ -72,4 +74,4 @@ async function fillThumbs(root = document) {
 }
 // A photo's album copy, in the Google account Photos is connected to now (mediaAccount says which account it went to)
 const inAlbum = p => !!(p && p.mediaItemId && p.mediaAccount && p.mediaAccount === doc.settings.photosAccount);
-const mediaIdOf = id => { for (const it of [...doc.items, ...doc.outfits, ...(editing ? [editing] : [])]) for (const p of it.photos || []) if (p.id === id && inAlbum(p)) return p.mediaItemId; return null; };
+const mediaIdOf = id => { for (const it of photoOwners()) for (const p of it.photos || []) if (p.id === id && inAlbum(p)) return p.mediaItemId; return null; };

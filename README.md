@@ -238,6 +238,29 @@ Photos. The browser keeps its copy in IndexedDB as a cache.
 and the **Google Photos Picker API** (*APIs & Services → Library*), and add the four scopes above under *Google Auth
 Platform → Data Access*. While the app is in *Testing*, your account must be a test user (*Audience*).
 
+## Make-up
+
+The *Make-up* tab keeps the make-up you own: lipsticks, lip liners, eyeshadow palettes, blush and so on.
+
+- **Products**: a type from `data/cosmetic-types.json` (two levels: Lips › Lip liner) or one of your own (*New type…*,
+  saved as `ownType` and offered again for the next product), brand, name, shades, price, purchase and opening dates,
+  notes and tags (the same tags as the closet). Brand suggests the brands you already have.
+- **Shades**: one for a lipstick, one per pan for a palette. Each has a colour, an optional name and a finish from
+  `data/finishes.json`. Set a colour by hand with the colour picker, or read it from a photo.
+- **Reading colours from a photo, on this device**: *Pick shades* on a photo opens it large. Tap the middle of a pan or a
+  paper swatch (tap size S, M or L), or drag a box over it; the app takes the median colour under the tap (the middle of
+  a dragged box, so a pan's rim doesn't count) and adds it as a shade, with a numbered dot where it was read. Tap a
+  shade's dot in the list first to read it again. For a swatch on white paper, *White paper* and a tap on bare paper
+  scales each colour channel so the paper comes out a clean near-white, which corrects the light's colour and a dim
+  exposure; shades already read from that photo are corrected too. No model and no network: just the pixels.
+- **Photos**: the first photo of a product is its product photo, later ones swatch photos (tap the caption to switch).
+  They are stored and synced like item photos (this browser, then the Google Photos album if connected; never Drive).
+  Dropped photos on the *Make-up* tab make one product with all of them, since a palette and its paper swatch belong
+  together; with a product open they're added to it. A new palette or a single first photo opens *Pick shades* straight away.
+- **Views**: *Products* shows shelves by type; *Shades* shows every shade as a tile, lightest first within each type,
+  so similar colours sit side by side. Filter by category (Lips, Eyes, Face, Nails, your own types), finish and tag, and search
+  brand, name, shade names, notes and tags.
+
 ## Next steps
 
 From the spec, roughly in order:
@@ -286,6 +309,11 @@ One document, the same shape as the other apps (see STANDARDS.md, *User data*):
                  "layout": { "<item id>": { "x": 12.5, "y": 10, "w": 48, "z": 2 } } } ],
   "wears":   [ { "id": "…", "u": "…", "at": "2026-11-09", "outfit": "…", "source": "photo", "photo": "…" } ],
   "words":   [ { "id": "…", "u": "…", "name": "Goth", "colour": "#7c3aed", "emoji": "🦇" } ],
+  "cosmetics": [ { "id": "…", "u": "…", "added": "…", "type": "eyeshadow-palette", "brand": "…", "name": "Warm palette",
+                 "shades": [ { "id": "…", "name": "Berry", "hex": "#b03a48", "finish": "matte", "raw": "#a8364a",
+                               "at": { "photo": "…", "x": 0.08, "y": 0.11, "w": 0.06, "h": 0.06 } } ],
+                 "photos": [ { "id": "…", "role": "product" }, { "id": "…", "role": "swatch", "white": [250, 225, 190] } ],
+                 "price": 32, "purchased": "2026-10-01", "opened": "2026-10-02", "notes": "…", "words": ["…"] } ],
   "deleted": [ "…" ]
 }
 ```
@@ -297,6 +325,9 @@ listed in the outfit's `photos` (`role: "worn"`), so it syncs to Google Photos l
 `photo` existed are matched to the outfit's one unclaimed worn photo when that's unambiguous. An outfit's `layout` is optional: per item,
 the top-left corner (`x`, `y`) and width (`w`) as percentages of the figure, and the stacking order (`z`); items without
 an entry are placed by region, and entries for items no longer in the outfit are dropped on the next save.
+A make-up product's type is `type` (an id from `data/cosmetic-types.json`) or `ownType` (the name of a type of your
+own). A shade read from a photo keeps `at` (the photo and the box it was read from, as fractions of the photo) and
+`raw` (its colour before white correction); a photo's `white` is the paper colour read from it.
 
 ## Extending the app
 
@@ -315,6 +346,8 @@ What the app knows is data, in `data/`. Each file has a JSON Schema in `data/sch
 | Gender tags | `data/gender-tags.json` | `data/schema/gender-tags.schema.json` | The gender choices (Masc, Fem, Androgynous); anything else is a tag |
 | Colour seasons | `data/colour-seasons.json` | `data/schema/colour-seasons.schema.json` | The 12 seasons on the *Colour* tab: where each sits on warmth, depth and clarity, its palette, neutrals, metals and colours to avoid, with a `why` |
 | Colour questions | `data/colour-quiz.json` | `data/schema/colour-quiz.schema.json` | The *Colour* tab's questions and answers, how each answer scores, and which ones a photo sample can suggest |
+| Make-up types | `data/cosmetic-types.json` | `data/schema/cosmetic-types.schema.json` | Two-level list of make-up types on the *Make-up* tab (Lips › Lip liner); `multi` marks palettes, which open the shade picker on their first photo |
+| Finishes | `data/finishes.json` | `data/schema/finishes.schema.json` | Finishes a make-up shade can have (matte, satin, shimmer…) |
 
 Check the data locally with `node scripts/check-data.js`.
 

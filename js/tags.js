@@ -23,7 +23,7 @@ function addWord(name) {
 }
 function deleteWord(id) {
   const t = now();
-  [...doc.items, ...doc.outfits].forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
+  [...doc.items, ...doc.outfits, ...doc.cosmetics].forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
   const f = F(); if ((f.words || []).includes(id)) doc.settings = { ...doc.settings, filters: { ...f, words: f.words.filter(x => x !== id) }, updatedAt: t };
   remove('words', id);
 }
@@ -61,7 +61,7 @@ function migrateGenderTags(d) {
 
 // The tag picker in the item and outfit forms: chosen tags as chips (hidden inputs name="words", or name="wordsNew" for
 // a new name), then a box that finds known tags as you type (most used first), or makes a new one with Enter.
-const tagUse = () => { const n = new Map(); [...doc.items.filter(visible), ...doc.outfits].forEach(x => (x.words || []).forEach(id => n.set(id, (n.get(id) || 0) + 1))); return n; };
+const tagUse = () => { const n = new Map(); [...doc.items.filter(visible), ...doc.outfits, ...doc.cosmetics].forEach(x => (x.words || []).forEach(id => n.set(id, (n.get(id) || 0) + 1))); return n; };
 function wordsField(it) {
   const chosen = wordsOf(it).map(w => ({ id: w.id, name: w.name }));
   return `<fieldset class="tagpick" data-tagpick><legend>Tags</legend>

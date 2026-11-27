@@ -8,7 +8,7 @@ function openDrawer(html, cls = '') {
 function closeDrawer() {
   if (typeof Arrange !== 'undefined' && Arrange.on) Arrange.stop();
   const back = outfitReturn && editing && editing.id === outfitReturn.item ? outfitReturn : null; outfitReturn = null;
-  $('#layer').innerHTML = ''; editing = null;
+  $('#layer').innerHTML = ''; editing = null; cosClosed();
   // An item opened from an outfit's figure goes back to that outfit when it's saved or closed
   // (with what its form held, when it was opened from the form's item picker)
   if (back) { const o = back.draft || doc.outfits.find(x => x.id === back.outfit); if (o) { render(); outfitForm(structuredClone(o)); } }

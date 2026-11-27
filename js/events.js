@@ -50,7 +50,7 @@ document.addEventListener('click', async e => {
   if (d.unwear) { remove('wears', d.unwear); render(); return refreshOutfitView(); }
   if (d.delItem && confirm('Delete this item? Outfits and the wear log keep their other items.')) { const it = itemById(d.delItem); remove('items', d.delItem); (it.photos || []).forEach(p => Photos.drop(p.id)); GPhotos.unlink(it.photos || []); closeDrawer(); return render(); }
   if (d.delOutfit && confirm('Delete this outfit? Its items stay in your closet.')) { const o = doc.outfits.find(x => x.id === d.delOutfit) || {}; remove('outfits', d.delOutfit); (o.photos || []).forEach(p => Photos.drop(p.id)); GPhotos.unlink(o.photos || []); closeDrawer(); return render(); }
-  if (d.gphotos === 'pick') return pickPhotos(editing);
+  if (d.gphotos === 'pick') return d.cosPick !== undefined ? cosPick() : pickPhotos(editing);
   if (d.gphotos === 'off') { GPhotos.signOut(); render(); return toast('Disconnected from Google Photos. The album and its photos stay in your Google Photos.'); }
   if (d.gphotos === 'on') {
     try { await GPhotos.connect(); render(); toast('Connected to Google Photos'); }

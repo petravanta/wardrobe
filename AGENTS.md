@@ -14,8 +14,8 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
 - **Built-in knowledge** is in `data/*.json` with schemas in `data/schema/`. Run `node scripts/check-data.js` after
   changing data. Item records refer to entries by id; ids are never renamed or reused.
 - **User data**: `localStorage` key `wardrobe.data`; Drive file `petravanta/Wardrobe/Wardrobe data.json` (app id `wardrobe`, key prefix
-  `wardrobe.drive`). Lists: `items`, `outfits`, `wears`, `words`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
-  `groupBy`, `thumbSize` (`s`, `m`, `l`), `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
+  `wardrobe.drive`). Lists: `items`, `outfits`, `wears`, `words`, `cosmetics`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
+  `groupBy`, `cos` (the Make-up tab's view and filters), `thumbSize` (`s`, `m`, `l`), `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
   `mergeDocs()`.
 - **Photos**: bytes live in IndexedDB database `wardrobe` (`photos` full size, `thumbs` 400 px), keyed by the photo
   id stored on the item. Every way of adding a photo goes through `Photos.add()` / `takePhotos()`.
@@ -75,4 +75,10 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   `data/colour-quiz.json`. Only `settings.colourSeason` (a season id) is saved. A photo used for sampling lives only on
   the sampler's canvas: never pass it to `Photos.add()`, IndexedDB, Drive or Google Photos, and never save answers or
   samples. On the Colour tab a drop goes to the sampler (capture-phase listener), never into the closet.
+- **Make-up**: `js/cosmetics.js` (README, *Make-up*): `renderCosmetics()`, `cosForm()` (the open product is `cosEditing`,
+  never `editing`), and the sampler `cosSampler()` (`cosSamp` while open; its × and Esc go back to the product). Its
+  photos go through `Photos.add()` in `cosTake()`, and `GPhotos` finds them through `photoOwners()`: anything new that
+  holds photos must be added there. A drop on the Make-up tab, or with a product open, goes to make-up (capture-phase
+  listener), never into the closet. `closeDrawer()` calls `cosClosed()`, which drops the photos of a new product that
+  was never saved. Shade colours come only from pixels on the canvas: no model, nothing sent anywhere.
 - The design and roadmap are in the README (*Next steps*).

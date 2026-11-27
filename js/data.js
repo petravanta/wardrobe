@@ -15,7 +15,7 @@ const typeGroup = id => { const t = K.byId.types.get(id); return t ? (t.parent |
 const typeSizeSystems = id => { const t = K.byId.types.get(id) || {}; return t.sizeSystems || (K.byId.types.get(t.parent) || {}).sizeSystems || ['letter']; };
 
 /* ---------- User data ---------- */
-function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {}, sort: 'added', sortReverse: false, groupBy: '' }, items: [], outfits: [], wears: [], words: [], deleted: [] }; }
+function blankDoc() { return { version: 1, settings: { updatedAt: '1970-01-01T00:00:00Z', showSpicy: false, filters: {}, sort: 'added', sortReverse: false, groupBy: '' }, items: [], outfits: [], wears: [], words: [], cosmetics: [], deleted: [] }; }
 // Older or partial documents become the current shape; never write an older format
 function upgrade(d) {
   const b = blankDoc();
