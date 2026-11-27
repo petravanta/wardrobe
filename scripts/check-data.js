@@ -4,7 +4,7 @@
 'use strict';
 const fs = require('fs'), path = require('path');
 const DATA = path.join(__dirname, '..', 'data');
-const SETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags', 'colour-seasons', 'colour-quiz', 'cosmetic-types', 'finishes'];
+const SETS = ['types', 'colours', 'materials', 'seasons', 'occasions', 'care', 'size-systems', 'gender-tags', 'colour-seasons', 'colour-quiz', 'cosmetic-types', 'finishes', 'face-zones'];
 const errors = [];
 const load = set => {
   try { return JSON.parse(fs.readFileSync(path.join(DATA, `${set}.json`), 'utf8')); }
@@ -37,6 +37,9 @@ data['cosmetic-types'].forEach((t, i) => {
   else if (p.parent) errors.push(`cosmetic-types.json: "${t.id}" has parent "${t.parent}", which is itself inside a group (only two levels)`);
   else if (data['cosmetic-types'].indexOf(p) > i) errors.push(`cosmetic-types.json: "${t.id}" comes before its group "${t.parent}"`);
 });
+
+// Face zones name make-up types that exist
+data['face-zones'].forEach(z => z.types.filter(t => !ctypes.has(t)).forEach(t => errors.push(`face-zones.json: "${z.id}" lists type "${t}", which isn't in cosmetic-types.json`)));
 
 // Every type needs a region and size systems, its own or its group's
 data.types.forEach(t => {

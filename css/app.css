@@ -319,3 +319,32 @@ legend{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercas
   .samp-fig{overflow:visible;padding:52px 8px 8px}
   .samp-side{overflow:visible}
 }
+.samp-fig.zoomed{justify-content:flex-start}
+.samp-fig.zoomed .samp-photo{margin:0 auto 0 0;flex:none}
+.samp-zoom .mono{min-width:3.2em;text-align:center}
+.sheet-row{border:1px solid var(--line);border-radius:12px;padding:8px}
+.sheet-prod{display:flex;flex-wrap:wrap;gap:6px;padding-left:calc(1.6em + 6px)}
+.sheet-prod input,.sheet-prod select{flex:1 1 120px;min-width:0;width:auto}
+/* Looks */
+.face{display:block;width:100%;height:auto}
+.face-lg{max-width:min(380px,calc((92vh - 120px) * .8));margin:0 auto;background:var(--sunk);border-radius:16px}
+.face .fz{cursor:pointer}
+.face .fz:hover>*,.face .fz:focus-visible>*{filter:drop-shadow(0 0 3px var(--accent))}
+.face .fz:focus{outline:none}
+.face .fz.on>*{filter:drop-shadow(0 0 2px var(--ink)) drop-shadow(0 0 4px var(--accent))}
+.card .ph.look-ph{aspect-ratio:4/5;padding:8px}
+.lz{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.lz.open{border-color:var(--accent)}
+.lz-head{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;background:none;border:0;text-align:left;flex-wrap:wrap}
+.lz-head b{font-weight:600;font-size:14px;min-width:6.5em}
+.lz-head span{flex:1 1 140px}
+.lz-sw{width:26px;height:26px;border-radius:50%;border:1px dashed var(--faint);flex:none}
+.lz-sw[style*="background"]{border:1px solid var(--line)}
+.lz-pick{padding:4px 10px 12px;border-top:1px solid var(--line);gap:10px}
+.lz-sub{margin:0 0 6px}
+.lz-shades{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px}
+.shade-chip{display:flex;flex-direction:column;gap:1px;width:100%;padding:0 0 6px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:11px}
+.shade-chip i{display:grid;place-items:center;height:36px;font-style:normal;font-weight:700;font-size:14px;margin-bottom:3px}
+.shade-chip span{padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shade-chip.on{outline:3px solid var(--accent);outline-offset:-2px}
+@media (max-width:760px){.samp-fig{overflow:auto;max-height:62vh}.face-lg{max-width:300px}}

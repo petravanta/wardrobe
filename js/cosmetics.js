@@ -54,15 +54,18 @@ function shadeTiles(list) {
   }).join('');
 }
 function renderCosmetics() {
-  const f = cosF(), list = doc.cosmetics.filter(cosMatches), view = f.view === 'shades' ? 'shades' : 'products';
+  const f = cosF(), list = doc.cosmetics.filter(cosMatches), view = ['shades', 'looks'].includes(f.view) ? f.view : 'products';
   const groups = [...K.cosmeticTypes.filter(t => !t.parent).map(t => [t.id, t.name]), ...(ownTypes().length ? [['own', 'Your own types']] : [])];
   const fins = K.finishes.filter(x => doc.cosmetics.some(c => (c.shades || []).some(s => s.finish === x.id)));
   const tags = sortedWords().filter(w => doc.cosmetics.some(c => (c.words || []).includes(w.id)));
   const on = (k, v) => (f[k] || []).includes(v);
   const filtered = (f.groups || []).length || (f.finishes || []).length || (f.words || []).length || f.q;
+  const views = `<div class="chips seg" role="group" aria-label="Show">${[['products', 'Products'], ['shades', 'Shades'], ['looks', 'Looks']].map(([k, n]) => `<button type="button" class="chip" data-cos-view="${k}" aria-pressed="${view === k}">${n}</button>`).join('')}</div>`;
+  if (view === 'looks') { $('#main').innerHTML = `<div class="bar"><span class="grow"></span>${views}</div>${renderLooks()}`; return; }
   $('#main').innerHTML = `
   <div class="bar">
     <button type="button" class="btn primary" data-cos-act="add">Add make-up</button>
+    <button type="button" class="btn" data-cos-act="sheet" title="One photo of swatches from several products, such as lipsticks swatched on paper">Swatch sheet</button>
     ${GPhotos.known() ? '<button type="button" class="btn" data-gphotos="pick" data-cos-pick>From Google Photos</button>' : ''}
     <span class="small muted fine-only">or drop photos anywhere</span>
     <span class="grow"></span>
@@ -74,9 +77,9 @@ function renderCosmetics() {
     ${tags.length ? `<div class="chips">${tags.map(w => `<button type="button" class="chip" data-cos-word="${esc(w.id)}" aria-pressed="${on('words', w.id)}">${wordChip(w)}</button>`).join('')}</div>` : ''}
     ${filtered ? '<button type="button" class="btn ghost sm" data-cos-act="clear">Clear filters</button>' : ''}
     <span class="grow"></span>
-    <div class="chips seg" role="group" aria-label="Show"><button type="button" class="chip" data-cos-view="products" aria-pressed="${view === 'products'}">Products</button><button type="button" class="chip" data-cos-view="shades" aria-pressed="${view === 'shades'}">Shades</button></div>
+    ${views}
   </div>
-  ${!list.length ? `<div class="empty">${doc.cosmetics.length ? 'Nothing matches these filters.' : 'No make-up yet. Add a lipstick or a palette, or drop a photo of it (and of a paper swatch) here, then tap each shade on the photo to save its colour.'}</div>`
+  ${!list.length ? `<div class="empty">${doc.cosmetics.length ? 'Nothing matches these filters.' : 'No make-up yet. Add a lipstick or a palette, or drop a photo of it (and of a paper swatch) here, then tap each shade on the photo to save its colour. Swatched several products on one sheet of paper? Use <i>Swatch sheet</i>: each swatch becomes its own product.'}</div>`
     : view === 'shades' ? shadeTiles(list) || '<div class="empty">No shades with a colour yet. Open a product and tap its shades on a photo.</div>'
     : cosShelves(list).map(s => `<section class="shelf"><h3>${esc(s.label)} <span class="count">${s.items.length}</span></h3><ul class="${thumbClass()}">${s.items.map(cosCard).join('')}</ul></section>`).join('')}`;
 }
@@ -163,7 +166,7 @@ async function cosTake(files) {
   if (!(c.shades || []).length && imgs.length === (c.photos || []).length && (t && t.multi || imgs.length === 1)) cosSampler(c.photos[0].id);
 }
 function cosClosed() { // from closeDrawer(): a new product that was never saved takes its photos with it
-  const c = cosEditing; cosEditing = null; cosSamp = null;
+  const c = cosEditing; cosEditing = null; if (cosSamp && cosSamp.bmp && cosSamp.bmp.close) cosSamp.bmp.close(); cosSamp = null;
   if (c && !cosById(c.id)) (c.photos || []).forEach(p => Photos.drop(p.id));
 }
 function cosSave() {
@@ -184,44 +187,104 @@ function cosRmPhoto(pid) {
   cosForm(c);
 }
 
-/* The sampler: the photo on a canvas; tap a pan or swatch (or drag a box over it) to read its colour */
+/* The sampler: the photo on a canvas; tap a pan or swatch (or drag a box over it) to read its colour. It works on one
+   product's photo (its shades are cosEditing.shades) or on a swatch sheet: one photo of swatches from several products
+   (cosSamp.sheet; each row in cosSamp.rows becomes a product, or a shade added to one you have, on Done). */
 const SAMP_SIZES = { s: 160, m: 80, l: 36 }; // tap square: the photo's long side over this
+const SAMP_ZOOM = [1, 6];
+const sampList = () => cosSamp.sheet ? cosSamp.rows : cosEditing.shades;
+const sampSet = v => { if (cosSamp.sheet) cosSamp.rows = v; else cosEditing.shades = v; };
+const sampPhoto = () => cosSamp.sheet ? cosSamp.photo : cosEditing.photos.find(x => x.id === cosSamp.pid);
 async function cosSampler(pid) {
   const c = cosEditing = cosRead(cosEditing), p = (c.photos || []).find(x => x.id === pid); if (!p) return;
   const blob = await Photos.full(pid);
   if (!blob) return toast('This photo isn’t on this device yet (it was added on another one), so its colours can’t be read here.', 6000);
   let bmp; try { bmp = await createImageBitmap(blob); } catch (e) { return toast('This browser can’t read that photo. Try a JPEG or PNG.'); }
-  cosSamp = { pid, mode: 'shade', size: cosSamp && cosSamp.size || 'm', sel: null };
+  cosSamp = { pid, mode: 'shade', size: cosSamp && cosSamp.size || 'm', sel: null, zoom: 1 };
+  sampOpen(bmp); bmp.close && bmp.close();
+}
+// A swatch sheet: the photo stays in memory (for the crops each product gets) and is never stored itself
+async function sheetSampler(file) {
+  if (!isImage(file)) return toast('Only photos can be used (JPEG, PNG, WebP, HEIC).');
+  let bmp; try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch (e) { return toast('This browser can’t read that photo. Try a JPEG or PNG.'); }
+  if (cosEditing || $('#layer').innerHTML) closeDrawer();
+  cosSamp = { sheet: true, pid: 'sheet', photo: { id: 'sheet' }, rows: [], bmp, mode: 'shade', size: 'm', sel: null, zoom: 1 };
+  sampOpen(bmp);
+}
+function sampOpen(bmp) {
+  const sheet = cosSamp.sheet, p = sampPhoto();
+  const brands = [...new Set(doc.cosmetics.map(x => x.brand).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   openDrawer(`<div class="samp-fig"><div class="cs-photo samp-photo"><canvas id="sampCanvas" aria-label="The photo: tap a shade to read its colour, or drag a box over it"></canvas><div id="sampDots"></div><div id="sampBox" hidden></div></div></div>
   <div class="samp-side stack">
-    <h2>Pick shades</h2>
-    <p class="small">Tap the middle of each pan or swatch, or drag a box over it. Each one becomes a shade; name it below. Tap a shade in the list first to read it again.</p>
+    <h2>${sheet ? 'Swatch sheet' : 'Pick shades'}</h2>
+    <p class="small">${sheet ? 'Tap each swatch, or drag a box over it. Each one becomes its own product: give it a brand, a name and a type below, or add it to a product you have.' : 'Tap the middle of each pan or swatch, or drag a box over it. Each one becomes a shade; name it below.'} Tap a shade’s dot in the list first to read it again.</p>
+    <div class="row samp-zoom" role="group" aria-label="Zoom"><button type="button" class="btn sm" data-samp-zoom="out" aria-label="Zoom out">−</button><span class="small mono" id="sampZoomL">100%</span><button type="button" class="btn sm" data-samp-zoom="in" aria-label="Zoom in">+</button><button type="button" class="btn ghost sm" data-samp-zoom="fit">Fit</button><span class="small muted">${matchMedia('(pointer:coarse)').matches ? 'or pinch; drag to move around' : 'or Ctrl + scroll'}</span></div>
     <div class="chips" role="group" aria-label="What a tap does"><button type="button" class="chip" data-samp-mode="shade" aria-pressed="true">Shade</button><button type="button" class="chip" data-samp-mode="white" aria-pressed="false">White paper</button></div>
-    <p class="small muted" id="sampWhite">${p.white ? `White paper set <i class="swatch" style="background:${rgbHex(p.white)}"></i>: colours from this photo are corrected for the light.` : 'For a swatch on paper, tap the bare paper once with <i>White paper</i>: the app then corrects for the colour of the light.'}</p>
+    <p class="small muted" id="sampWhite"></p>
     <div class="row"><span class="small muted" id="sampSzL">Tap size</span><div class="chips seg" role="group" aria-labelledby="sampSzL">${Object.keys(SAMP_SIZES).map(k => `<button type="button" class="chip" data-samp-size="${k}" aria-pressed="${cosSamp.size === k}">${k.toUpperCase()}</button>`).join('')}</div></div>
+    <datalist id="dlSheetBrand">${brands.map(b => `<option value="${esc(b)}"></option>`).join('')}</datalist>
     <div class="stack" id="sampList"></div>
-    <div class="row"><button type="button" class="btn primary" data-samp-done>Done</button></div>
+    <div class="row"><button type="button" class="btn primary" data-samp-done>${sheet ? 'Save products' : 'Done'}</button>${sheet ? '<button type="button" class="btn" data-close>Cancel</button>' : ''}</div>
   </div>`, 'samp-panel');
-  const cv = $('#sampCanvas'), k = Math.min(1, 1400 / Math.max(bmp.width, bmp.height));
+  const cv = $('#sampCanvas'), k = Math.min(1, 1400 / Math.max(bmp.width, bmp.height)), fig = $('#layer .samp-fig');
   cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
-  cv.getContext('2d', { willReadFrequently: true }).drawImage(bmp, 0, 0, cv.width, cv.height); bmp.close && bmp.close();
-  cosSamp.cv = cv; sampDraw();
-  let start = null;
+  cv.getContext('2d', { willReadFrequently: true }).drawImage(bmp, 0, 0, cv.width, cv.height);
+  cosSamp.cv = cv; sampPanel();
   const at = e => { const r = cv.getBoundingClientRect(); return [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))]; };
-  cv.addEventListener('pointerdown', e => { start = at(e); cv.setPointerCapture(e.pointerId); });
+  const tap = (e, from) => {
+    const [x, y] = at(e), r = cv.getBoundingClientRect(), dragged = from && Math.hypot((x - from[0]) * r.width, (y - from[1]) * r.height) >= 8;
+    let box;
+    if (dragged) box = [Math.min(x, from[0]), Math.min(y, from[1]), Math.abs(x - from[0]), Math.abs(y - from[1])];
+    else { const h = Math.max(cv.width, cv.height) / SAMP_SIZES[cosSamp.size] / 2; box = [x - h / cv.width, y - h / cv.height, 2 * h / cv.width, 2 * h / cv.height]; }
+    sampTake(box, dragged);
+  };
+  // Mouse: click to read, drag a box. Touch: tap to read, one finger moves around the zoomed photo, two fingers zoom.
+  const pts = new Map(); let start = null, pan = null, pinch = null;
+  const two = () => { const [a, b] = [...pts.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+  cv.addEventListener('pointerdown', e => {
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); cv.setPointerCapture(e.pointerId);
+    if (pts.size === 2) { start = null; pan = null; $('#sampBox').hidden = true; pinch = { d: two().d, z: cosSamp.zoom }; return; }
+    if (pts.size > 2 || pinch) return;
+    if (e.pointerType === 'mouse') start = at(e);
+    else { const dr = $('#layer .drawer'); pan = { x: e.clientX, y: e.clientY, sl: fig.scrollLeft, st: fig.scrollTop, dt: dr.scrollTop, moved: false }; }
+  });
   cv.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch) { if (pts.size >= 2) { const t = two(); sampZoom(pinch.z * t.d / pinch.d, t.x, t.y); } return; }
+    if (pan) {
+      const dx = e.clientX - pan.x, dy = e.clientY - pan.y; if (Math.hypot(dx, dy) > 8) pan.moved = true; if (!pan.moved) return;
+      fig.scrollLeft = pan.sl - dx; fig.scrollTop = pan.st - dy;
+      if (cosSamp.zoom <= 1) $('#layer .drawer').scrollTop = pan.dt - dy; // not zoomed: the panel scrolls, as anywhere else
+      return;
+    }
     if (!start) return; const [x, y] = at(e), b = $('#sampBox'), r = cv.getBoundingClientRect();
     if (Math.hypot((x - start[0]) * r.width, (y - start[1]) * r.height) < 8) { b.hidden = true; return; }
     Object.assign(b.style, { left: `${Math.min(x, start[0]) * 100}%`, top: `${Math.min(y, start[1]) * 100}%`, width: `${Math.abs(x - start[0]) * 100}%`, height: `${Math.abs(y - start[1]) * 100}%` }); b.hidden = false;
   });
-  cv.addEventListener('pointerup', e => {
-    if (!start) return; const [x, y] = at(e), s = start, r = cv.getBoundingClientRect(); start = null; $('#sampBox').hidden = true;
-    let box; const dragged = Math.hypot((x - s[0]) * r.width, (y - s[1]) * r.height) >= 8;
-    if (dragged) box = [Math.min(x, s[0]), Math.min(y, s[1]), Math.abs(x - s[0]), Math.abs(y - s[1])];
-    else { const h = Math.max(cv.width, cv.height) / SAMP_SIZES[cosSamp.size] / 2; box = [x - h / cv.width, y - h / cv.height, 2 * h / cv.width, 2 * h / cv.height]; }
-    sampTake(box, dragged);
-  });
-  cv.addEventListener('pointercancel', () => { start = null; $('#sampBox').hidden = true; });
+  const end = e => {
+    pts.delete(e.pointerId); $('#sampBox').hidden = true;
+    if (pinch) { if (!pts.size) pinch = null; return; }
+    if (pan) { const p0 = pan; pan = null; if (!p0.moved && e.type === 'pointerup') tap(e, null); return; }
+    if (start) { const s = start; start = null; if (e.type === 'pointerup') tap(e, s); }
+  };
+  cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+  // Ctrl + scroll, and a trackpad pinch (which browsers send as Ctrl + scroll), zoom around the pointer
+  fig.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); sampZoom(cosSamp.zoom * Math.exp(-e.deltaY * 0.01), e.clientX, e.clientY); }, { passive: false });
+}
+// Zoom the photo, keeping the spot under (cx, cy) where it is (the middle of the view when not given)
+function sampZoom(z, cx, cy) {
+  if (!cosSamp || !cosSamp.cv) return;
+  const fig = $('#layer .samp-fig'), ph = $('#layer .samp-photo'); if (!fig || !ph) return;
+  z = Math.min(SAMP_ZOOM[1], Math.max(SAMP_ZOOM[0], z));
+  const fr = fig.getBoundingClientRect(); if (cx == null) { cx = fr.left + fig.clientWidth / 2; cy = fr.top + Math.min(fig.clientHeight, innerHeight - fr.top) / 2; }
+  const r0 = ph.getBoundingClientRect(), px = (cx - r0.left) / r0.width, py = (cy - r0.top) / r0.height;
+  if (!cosSamp.baseW || cosSamp.zoom === 1) cosSamp.baseW = r0.width / cosSamp.zoom;
+  cosSamp.zoom = z;
+  ph.style.width = z === 1 ? '' : `${cosSamp.baseW * z}px`; ph.style.maxWidth = z === 1 ? '' : 'none';
+  fig.classList.toggle('zoomed', z > 1);
+  const r1 = ph.getBoundingClientRect();
+  fig.scrollLeft += r1.left + px * r1.width - cx; fig.scrollTop += r1.top + py * r1.height - cy;
+  const l = $('#sampZoomL'); if (l) l.textContent = `${Math.round(z * 100)}%`;
 }
 // The median of each channel over the box (only its middle, for a dragged box, so a pan's rim or the gap beside it doesn't count)
 function sampRead(box, dragged) {
@@ -235,40 +298,85 @@ function sampRead(box, dragged) {
 // A white paper reading scales each channel so the paper comes out a clean near-white: it fixes the light's colour and a dim exposure
 const whiteFix = (rgb, w) => w ? rgb.map((v, i) => v * Math.min(2.2, Math.max(0.5, 242 / Math.max(1, w[i])))) : rgb;
 function sampTake(box, dragged) {
-  const c = cosEditing, p = c.photos.find(x => x.id === cosSamp.pid);
-  const rgb = sampRead(box, dragged);
+  const p = sampPhoto(), list = sampList(), rgb = sampRead(box, dragged);
   if (cosSamp.mode === 'white') {
     p.white = rgb;
-    c.shades = c.shades.map(s => s.at && s.at.photo === p.id && s.raw ? { ...s, hex: rgbHex(whiteFix(hexRgb(s.raw), rgb)) } : s);
+    sampSet(list.map(s => s.at && s.at.photo === p.id && s.raw ? { ...s, hex: rgbHex(whiteFix(hexRgb(s.raw), rgb)) } : s));
     cosSamp.mode = 'shade'; toast('White paper set: colours from this photo are corrected');
     return sampPanel();
   }
   const at = { photo: p.id, x: +box[0].toFixed(4), y: +box[1].toFixed(4), w: +box[2].toFixed(4), h: +box[3].toFixed(4) }, raw = rgbHex(rgb), hex = rgbHex(whiteFix(rgb, p.white));
-  const i = cosSamp.sel ? c.shades.findIndex(s => s.id === cosSamp.sel) : -1;
-  if (i >= 0) { c.shades[i] = { ...c.shades[i], hex, raw, at }; cosSamp.sel = null; }
+  const i = cosSamp.sel ? list.findIndex(s => s.id === cosSamp.sel) : -1;
+  if (i >= 0) { list[i] = { ...list[i], hex, raw, at }; cosSamp.sel = null; }
   else {
-    const prev = [...c.shades].reverse().find(s => s.at && s.at.photo === p.id);
-    c.shades = [...c.shades, { id: uid(), hex, raw, at, ...(prev && prev.finish ? { finish: prev.finish } : {}) }];
+    const prev = [...list].reverse().find(s => s.at && s.at.photo === p.id);
+    // On a sheet, the next swatch is probably the same kind of product (and finish) as the last one; the brand usually isn't
+    sampSet([...list, { id: uid(), hex, raw, at, ...(prev && prev.finish ? { finish: prev.finish } : {}), ...(cosSamp.sheet ? { type: prev ? prev.type : 'lipstick', into: '' } : {}) }]);
   }
   sampPanel(i < 0);
 }
+const finishOpts = v => `<option value="">Finish</option>${K.finishes.map(x => `<option value="${x.id}"${v === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}`;
+const cosTypeOpts = v => K.cosmeticTypes.filter(t => !t.parent).map(g => `<optgroup label="${esc(g.name)}">${K.cosmeticTypes.filter(t => t.parent === g.id).map(t => `<option value="${t.id}"${v === t.id ? ' selected' : ''}>${esc(t.name)}</option>`).join('')}<option value="${g.id}"${v === g.id ? ' selected' : ''}>${esc(g.name)} (other)</option></optgroup>`).join('')
+  + (ownTypes().length ? `<optgroup label="Your own">${ownTypes().map(n => `<option value="own:${esc(n)}"${v === 'own:' + n ? ' selected' : ''}>${esc(n)}</option>`).join('')}</optgroup>` : '');
+// A sheet row's product: a new one (brand, name, type) or one you have, to add the shade to
+function sheetProd(s, i) {
+  const have = [...doc.cosmetics].sort((a, b) => cosLabel(a).localeCompare(cosLabel(b)));
+  return `<div class="sheet-prod"><label class="sr-only" for="sInto${i}">Product for swatch ${i + 1}</label><select id="sInto${i}" data-sheet-into="${esc(s.id)}"><option value="">New product</option>${have.length ? `<optgroup label="Add to one you have">${have.map(c => `<option value="${esc(c.id)}"${s.into === c.id ? ' selected' : ''}>${esc(cosLabel(c))}</option>`).join('')}</optgroup>` : ''}</select>
+    ${s.into ? '' : `<input type="text" data-sheet-brand="${esc(s.id)}" value="${esc(s.brand || '')}" placeholder="Brand" aria-label="Brand of swatch ${i + 1}" list="dlSheetBrand" autocomplete="off">
+    <input type="text" data-sheet-pname="${esc(s.id)}" value="${esc(s.pname || '')}" placeholder="Product name" aria-label="Product name of swatch ${i + 1}" autocomplete="off">
+    <select data-sheet-type="${esc(s.id)}" aria-label="Type of swatch ${i + 1}">${cosTypeOpts(s.type)}</select>`}</div>`;
+}
 function sampDraw() {
-  const c = cosEditing, pid = cosSamp.pid;
-  $('#sampDots').innerHTML = c.shades.map((s, i) => s.at && s.at.photo === pid ? `<i class="${s.id === cosSamp.sel ? 'sel' : ''}" style="left:${(s.at.x + s.at.w / 2) * 100}%;top:${(s.at.y + s.at.h / 2) * 100}%;background:${esc(s.hex)};color:${inkOn(s.hex)}">${i + 1}</i>` : '').join('');
-  $('#sampList').innerHTML = c.shades.length ? c.shades.map((s, i) => `<div class="shade-row${s.id === cosSamp.sel ? ' sel' : ''}" data-samp-shade="${esc(s.id)}"><span class="shade-n mono">${i + 1}</span>
-    <button type="button" class="shade-dot" data-samp-sel="${esc(s.id)}" style="background:${esc(s.hex)}" aria-pressed="${s.id === cosSamp.sel}" aria-label="Read shade ${i + 1} again with the next tap" title="${s.at && s.at.photo === pid ? 'Read again' : 'From another photo or set by hand: tap, then tap the photo to read it here'}"></button>
+  const pid = cosSamp.pid, list = sampList(), sheet = cosSamp.sheet;
+  $('#sampDots').innerHTML = list.map((s, i) => s.at && s.at.photo === pid ? `<i class="${s.id === cosSamp.sel ? 'sel' : ''}" style="left:${(s.at.x + s.at.w / 2) * 100}%;top:${(s.at.y + s.at.h / 2) * 100}%;background:${esc(s.hex)};color:${inkOn(s.hex)}">${i + 1}</i>` : '').join('');
+  $('#sampList').innerHTML = list.length ? list.map((s, i) => `<div class="${sheet ? 'sheet-row stack' : ''}" data-samp-shade="${esc(s.id)}"><div class="shade-row${s.id === cosSamp.sel ? ' sel' : ''}"><span class="shade-n mono">${i + 1}</span>
+    <button type="button" class="shade-dot" data-samp-sel="${esc(s.id)}" style="background:${esc(s.hex)}" aria-pressed="${s.id === cosSamp.sel}" aria-label="Read ${sheet ? 'swatch' : 'shade'} ${i + 1} again with the next tap" title="${s.at && s.at.photo === pid ? 'Read again' : 'From another photo or set by hand: tap, then tap the photo to read it here'}"></button>
     <input type="text" data-samp-name="${esc(s.id)}" value="${esc(s.name || '')}" placeholder="Shade name" aria-label="Name of shade ${i + 1}" autocomplete="off" enterkeyhint="done">
-    <select data-samp-finish="${esc(s.id)}" aria-label="Finish of shade ${i + 1}"><option value="">Finish</option>${K.finishes.map(x => `<option value="${x.id}"${s.finish === x.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
-    <button type="button" class="btn ghost sm" data-samp-rm="${esc(s.id)}" aria-label="Remove shade ${i + 1}">×</button></div>`).join('') : '<p class="small muted" style="margin:0">No shades yet.</p>';
+    <select data-samp-finish="${esc(s.id)}" aria-label="Finish of shade ${i + 1}">${finishOpts(s.finish)}</select>
+    <button type="button" class="btn ghost sm" data-samp-rm="${esc(s.id)}" aria-label="Remove shade ${i + 1}">×</button></div>${sheet ? sheetProd(s, i) : ''}</div>`).join('') : `<p class="small muted" style="margin:0">No ${sheet ? 'swatches' : 'shades'} yet.</p>`;
 }
 function sampPanel(focusNew) {
-  const p = cosEditing.photos.find(x => x.id === cosSamp.pid);
+  const p = sampPhoto();
   $$('[data-samp-mode]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sampMode === cosSamp.mode)));
   $('#sampWhite').innerHTML = cosSamp.mode === 'white' ? '<b>Now tap the bare white paper.</b>' : p.white ? `White paper set <i class="swatch" style="background:${rgbHex(p.white)}"></i>: colours from this photo are corrected for the light.` : 'For a swatch on paper, tap the bare paper once with <i>White paper</i>: the app then corrects for the colour of the light.';
   sampDraw();
-  if (focusNew) { const ins = $$('#sampList [data-samp-name]'), last = ins[ins.length - 1]; if (last && matchMedia('(pointer:fine)').matches) last.focus({ preventScroll: true }); if (last) last.closest('.shade-row').scrollIntoView({ block: 'nearest' }); }
+  if (focusNew) { const ins = $$('#sampList [data-samp-name]'), last = ins[ins.length - 1]; if (last && matchMedia('(pointer:fine)').matches) last.focus({ preventScroll: true }); if (last) last.closest('[data-samp-shade]').scrollIntoView({ block: 'nearest' }); }
 }
-function sampBack() { const c = cosEditing; if (cosSamp && cosSamp.cv) cosSamp.cv.width = cosSamp.cv.height = 0; cosSamp = null; cosForm(c); }
+function sampBack() {
+  if (cosSamp && cosSamp.cv) cosSamp.cv.width = cosSamp.cv.height = 0;
+  if (cosSamp && cosSamp.sheet) { if (cosSamp.bmp && cosSamp.bmp.close) cosSamp.bmp.close(); cosSamp = null; return closeDrawer(); }
+  const c = cosEditing; cosSamp = null; cosForm(c);
+}
+// Each swatch on a sheet gets its own photo: a crop around it from the full-size sheet (three times its size, so the
+// paper around it shows), on which its dot sits where it was read
+async function sheetCrop(bmp, s) {
+  const W = bmp.width, H = bmp.height, cx = (s.at.x + s.at.w / 2) * W, cy = (s.at.y + s.at.h / 2) * H;
+  const bs = Math.max(s.at.w * W, s.at.h * H), side = Math.min(Math.max(W, H), Math.max(bs * 3, 0.12 * Math.max(W, H)));
+  const x0 = Math.max(0, Math.min(W - Math.min(side, W), cx - side / 2)), y0 = Math.max(0, Math.min(H - Math.min(side, H), cy - side / 2)), w = Math.min(side, W), h = Math.min(side, H);
+  const k = Math.min(1, 900 / Math.max(w, h)), c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext('2d').drawImage(bmp, x0, y0, w, h, 0, 0, c.width, c.height);
+  const blob = await new Promise(r => c.toBlob(r, 'image/jpeg', .9)), id = await Photos.add(new File([blob], 'swatch.jpg', { type: 'image/jpeg' }));
+  const at = { photo: id, x: +((s.at.x * W - x0) / w).toFixed(4), y: +((s.at.y * H - y0) / h).toFixed(4), w: +(s.at.w * W / w).toFixed(4), h: +(s.at.h * H / h).toFixed(4) };
+  return { id, at };
+}
+async function sheetSave() {
+  const S = cosSamp, rows = S.rows; if (!rows.length) return toast('Tap a swatch on the photo first');
+  const btn = $('[data-samp-done]'); if (btn) btn.disabled = true;
+  let made = 0, added = 0;
+  for (const s of rows) {
+    const { id, at } = await sheetCrop(S.bmp, s), photo = { id, role: 'swatch', ...(S.photo.white ? { white: S.photo.white } : {}) };
+    const shade = { id: uid(), hex: s.hex, ...(s.raw ? { raw: s.raw } : {}), at, ...(s.name ? { name: s.name } : {}), ...(s.finish ? { finish: s.finish } : {}) };
+    const have = s.into && cosById(s.into);
+    if (have) { put('cosmetics', { ...have, shades: [...(have.shades || []), shade], photos: [...(have.photos || []), photo] }); added++; }
+    else {
+      const own = (s.type || '').startsWith('own:') ? s.type.slice(4) : '';
+      put('cosmetics', { id: uid(), added: now(), ...(own ? { ownType: own } : { type: s.type || 'lipstick' }), ...(s.brand ? { brand: s.brand } : {}), ...(s.pname ? { name: s.pname } : {}), shades: [shade], photos: [photo] });
+      made++;
+    }
+  }
+  sampBack(); render();
+  toast([made && `${made} new product${made > 1 ? 's' : ''}`, added && `${added} shade${added > 1 ? 's' : ''} added to products you have`].filter(Boolean).join(', ') + ' saved', 5000);
+}
 
 /* Events */
 document.addEventListener('click', e => {
@@ -279,6 +387,7 @@ document.addEventListener('click', e => {
   if (d.cos && !t.closest('#layer')) return cosForm(structuredClone(cosById(d.cos)));
   if (d.cosAct === 'add') return cosForm(newCos());
   if (d.cosAct === 'photo') return $('#cosIn').click();
+  if (d.cosAct === 'sheet') return $('#sheetIn').click();
   if (d.cosAct === 'shade') { const c = cosRead(cosEditing); c.shades = [...c.shades, { id: uid(), hex: '#c06070' }]; cosForm(c); const ins = $$('#cosShades [name=shName]'); if (ins.length) ins[ins.length - 1].focus(); return; }
   if (d.cosAct === 'clear') { setSetting('cos', { view: cosF().view }); return render(); }
   if (d.cosView) return setCosF('view', d.cosView);
@@ -295,16 +404,25 @@ document.addEventListener('click', e => {
   if (d.sampMode) { cosSamp.mode = d.sampMode; return sampPanel(); }
   if (d.sampSize) { cosSamp.size = d.sampSize; $$('[data-samp-size]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sampSize === cosSamp.size))); return; }
   if (d.sampSel) { cosSamp.sel = cosSamp.sel === d.sampSel ? null : d.sampSel; cosSamp.mode = 'shade'; return sampPanel(); }
-  if (d.sampRm) { cosEditing.shades = cosEditing.shades.filter(s => s.id !== d.sampRm); if (cosSamp.sel === d.sampRm) cosSamp.sel = null; return sampDraw(); }
-  if (d.sampDone !== undefined) return sampBack();
+  if (d.sampRm) { sampSet(sampList().filter(s => s.id !== d.sampRm)); if (cosSamp.sel === d.sampRm) cosSamp.sel = null; return sampDraw(); }
+  if (d.sampZoom) return sampZoom(d.sampZoom === 'fit' ? 1 : cosSamp.zoom * (d.sampZoom === 'in' ? 1.5 : 1 / 1.5));
+  if (d.sampDone !== undefined) return cosSamp.sheet ? sheetSave() : sampBack();
 }, true);
 document.addEventListener('input', e => {
   const d = e.target.dataset || {};
   if (e.target.id === 'cosQ') { clearTimeout(cosQT); cosQT = setTimeout(() => { setCosF('q', e.target.value); const q = $('#cosQ'); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 250); }
-  if (d.sampName && cosEditing) { const s = cosEditing.shades.find(x => x.id === d.sampName); if (s) s.name = e.target.value.trim() || undefined; }
+  const row = id => cosSamp && sampList().find(x => x.id === id), v = e.target.value.trim() || undefined;
+  if (d.sampName) { const s = row(d.sampName); if (s) s.name = v; }
+  if (d.sheetBrand) { const s = row(d.sheetBrand); if (s) s.brand = v; }
+  if (d.sheetPname) { const s = row(d.sheetPname); if (s) s.pname = v; }
 });
 let cosQT;
-document.addEventListener('change', e => { const d = e.target.dataset || {}; if (d.sampFinish && cosEditing) { const s = cosEditing.shades.find(x => x.id === d.sampFinish); if (s) s.finish = e.target.value || undefined; } });
+document.addEventListener('change', e => {
+  const d = e.target.dataset || {}, s = cosSamp && sampList().find(x => x.id === (d.sampFinish || d.sheetType || d.sheetInto)); if (!s) return;
+  if (d.sampFinish) s.finish = e.target.value || undefined;
+  if (d.sheetType) s.type = e.target.value;
+  if (d.sheetInto) { s.into = e.target.value; sampDraw(); }
+});
 document.addEventListener('submit', e => { if (e.target.id === 'cosForm') { e.preventDefault(); cosSave(); } });
 // Esc in the sampler goes back to the product; Enter in a shade name moves on
 addEventListener('keydown', e => {
@@ -312,6 +430,7 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); sampBack(); }
   else if (e.key === 'Enter' && e.target.dataset && e.target.dataset.sampName) { e.preventDefault(); e.target.blur(); }
 }, true);
+$('#sheetIn').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) sheetSampler(f); });
 $('#cosIn').addEventListener('change', e => { const f = [...e.target.files]; e.target.value = ''; if (f.length) cosTake(f); });
 // On the Cosmetics tab, or with a product open, dropped photos go to make-up, never into the closet
 const cosDropHere = () => cosEditing || (tab === 'cosmetics' && !$('#layer').innerHTML);

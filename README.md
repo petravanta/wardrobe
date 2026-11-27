@@ -258,8 +258,22 @@ The *Make-up* tab keeps the make-up you own: lipsticks, lip liners, eyeshadow pa
   Dropped photos on the *Make-up* tab make one product with all of them, since a palette and its paper swatch belong
   together; with a product open they're added to it. A new palette or a single first photo opens *Pick shades* straight away.
 - **Views**: *Products* shows shelves by type; *Shades* shows every shade as a tile, lightest first within each type,
-  so similar colours sit side by side. Filter by category (Lips, Eyes, Face, Nails, your own types), finish and tag, and search
+  so similar colours sit side by side; *Looks* shows your saved looks (below). Filter by category (Lips, Eyes, Face, Nails, your own types), finish and tag, and search
   brand, name, shade names, notes and tags.
+- **Zoom**: in *Pick shades* and *Swatch sheet*, zoom the photo with − and +, Ctrl + scroll (or a trackpad pinch),
+  or two fingers on a phone; one finger then moves around the zoomed photo, and a tap still reads a colour.
+- **Swatch sheet**: one photo of swatches from several products (lipsticks from different brands swatched on one
+  sheet of paper). Each swatch you tap is its own row: give it a shade name, finish, brand, product name and type, or
+  add it to a product you already have. *Save products* makes one product per row, each with its own photo: a crop of
+  the sheet around its swatch (with the white paper reading, so it can be read again). The sheet itself isn't stored.
+- **Looks**: a look is a face palette, one colour each for lips, cheeks, bronze and contour, highlight, eyelid,
+  crease, liner and nails (`data/face-zones.json`), shown on a face chart. It opens in a large panel like an outfit:
+  tap a part of the face, or its row, to choose from your own shades that fit it (✓ marks those in your colour
+  season's palette, the same rule as the closet on the *Colour* tab) or from the season's colours to look for.
+  *Suggest* fills the empty parts (your shades in the palette first, a season colour only where you have none) and
+  *Mix it up* picks again for every part. Each zone in `data/face-zones.json` says which make-up types fit it and
+  which part of the palette to suggest (colours or neutrals, with lightness, chroma and hue ranges). Looks keep a
+  season, a name, notes and tags.
 
 ## Next steps
 
@@ -314,6 +328,8 @@ One document, the same shape as the other apps (see STANDARDS.md, *User data*):
                                "at": { "photo": "…", "x": 0.08, "y": 0.11, "w": 0.06, "h": 0.06 } } ],
                  "photos": [ { "id": "…", "role": "product" }, { "id": "…", "role": "swatch", "white": [250, 225, 190] } ],
                  "price": 32, "purchased": "2026-10-01", "opened": "2026-10-02", "notes": "…", "words": ["…"] } ],
+  "looks":   [ { "id": "…", "u": "…", "name": "Spring day", "season": "light-spring", "notes": "…", "words": ["…"],
+                 "zones": { "lips": { "cos": "…", "shade": "…", "hex": "#e87473" }, "cheeks": { "hex": "#f6b89a", "name": "Peach", "find": true } } } ],
   "deleted": [ "…" ]
 }
 ```
@@ -328,6 +344,8 @@ an entry are placed by region, and entries for items no longer in the outfit are
 A make-up product's type is `type` (an id from `data/cosmetic-types.json`) or `ownType` (the name of a type of your
 own). A shade read from a photo keeps `at` (the photo and the box it was read from, as fractions of the photo) and
 `raw` (its colour before white correction); a photo's `white` is the paper colour read from it.
+A look's zone holds a shade of your make-up (`cos`, `shade`, and its `hex`, so the look still shows if the product
+goes) or a season colour to look for (`find: true`).
 
 ## Extending the app
 
@@ -347,6 +365,7 @@ What the app knows is data, in `data/`. Each file has a JSON Schema in `data/sch
 | Colour seasons | `data/colour-seasons.json` | `data/schema/colour-seasons.schema.json` | The 12 seasons on the *Colour* tab: where each sits on warmth, depth and clarity, its palette, neutrals, metals and colours to avoid, with a `why` |
 | Colour questions | `data/colour-quiz.json` | `data/schema/colour-quiz.schema.json` | The *Colour* tab's questions and answers, how each answer scores, and which ones a photo sample can suggest |
 | Make-up types | `data/cosmetic-types.json` | `data/schema/cosmetic-types.schema.json` | Two-level list of make-up types on the *Make-up* tab (Lips › Lip liner); `multi` marks palettes, which open the shade picker on their first photo |
+| Face zones | `data/face-zones.json` | `data/schema/face-zones.schema.json` | The parts of a make-up look, the make-up types that fit each, and which season colours to suggest for it |
 | Finishes | `data/finishes.json` | `data/schema/finishes.schema.json` | Finishes a make-up shade can have (matte, satin, shimmer…) |
 
 Check the data locally with `node scripts/check-data.js`.

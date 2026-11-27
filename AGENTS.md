@@ -14,7 +14,7 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
 - **Built-in knowledge** is in `data/*.json` with schemas in `data/schema/`. Run `node scripts/check-data.js` after
   changing data. Item records refer to entries by id; ids are never renamed or reused.
 - **User data**: `localStorage` key `wardrobe.data`; Drive file `petravanta/Wardrobe/Wardrobe data.json` (app id `wardrobe`, key prefix
-  `wardrobe.drive`). Lists: `items`, `outfits`, `wears`, `words`, `cosmetics`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
+  `wardrobe.drive`). Lists: `items`, `outfits`, `wears`, `words`, `cosmetics`, `looks`; settings include `showSpicy`, `filters`, `sort`, `sortReverse`,
   `groupBy`, `cos` (the Make-up tab's view and filters), `thumbSize` (`s`, `m`, `l`), `autoCutout` (unset means on), `photosAlbum` and `photosAccount`. Merge rules are
   `mergeDocs()`.
 - **Photos**: bytes live in IndexedDB database `wardrobe` (`photos` full size, `thumbs` 400 px), keyed by the photo
@@ -80,5 +80,11 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   photos go through `Photos.add()` in `cosTake()`, and `GPhotos` finds them through `photoOwners()`: anything new that
   holds photos must be added there. A drop on the Make-up tab, or with a product open, goes to make-up (capture-phase
   listener), never into the closet. `closeDrawer()` calls `cosClosed()`, which drops the photos of a new product that
-  was never saved. Shade colours come only from pixels on the canvas: no model, nothing sent anywhere.
+  was never saved. Shade colours come only from pixels on the canvas: no model, nothing sent anywhere. The sampler works
+  on `sampList()` / `sampPhoto()`: a product's shades, or a swatch sheet's rows (`cosSamp.sheet`), whose photo stays in
+  memory and is never stored: `sheetSave()` stores one crop per swatch on its product. `sampZoom()` keeps the spot under
+  the pointer still; touch pans by hand, so the canvas has `touch-action: none`.
+- **Looks**: `js/looks.js`: `renderLooks()` (the Make-up tab's *Looks* view) and `lookForm()` in the outfit panel layout
+  (`lookEd` while open; `closeDrawer()` clears it). Zones come from `data/face-zones.json`; `lookFace()` draws each zone
+  id, so a new zone needs a place in it. A zone keeps its `hex` so a look survives its product being deleted.
 - The design and roadmap are in the README (*Next steps*).

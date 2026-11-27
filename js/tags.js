@@ -23,7 +23,7 @@ function addWord(name) {
 }
 function deleteWord(id) {
   const t = now();
-  [...doc.items, ...doc.outfits, ...doc.cosmetics].forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
+  [...doc.items, ...doc.outfits, ...doc.cosmetics, ...doc.looks].forEach(it => { if ((it.words || []).includes(id)) { it.words = it.words.filter(x => x !== id); it.u = t; } });
   const f = F(); if ((f.words || []).includes(id)) doc.settings = { ...doc.settings, filters: { ...f, words: f.words.filter(x => x !== id) }, updatedAt: t };
   remove('words', id);
 }
