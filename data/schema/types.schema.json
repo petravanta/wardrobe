@@ -60,7 +60,8 @@
             "shoe-eu",
             "shoe-uk",
             "shoe-us",
-            "bra"
+            "bra",
+            "one-size"
           ]
         },
         "uniqueItems": true,
