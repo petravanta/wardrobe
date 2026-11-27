@@ -67,6 +67,15 @@
         "type": "number",
         "minimum": 0,
         "description": "Least CIE chroma for suggestions, to leave greys out (lips)."
+      },
+      "maxChroma": {
+        "type": "number",
+        "minimum": 0,
+        "description": "Most CIE chroma for suggestions, to keep a part muted (contour)."
+      },
+      "ownFirst": {
+        "type": "boolean",
+        "description": "Suggest the best-suited shade you own for this part even when it is not in your season’s palette (contour, bronzer and highlight depend more on depth than on the palette)."
       }
     }
   }

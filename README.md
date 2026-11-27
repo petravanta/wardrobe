@@ -266,13 +266,24 @@ The *Make-up* tab keeps the make-up you own: lipsticks, lip liners, eyeshadow pa
   sheet of paper). Each swatch you tap is its own row: give it a shade name, finish, brand, product name and type, or
   add it to a product you already have. *Save products* makes one product per row, each with its own photo: a crop of
   the sheet around its swatch (with the white paper reading, so it can be read again). The sheet itself isn't stored.
-- **Looks**: a look is a face palette, one colour each for lips, cheeks, bronze and contour, highlight, eyelid,
+- **Multicolour shades** (glitter, duochrome): turn on *✦ Multicolour* before tapping, or ✦ on a shade, or give it
+  the glitter or duochrome finish, and the app reads the few colours that cover most of the spot instead of one
+  average (k-means in Lab; colours closer than ΔE 12 merge, any under 7% of the spot drop out). The shade keeps them as
+  `parts` (largest first, with each one's share) and shows them as stripes; its `hex` is the main one. A bigger
+  dragged box catches more of the glitter.
+- **Face palettes**: one *Face palette (contour, bronzer, highlight, blush)* holds all of them. Each shade in the form
+  says which parts of the face it suits, from its colour and the ranges in `data/face-zones.json`, and a look's
+  *Suggest* takes the best-suited pan for contour, bronzer and highlight (`ownFirst` zones) from whatever palette
+  you have, in the season's palette or not.
+- **Season gaps**: the *Shades* view opens with the colours your season suggests for each part of the face that none
+  of your shades for that part comes near (within ΔE 20), up to eight a part, as a shopping guide.
+- **Looks**: a look is a face palette, one colour each for lips, cheeks, contour, bronzer, highlight, eyelid,
   crease, liner and nails (`data/face-zones.json`), shown on a face chart. It opens in a large panel like an outfit:
   tap a part of the face, or its row, to choose from your own shades that fit it (✓ marks those in your colour
   season's palette, the same rule as the closet on the *Colour* tab) or from the season's colours to look for.
   *Suggest* fills the empty parts (your shades in the palette first, a season colour only where you have none) and
   *Mix it up* picks again for every part. Each zone in `data/face-zones.json` says which make-up types fit it and
-  which part of the palette to suggest (colours or neutrals, with lightness, chroma and hue ranges). Looks keep a
+  which part of the palette to suggest (colours or neutrals, with lightness, chroma and hue ranges), and `ownFirst` makes Suggest take your best-suited shade even outside the palette. Looks keep a
   season, a name, notes and tags.
 
 ## Next steps

@@ -11,21 +11,24 @@ const lchOf = hex => { const [L, a, b] = labOf(hex); return { L, C: Math.hypot(a
 const inHue = (h, [a, b]) => a <= b ? h >= a && h <= b : h >= a || h <= b;
 const zoneTypeOk = (z, c) => !c.ownType && (z.types.includes(c.type) || z.types.includes((K.byId.cosmeticTypes.get(c.type) || {}).parent));
 // How far a colour is from what a zone asks for (0: it fits its lightness, chroma and hue ranges)
-const zoneMiss = (z, hex) => { const { L, C, h } = lchOf(hex); return (z.lightness ? Math.max(0, z.lightness[0] - L, L - z.lightness[1]) : 0) + (z.minChroma ? Math.max(0, z.minChroma - C) : 0) + (z.hue && C > 12 && !inHue(h, z.hue) ? 30 : 0); };
+const zoneMiss = (z, hex) => { const { L, C, h } = lchOf(hex); return (z.lightness ? Math.max(0, z.lightness[0] - L, L - z.lightness[1]) : 0) + (z.minChroma ? Math.max(0, z.minChroma - C) : 0) + (z.maxChroma ? Math.max(0, C - z.maxChroma) : 0) + (z.hue && C > 12 && !inHue(h, z.hue) ? 30 : 0); };
+// The parts of a face a shade suits (its product's type fits the part, and its colour the part's ranges): a combined
+// face palette's pans sort themselves into contour, bronzer, highlight and blush this way
+const shadeUses = (c, s) => c && okHex(s.hex) ? K.faceZones.filter(z => zoneTypeOk(z, c) && zoneMiss(z, s.hex) <= 6).map(z => z.name) : [];
 // The season's colours for a zone, best first; when the zone's ranges leave none, the nearest of the rest
-function zoneTargets(z, s) {
+function zoneTargets(z, s, strict) {
   if (!s) return [];
   const src = z.from === 'neutrals' ? s.neutrals : z.from === 'colours' ? s.colours : [...s.colours, ...s.neutrals];
   const ranked = src.map(c => ({ c, m: zoneMiss(z, c.hex) })).sort((a, b) => a.m - b.m);
   const ok = ranked.filter(x => !x.m);
-  return (ok.length ? ok : ranked.slice(0, 4)).map(x => x.c);
+  return (ok.length || strict ? ok : ranked.slice(0, 4)).map(x => x.c);
 }
 // Your shades that fit a zone, those in the season's palette first, then by how close they are to it
 function zoneShades(z, s) {
   const good = s ? [...s.colours, ...s.neutrals].map(c => labOf(c.hex)) : [], bad = s ? s.avoid.map(c => labOf(c.hex)) : [];
   return doc.cosmetics.filter(c => zoneTypeOk(z, c)).flatMap(c => (c.shades || []).filter(x => okHex(x.hex)).map(x => {
     const l = labOf(x.hex), g = good.length ? Math.min(...good.map(t => dE(l, t))) : 0, b = Math.min(Infinity, ...bad.map(t => dE(l, t)));
-    return { c, x, d: g, fits: !!s && g <= CS_MATCH && g < b, suits: zoneMiss(z, x.hex) <= 10 };
+    return { c, x, d: g, fits: !!s && g <= CS_MATCH && g < b, suits: zoneMiss(z, x.hex) <= 6 };
   })).sort((a, b) => (b.fits - a.fits) || a.d - b.d);
 }
 const zoneHex = v => v && okHex(v.hex) ? v.hex : null;
@@ -46,6 +49,7 @@ function lookFace(l, big) {
     ${g('liner', `<path d="M${cx - 25} 131 Q${cx} 122 ${cx + 25} 131 L${cx + 31} 126" fill="none" ${st('liner', 3)} stroke-linecap="round"/>`)}`;
   return `<svg class="face${big ? ' face-lg' : ''}" viewBox="0 0 240 300" aria-hidden="${big ? 'false' : 'true'}" role="img" aria-label="Face chart">
     <ellipse cx="120" cy="150" rx="86" ry="112" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
+    ${g('contour', `<path d="M42 172 Q62 186 90 196" fill="none" ${st('contour', 9)} stroke-linecap="round" opacity=".55"/><path d="M198 172 Q178 186 150 196" fill="none" ${st('contour', 9)} stroke-linecap="round" opacity=".55"/>`)}
     ${g('bronze', `<ellipse cx="44" cy="165" rx="9" ry="30" ${f('bronze', 'opacity=".5"')}/><ellipse cx="196" cy="165" rx="9" ry="30" ${f('bronze', 'opacity=".5"')}/>`)}
     ${eye(85, 1)}${eye(155, -1)}
     ${g('highlight', `<ellipse cx="78" cy="160" rx="15" ry="5" ${f('highlight', 'opacity=".85"')}/><ellipse cx="162" cy="160" rx="15" ry="5" ${f('highlight', 'opacity=".85"')}/>`)}
@@ -99,7 +103,7 @@ function zonePicker(z, s, v) {
   const mine = zoneShades(z, s), targets = zoneTargets(z, s);
   const cur = x => v && !v.find && v.shade === x.id;
   return `<div class="lz-pick stack">
-    ${mine.length ? `<div><p class="small muted lz-sub">From your make-up</p><ul class="lz-shades">${mine.map(({ c, x, fits }) => `<li><button type="button" class="shade-chip${cur(x) ? ' on' : ''}" data-look-shade="${esc(c.id)}|${esc(x.id)}" aria-pressed="${cur(x)}" title="${esc([x.name, c.brand, c.name].filter(Boolean).join(' · '))}"><i style="background:${esc(x.hex)};color:${inkOn(x.hex)}">${fits ? '✓' : ''}</i><span>${esc(x.name || c.name || cosTypeName(c))}</span><span class="muted">${esc(c.brand || '')}</span></button></li>`).join('')}</ul>${s && !mine.some(m => m.fits) ? '<p class="small muted" style="margin:4px 0 0">None of these is in your season’s palette; a season colour below is something to look for.</p>' : ''}</div>`
+    ${mine.length ? `<div><p class="small muted lz-sub">From your make-up</p><ul class="lz-shades">${mine.map(({ c, x, fits }) => `<li><button type="button" class="shade-chip${cur(x) ? ' on' : ''}" data-look-shade="${esc(c.id)}|${esc(x.id)}" aria-pressed="${cur(x)}" title="${esc([x.name, c.brand, c.name].filter(Boolean).join(' · '))}"><i style="background:${esc(shadeBg(x))};color:${inkOn(x.hex)}">${fits ? '✓' : ''}</i><span>${esc(x.name || c.name || cosTypeName(c))}</span><span class="muted">${esc(c.brand || '')}</span></button></li>`).join('')}</ul>${s && !mine.some(m => m.fits) ? '<p class="small muted" style="margin:4px 0 0">None of these is in your season’s palette; a season colour below is something to look for.</p>' : ''}</div>`
       : `<p class="small muted" style="margin:0">No ${esc(z.name.toLowerCase())} make-up with a colour yet.</p>`}
     ${targets.length ? `<div><p class="small muted lz-sub">${esc(s.name)} colours to look for</p><div class="chips">${targets.map(c => `<button type="button" class="chip" data-look-find="${esc(c.hex)}|${esc(c.name)}" aria-pressed="${!!(v && v.find && v.hex === c.hex)}"><i class="swatch" style="background:${esc(c.hex)}"></i>${esc(c.name)}</button>`).join('')}</div></div>` : ''}
     ${v ? '<div><button type="button" class="btn ghost sm" data-look-clear>Clear this part</button></div>' : ''}
@@ -113,8 +117,10 @@ function lookSuggest(l, all) {
   for (const z of K.faceZones) {
     if (zones[z.id]) continue;
     // only shades that suit the part (a blue eyeshadow is no highlighter), even when they are in the palette
+    // Parts marked ownFirst (contour, bronzer, highlight) take the pan of yours that suits them best, in the palette or not
     const mine = zoneShades(z, s).filter(m => !used.has(m.x.id) && m.suits), fit = mine.filter(m => m.fits);
-    if (fit.length || (!s && mine.length)) { const m = pick(fit.length ? fit : mine); zones[z.id] = { cos: m.c.id, shade: m.x.id, hex: m.x.hex }; used.add(m.x.id); continue; }
+    if (z.ownFirst) mine.sort((a, b) => zoneMiss(z, a.x.hex) - zoneMiss(z, b.x.hex) || (b.fits - a.fits) || a.d - b.d);
+    if (fit.length || ((!s || z.ownFirst) && mine.length)) { const m = pick(z.ownFirst ? mine : fit.length ? fit : mine); zones[z.id] = { cos: m.c.id, shade: m.x.id, hex: m.x.hex }; used.add(m.x.id); continue; }
     const t = zoneTargets(z, s); if (t.length) { const c = pick(t); zones[z.id] = { hex: c.hex, name: c.name, find: true }; }
   }
   return { ...l, zones };
@@ -144,3 +150,20 @@ document.addEventListener('submit', e => {
   e.preventDefault(); const l = lookRead(); if (!l.name) l.name = 'Look';
   put('looks', l); lookEd = null; closeDrawer(); render(); toast('Look saved');
 });
+// The Shades view's gaps: for each part of the face, the season's colours for it that none of your shades for that part
+// comes near (within CS_MATCH), so you know what to look for when you shop
+function seasonGaps() {
+  const s = K.byId.colourSeasons.get(doc.settings.colourSeason);
+  if (!s) return `<section class="panel row gaps"><span class="small muted">Pick your colour season to see which of its colours your make-up doesn’t cover yet.</span><button type="button" class="btn sm" data-tab="colour">Find my season</button></section>`;
+  const rows = K.faceZones.map(z => {
+    const mine = doc.cosmetics.filter(c => zoneTypeOk(z, c)).flatMap(c => (c.shades || []).filter(x => okHex(x.hex)).map(x => labOf(x.hex)));
+    const miss = zoneTargets(z, s, true).filter(t => { const l = labOf(t.hex); return !mine.some(m => dE(m, l) <= CS_MATCH); });
+    return { z, miss: miss.slice(0, 8), have: mine.length };
+  }).filter(r => r.miss.length);
+  const n = rows.reduce((a, r) => a + r.miss.length, 0);
+  return `<details class="panel gaps"${cosF().gapsShut ? '' : ' open'} data-gaps><summary><b>${esc(s.name)} colours you don’t have yet</b> <span class="count">${n}</span></summary>
+    ${rows.length ? `<p class="small muted">Suggested from your season’s palette for each part of the face, and not close to any shade you own for it. A guide for shopping, not a rule.</p>
+    <div class="stack">${rows.map(r => `<div class="gap-row"><span class="small"><b>${esc(r.z.name)}</b>${r.have ? '' : ' <span class="muted">(none yet)</span>'}</span><div class="chips">${r.miss.map(c => `<span class="chip gap-chip"><i class="swatch" style="background:${esc(c.hex)}"></i>${esc(c.name)}</span>`).join('')}</div></div>`).join('')}</div>`
+    : '<p class="small muted">Your make-up covers every colour your season suggests. Nice.</p>'}</details>`;
+}
+document.addEventListener('toggle', e => { if (e.target.dataset && e.target.dataset.gaps !== undefined) { const shut = !e.target.open; if (!!cosF().gapsShut !== shut) setSetting('cos', { ...cosF(), gapsShut: shut || undefined }); } }, true);

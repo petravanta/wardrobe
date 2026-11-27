@@ -17,6 +17,14 @@ const ownTypes = () => [...new Set(doc.cosmetics.map(c => c.ownType).filter(Bool
 // Text that reads on a swatch: dark on light colours, light on dark ones
 const inkOn = hex => labOf(hex)[0] > 62 ? '#1b1f24' : '#ffffff';
 const okHex = h => /^#[0-9a-f]{6}$/i.test(h || '');
+// A multicolour shade (glitter, duochrome) shows its dominant colours as stripes, widest for the most common one
+function shadeBg(s) {
+  const ps = s.multi && (s.parts || []).filter(p => okHex(p.hex));
+  if (!ps || ps.length < 2) return s.hex;
+  let at = 0; const all = ps.reduce((a, p) => a + (p.share || 0), 0) || 1;
+  return `linear-gradient(135deg,${ps.map(p => { const a = at; at += (p.share || 0) / all * 100; return `${p.hex} ${a.toFixed(1)}% ${at.toFixed(1)}%`; }).join(',')})`;
+}
+const MULTI_FINISHES = ['glitter', 'duochrome'];
 const cosF = () => doc.settings.cos || {};
 function setCosF(k, v) { setSetting('cos', { ...cosF(), [k]: v }); render(); }
 
@@ -35,10 +43,10 @@ function cosShelves(list) {
   return [...m.entries()].sort(([a], [b]) => { const ia = order.indexOf(a), ib = order.indexOf(b); return (ia < 0 ? 1e4 : ia) - (ib < 0 ? 1e4 : ib) || a.localeCompare(b); })
     .map(([k, cs]) => ({ label: k.startsWith('own:') ? k.slice(4) : kname('cosmeticTypes', k), items: cs.sort((a, b) => (b.added || '').localeCompare(a.added || '')) }));
 }
-const shadeStrip = (c, n = 8) => (c.shades || []).filter(s => okHex(s.hex)).slice(0, n).map(s => `<i class="swatch" style="background:${esc(s.hex)}"></i>`).join(' ');
+const shadeStrip = (c, n = 8) => (c.shades || []).filter(s => okHex(s.hex)).slice(0, n).map(s => `<i class="swatch" style="background:${esc(shadeBg(s))}"></i>`).join(' ');
 function cosCard(c) {
   const p = cosCover(c), sh = (c.shades || []).filter(s => okHex(s.hex));
-  const ph = p ? `<img alt="" data-photo="${esc(p.id)}">` : sh.length ? `<span class="cos-blocks">${sh.slice(0, 12).map(s => `<i style="background:${esc(s.hex)}"></i>`).join('')}</span>` : 'No photo';
+  const ph = p ? `<img alt="" data-photo="${esc(p.id)}">` : sh.length ? `<span class="cos-blocks">${sh.slice(0, 12).map(s => `<i style="background:${esc(shadeBg(s))}"></i>`).join('')}</span>` : 'No photo';
   const sub = [c.brand, sh.length > 1 ? `${sh.length} shades` : (sh[0] && sh[0].name) || ''].filter(Boolean).join(' · ');
   return `<li><button type="button" class="card" data-cos="${esc(c.id)}"><span class="ph">${ph}</span>
     <span class="cap"><b>${esc(c.name || cosTypeName(c))}</b><span>${shadeStrip(c)} ${esc(sub)}</span></span></button></li>`;
@@ -49,7 +57,7 @@ function shadeTiles(list) {
     const tiles = s.items.flatMap(c => (c.shades || []).filter(x => okHex(x.hex)).map(x => ({ c, x, l: labOf(x.hex) }))).sort((a, b) => b.l[0] - a.l[0]);
     if (!tiles.length) return '';
     return `<section class="shelf"><h3>${esc(s.label)} <span class="count">${tiles.length}</span></h3><ul class="shade-grid">${tiles.map(({ c, x }) => `<li><button type="button" class="shade-tile" data-cos="${esc(c.id)}" title="${esc(x.hex)}">
-      <i style="background:${esc(x.hex)};color:${inkOn(x.hex)}">${x.finish ? esc(kname('finishes', x.finish)) : ''}</i>
+      <i style="background:${esc(shadeBg(x))};color:${inkOn(x.hex)}">${x.finish ? esc(kname('finishes', x.finish)) : ''}${x.multi ? ' ✦' : ''}</i>
       <b>${esc(x.name || 'Unnamed shade')}</b><span>${esc([c.brand, c.name].filter(Boolean).join(' · ') || cosTypeName(c))}</span></button></li>`).join('')}</ul></section>`;
   }).join('');
 }
@@ -79,8 +87,9 @@ function renderCosmetics() {
     <span class="grow"></span>
     ${views}
   </div>
+  ${!list.length && view === 'shades' && !doc.cosmetics.length ? seasonGaps() : ''}
   ${!list.length ? `<div class="empty">${doc.cosmetics.length ? 'Nothing matches these filters.' : 'No make-up yet. Add a lipstick or a palette, or drop a photo of it (and of a paper swatch) here, then tap each shade on the photo to save its colour. Swatched several products on one sheet of paper? Use <i>Swatch sheet</i>: each swatch becomes its own product.'}</div>`
-    : view === 'shades' ? shadeTiles(list) || '<div class="empty">No shades with a colour yet. Open a product and tap its shades on a photo.</div>'
+    : view === 'shades' ? seasonGaps() + shadeTiles(list) || '<div class="empty">No shades with a colour yet. Open a product and tap its shades on a photo.</div>'
     : cosShelves(list).map(s => `<section class="shelf"><h3>${esc(s.label)} <span class="count">${s.items.length}</span></h3><ul class="${thumbClass()}">${s.items.map(cosCard).join('')}</ul></section>`).join('')}`;
 }
 const newCos = () => ({ id: uid(), added: now(), type: 'lipstick', shades: [], photos: [] });
@@ -92,7 +101,9 @@ function shadeRow(s, i) {
     <input type="color" name="shHex" value="${okHex(s.hex) ? esc(s.hex) : '#c06070'}" aria-label="Colour of shade ${i + 1}" title="${s.at ? 'Sampled from a photo; change it by hand here' : 'Pick the colour'}">
     <input type="text" name="shName" value="${esc(s.name || '')}" placeholder="Shade name" aria-label="Name of shade ${i + 1}" autocomplete="off">
     ${finishSel('shFinish', s.finish, `Finish of shade ${i + 1}`)}
-    <button type="button" class="btn ghost sm" data-shade-rm="${esc(s.id)}" aria-label="Remove shade ${i + 1}">×</button></div>`;
+    ${s.multi && (s.parts || []).length > 1 ? `<i class="multi-strip" style="background:${esc(shadeBg(s))}" title="Multicolour: ${esc(s.parts.map(p => p.hex).join(', '))}"></i>` : ''}
+    <button type="button" class="btn ghost sm" data-shade-rm="${esc(s.id)}" aria-label="Remove shade ${i + 1}">×</button>
+    ${shadeUses(cosEditing, s).length ? `<span class="shade-uses small muted">Suits ${esc(shadeUses(cosEditing, s).join(', ').toLowerCase())}</span>` : ''}</div>`;
 }
 function cosThumbs(c) {
   return (c.photos || []).map(p => `<figure><img alt="" class="zoomable" data-photo="${esc(p.id)}"><button type="button" class="rm" data-cos-rmphoto="${esc(p.id)}" aria-label="Remove photo">×</button>
@@ -140,7 +151,7 @@ function cosRead(c) {
     const s = (c.shades || []).find(x => x.id === r.dataset.shade) || { id: r.dataset.shade };
     const hex = $('[name=shHex]', r).value, name = $('[name=shName]', r).value.trim(), finish = $('[name=shFinish]', r).value || undefined;
     const out = { ...s, hex, name: name || undefined, finish };
-    if (s.hex && hex.toLowerCase() !== s.hex.toLowerCase()) { delete out.raw; } // set by hand: no longer a photo reading
+    if (s.hex && hex.toLowerCase() !== s.hex.toLowerCase()) { delete out.raw; if (out.parts && out.parts.length) out.parts = [{ ...out.parts[0], hex, raw: undefined }, ...out.parts.slice(1)]; } // set by hand: no longer a photo reading
     return out;
   });
   const n = v => { v = (v || '').trim(); return v || undefined; };
@@ -219,7 +230,7 @@ function sampOpen(bmp) {
     <h2>${sheet ? 'Swatch sheet' : 'Pick shades'}</h2>
     <p class="small">${sheet ? 'Tap each swatch, or drag a box over it. Each one becomes its own product: give it a brand, a name and a type below, or add it to a product you have.' : 'Tap the middle of each pan or swatch, or drag a box over it. Each one becomes a shade; name it below.'} Tap a shade’s dot in the list first to read it again.</p>
     <div class="row samp-zoom" role="group" aria-label="Zoom"><button type="button" class="btn sm" data-samp-zoom="out" aria-label="Zoom out">−</button><span class="small mono" id="sampZoomL">100%</span><button type="button" class="btn sm" data-samp-zoom="in" aria-label="Zoom in">+</button><button type="button" class="btn ghost sm" data-samp-zoom="fit">Fit</button><span class="small muted">${matchMedia('(pointer:coarse)').matches ? 'or pinch; drag to move around' : 'or Ctrl + scroll'}</span></div>
-    <div class="chips" role="group" aria-label="What a tap does"><button type="button" class="chip" data-samp-mode="shade" aria-pressed="true">Shade</button><button type="button" class="chip" data-samp-mode="white" aria-pressed="false">White paper</button></div>
+    <div class="chips" role="group" aria-label="What a tap does"><button type="button" class="chip" data-samp-mode="shade" aria-pressed="true">Shade</button><button type="button" class="chip" data-samp-mode="white" aria-pressed="false">White paper</button><button type="button" class="chip" data-samp-multi-all aria-pressed="${!!cosSamp.multi}" title="Glitter, duochrome: each tap reads the main colours, not one average">✦ Multicolour</button></div>
     <p class="small muted" id="sampWhite"></p>
     <div class="row"><span class="small muted" id="sampSzL">Tap size</span><div class="chips seg" role="group" aria-labelledby="sampSzL">${Object.keys(SAMP_SIZES).map(k => `<button type="button" class="chip" data-samp-size="${k}" aria-pressed="${cosSamp.size === k}">${k.toUpperCase()}</button>`).join('')}</div></div>
     <datalist id="dlSheetBrand">${brands.map(b => `<option value="${esc(b)}"></option>`).join('')}</datalist>
@@ -287,31 +298,65 @@ function sampZoom(z, cx, cy) {
   const l = $('#sampZoomL'); if (l) l.textContent = `${Math.round(z * 100)}%`;
 }
 // The median of each channel over the box (only its middle, for a dragged box, so a pan's rim or the gap beside it doesn't count)
-function sampRead(box, dragged) {
+function sampPixels(box, dragged, max = 40000) {
   const cv = cosSamp.cv, W = cv.width, H = cv.height;
   let [x, y, w, h] = box; if (dragged) { x += w * .15; y += h * .15; w *= .7; h *= .7; }
   const x0 = Math.max(0, Math.round(x * W)), y0 = Math.max(0, Math.round(y * H)), x1 = Math.min(W, Math.max(x0 + 1, Math.round((x + w) * W))), y1 = Math.min(H, Math.max(y0 + 1, Math.round((y + h) * H)));
-  const px = cv.getContext('2d', { willReadFrequently: true }).getImageData(x0, y0, x1 - x0, y1 - y0).data, ch = [[], [], []], step = Math.max(1, Math.floor(px.length / 4 / 40000));
-  for (let i = 0; i < px.length; i += 4 * step) for (let c = 0; c < 3; c++) ch[c].push(px[i + c]);
-  return ch.map(a => a.sort((p, q) => p - q)[a.length >> 1]);
+  const px = cv.getContext('2d', { willReadFrequently: true }).getImageData(x0, y0, x1 - x0, y1 - y0).data, out = [], step = Math.max(1, Math.floor(px.length / 4 / max));
+  for (let i = 0; i < px.length; i += 4 * step) out.push([px[i], px[i + 1], px[i + 2]]);
+  return out;
 }
+function sampRead(box, dragged) {
+  const pts = sampPixels(box, dragged);
+  return [0, 1, 2].map(c => pts.map(p => p[c]).sort((a, b) => a - b)[pts.length >> 1]);
+}
+// Glitter and duochrome: the few colours that cover most of the box (k-means in Lab, so "different" means different to
+// the eye). Clusters closer than ΔE 12 merge and any under 7% of the pixels drop out; the biggest comes first.
+function sampColours(box, dragged) {
+  const pts = sampPixels(box, dragged, 3000), lab = pts.map(rgbLab), k = Math.min(4, pts.length);
+  if (!k) return [];
+  const cen = [lab[0]]; // seeds spread out: each next one is the pixel farthest from the seeds so far
+  while (cen.length < k) { let bi = 0, bd = -1; lab.forEach((l, i) => { const d = Math.min(...cen.map(c => dE(l, c))); if (d > bd) { bd = d; bi = i; } }); if (bd < 6) break; cen.push(lab[bi]); }
+  let as = new Array(lab.length).fill(0);
+  for (let it = 0; it < 10; it++) {
+    as = lab.map(l => { let bi = 0, bd = Infinity; cen.forEach((c, i) => { const d = dE(l, c); if (d < bd) { bd = d; bi = i; } }); return bi; });
+    cen.forEach((_, j) => { const m = lab.filter((_, i) => as[i] === j); if (m.length) cen[j] = [0, 1, 2].map(c => m.reduce((a, l) => a + l[c], 0) / m.length); });
+  }
+  let groups = cen.map((_, j) => { const idx = as.map((a, i) => a === j ? i : -1).filter(i => i >= 0); return { idx, l: cen[j] }; }).filter(g => g.idx.length);
+  for (let merged = true; merged;) { // merge near-identical clusters
+    merged = false;
+    for (let a = 0; a < groups.length && !merged; a++) for (let b = a + 1; b < groups.length; b++) if (dE(groups[a].l, groups[b].l) < 12) { groups[a].idx.push(...groups[b].idx); groups.splice(b, 1); merged = true; break; }
+  }
+  return groups.map(g => ({ rgb: [0, 1, 2].map(c => g.idx.map(i => pts[i][c]).sort((a, b) => a - b)[g.idx.length >> 1]), share: g.idx.length / pts.length }))
+    .filter(g => g.share >= 0.07).sort((a, b) => b.share - a.share);
+}
+// A shade's reading from its box: one median colour, or for a multicolour shade its dominant colours too
+function sampShade(s, box, dragged, white) {
+  const at = { photo: cosSamp.pid, x: +box[0].toFixed(4), y: +box[1].toFixed(4), w: +box[2].toFixed(4), h: +box[3].toFixed(4), ...(dragged ? { drag: true } : {}) };
+  if (!s.multi) { const rgb = sampRead(box, dragged); const { parts, ...r } = s; return { ...r, at, raw: rgbHex(rgb), hex: rgbHex(whiteFix(rgb, white)) }; }
+  const cs = sampColours(box, dragged), parts = cs.map(c => ({ raw: rgbHex(c.rgb), hex: rgbHex(whiteFix(c.rgb, white)), share: +c.share.toFixed(3) }));
+  return { ...s, at, raw: parts[0].raw, hex: parts[0].hex, parts };
+}
+const sampBoxOf = s => [s.at.x, s.at.y, s.at.w, s.at.h];
 // A white paper reading scales each channel so the paper comes out a clean near-white: it fixes the light's colour and a dim exposure
 const whiteFix = (rgb, w) => w ? rgb.map((v, i) => v * Math.min(2.2, Math.max(0.5, 242 / Math.max(1, w[i])))) : rgb;
 function sampTake(box, dragged) {
-  const p = sampPhoto(), list = sampList(), rgb = sampRead(box, dragged);
+  const p = sampPhoto(), list = sampList();
   if (cosSamp.mode === 'white') {
-    p.white = rgb;
-    sampSet(list.map(s => s.at && s.at.photo === p.id && s.raw ? { ...s, hex: rgbHex(whiteFix(hexRgb(s.raw), rgb)) } : s));
+    const rgb = sampRead(box, dragged); p.white = rgb;
+    const fix = h => rgbHex(whiteFix(hexRgb(h), rgb));
+    sampSet(list.map(s => s.at && s.at.photo === p.id && s.raw ? { ...s, hex: fix(s.raw), ...(s.parts ? { parts: s.parts.map(q => q.raw ? { ...q, hex: fix(q.raw) } : q) } : {}) } : s));
     cosSamp.mode = 'shade'; toast('White paper set: colours from this photo are corrected');
     return sampPanel();
   }
-  const at = { photo: p.id, x: +box[0].toFixed(4), y: +box[1].toFixed(4), w: +box[2].toFixed(4), h: +box[3].toFixed(4) }, raw = rgbHex(rgb), hex = rgbHex(whiteFix(rgb, p.white));
   const i = cosSamp.sel ? list.findIndex(s => s.id === cosSamp.sel) : -1;
-  if (i >= 0) { list[i] = { ...list[i], hex, raw, at }; cosSamp.sel = null; }
+  if (i >= 0) { list[i] = sampShade(list[i], box, dragged, p.white); cosSamp.sel = null; }
   else {
     const prev = [...list].reverse().find(s => s.at && s.at.photo === p.id);
-    // On a sheet, the next swatch is probably the same kind of product (and finish) as the last one; the brand usually isn't
-    sampSet([...list, { id: uid(), hex, raw, at, ...(prev && prev.finish ? { finish: prev.finish } : {}), ...(cosSamp.sheet ? { type: prev ? prev.type : 'lipstick', into: '' } : {}) }]);
+    // On a sheet, the next swatch is probably the same kind of product (and finish) as the last one; the brand usually isn't.
+    // Multicolour taps (the chip) read several colours, and so does a shade whose finish is glitter or duochrome.
+    const fin = prev && prev.finish, multi = cosSamp.multi || MULTI_FINISHES.includes(fin);
+    sampSet([...list, sampShade({ id: uid(), ...(fin ? { finish: fin } : {}), ...(multi ? { multi: true } : {}), ...(cosSamp.sheet ? { type: prev ? prev.type : 'lipstick', into: '' } : {}) }, box, dragged, p.white)]);
   }
   sampPanel(i < 0);
 }
@@ -328,11 +373,12 @@ function sheetProd(s, i) {
 }
 function sampDraw() {
   const pid = cosSamp.pid, list = sampList(), sheet = cosSamp.sheet;
-  $('#sampDots').innerHTML = list.map((s, i) => s.at && s.at.photo === pid ? `<i class="${s.id === cosSamp.sel ? 'sel' : ''}" style="left:${(s.at.x + s.at.w / 2) * 100}%;top:${(s.at.y + s.at.h / 2) * 100}%;background:${esc(s.hex)};color:${inkOn(s.hex)}">${i + 1}</i>` : '').join('');
+  $('#sampDots').innerHTML = list.map((s, i) => s.at && s.at.photo === pid ? `<i class="${s.id === cosSamp.sel ? 'sel' : ''}" style="left:${(s.at.x + s.at.w / 2) * 100}%;top:${(s.at.y + s.at.h / 2) * 100}%;background:${esc(shadeBg(s))};color:${inkOn(s.hex)}">${i + 1}</i>` : '').join('');
   $('#sampList').innerHTML = list.length ? list.map((s, i) => `<div class="${sheet ? 'sheet-row stack' : ''}" data-samp-shade="${esc(s.id)}"><div class="shade-row${s.id === cosSamp.sel ? ' sel' : ''}"><span class="shade-n mono">${i + 1}</span>
-    <button type="button" class="shade-dot" data-samp-sel="${esc(s.id)}" style="background:${esc(s.hex)}" aria-pressed="${s.id === cosSamp.sel}" aria-label="Read ${sheet ? 'swatch' : 'shade'} ${i + 1} again with the next tap" title="${s.at && s.at.photo === pid ? 'Read again' : 'From another photo or set by hand: tap, then tap the photo to read it here'}"></button>
+    <button type="button" class="shade-dot" data-samp-sel="${esc(s.id)}" style="background:${esc(shadeBg(s))}" aria-pressed="${s.id === cosSamp.sel}" aria-label="Read ${sheet ? 'swatch' : 'shade'} ${i + 1} again with the next tap" title="${s.at && s.at.photo === pid ? 'Read again' : 'From another photo or set by hand: tap, then tap the photo to read it here'}"></button>
     <input type="text" data-samp-name="${esc(s.id)}" value="${esc(s.name || '')}" placeholder="Shade name" aria-label="Name of shade ${i + 1}" autocomplete="off" enterkeyhint="done">
     <select data-samp-finish="${esc(s.id)}" aria-label="Finish of shade ${i + 1}">${finishOpts(s.finish)}</select>
+    <button type="button" class="btn ghost sm multi-btn" data-samp-multi="${esc(s.id)}" aria-pressed="${!!s.multi}" aria-label="Multicolour: read several colours for shade ${i + 1}" title="Multicolour (glitter, duochrome): read the main colours, not one average">✦</button>
     <button type="button" class="btn ghost sm" data-samp-rm="${esc(s.id)}" aria-label="Remove shade ${i + 1}">×</button></div>${sheet ? sheetProd(s, i) : ''}</div>`).join('') : `<p class="small muted" style="margin:0">No ${sheet ? 'swatches' : 'shades'} yet.</p>`;
 }
 function sampPanel(focusNew) {
@@ -341,6 +387,16 @@ function sampPanel(focusNew) {
   $('#sampWhite').innerHTML = cosSamp.mode === 'white' ? '<b>Now tap the bare white paper.</b>' : p.white ? `White paper set <i class="swatch" style="background:${rgbHex(p.white)}"></i>: colours from this photo are corrected for the light.` : 'For a swatch on paper, tap the bare paper once with <i>White paper</i>: the app then corrects for the colour of the light.';
   sampDraw();
   if (focusNew) { const ins = $$('#sampList [data-samp-name]'), last = ins[ins.length - 1]; if (last && matchMedia('(pointer:fine)').matches) last.focus({ preventScroll: true }); if (last) last.closest('[data-samp-shade]').scrollIntoView({ block: 'nearest' }); }
+}
+// Switches a shade between one colour and several; one read on this photo is read again from where it was tapped
+function sampToggleMulti(id, on) {
+  const list = sampList(), i = list.findIndex(x => x.id === id); if (i < 0) return;
+  const s = list[i], multi = on == null ? !s.multi : on, p = sampPhoto();
+  let n = { ...s, multi: multi || undefined };
+  if (!multi) delete n.parts;
+  if (s.at && s.at.photo === cosSamp.pid) n = sampShade(n, sampBoxOf(s), !!s.at.drag, p.white);
+  list[i] = n; sampDraw();
+  if (multi && n.parts) toast(n.parts.length > 1 ? `Found ${n.parts.length} main colours` : 'Only one main colour there. Drag a bigger box over the glitter to catch more.', 4000);
 }
 function sampBack() {
   if (cosSamp && cosSamp.cv) cosSamp.cv.width = cosSamp.cv.height = 0;
@@ -405,6 +461,8 @@ document.addEventListener('click', e => {
   if (d.sampSize) { cosSamp.size = d.sampSize; $$('[data-samp-size]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sampSize === cosSamp.size))); return; }
   if (d.sampSel) { cosSamp.sel = cosSamp.sel === d.sampSel ? null : d.sampSel; cosSamp.mode = 'shade'; return sampPanel(); }
   if (d.sampRm) { sampSet(sampList().filter(s => s.id !== d.sampRm)); if (cosSamp.sel === d.sampRm) cosSamp.sel = null; return sampDraw(); }
+  if (d.sampMultiAll !== undefined) { cosSamp.multi = !cosSamp.multi; t.setAttribute('aria-pressed', String(cosSamp.multi)); return toast(cosSamp.multi ? 'Each tap now reads the main colours (for glitter and duochrome)' : 'Each tap reads one colour again'); }
+  if (d.sampMulti) return sampToggleMulti(d.sampMulti, null);
   if (d.sampZoom) return sampZoom(d.sampZoom === 'fit' ? 1 : cosSamp.zoom * (d.sampZoom === 'in' ? 1.5 : 1 / 1.5));
   if (d.sampDone !== undefined) return cosSamp.sheet ? sheetSave() : sampBack();
 }, true);
@@ -419,7 +477,7 @@ document.addEventListener('input', e => {
 let cosQT;
 document.addEventListener('change', e => {
   const d = e.target.dataset || {}, s = cosSamp && sampList().find(x => x.id === (d.sampFinish || d.sheetType || d.sheetInto)); if (!s) return;
-  if (d.sampFinish) s.finish = e.target.value || undefined;
+  if (d.sampFinish) { s.finish = e.target.value || undefined; if (MULTI_FINISHES.includes(s.finish) && !s.multi) sampToggleMulti(s.id, true); }
   if (d.sheetType) s.type = e.target.value;
   if (d.sheetInto) { s.into = e.target.value; sampDraw(); }
 });

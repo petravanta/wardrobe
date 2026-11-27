@@ -20,7 +20,7 @@
   {"id": "bronzer", "name": "Bronzer", "parent": "face"},
   {"id": "contour", "name": "Contour", "parent": "face"},
   {"id": "highlighter", "name": "Highlighter", "parent": "face"},
-  {"id": "face-palette", "name": "Face palette", "parent": "face", "multi": true},
+  {"id": "face-palette", "name": "Face palette (contour, bronzer, highlight, blush)", "parent": "face", "multi": true},
   {"id": "primer", "name": "Primer", "parent": "face"},
   {"id": "setting-spray", "name": "Setting spray", "parent": "face"},
   {"id": "nails", "name": "Nails"},
