@@ -391,9 +391,8 @@ There is no build step: GitHub Pages serves the files as they are.
 | File | What it holds |
 | --- | --- |
 | `index.html` | The page's markup; loads the styles and scripts below |
-| `css/theme.css`, `css/app.css` | The shared look of petravanta's apps (a copy), then Wardrobe's own styles |
+| `css/app.css` | Wardrobe's own styles (the shared look loads from the hub: `../general/shared/theme.css`) |
 | `js/core.js` … `js/start.js` | The app, one file per area (closet, outfits, worn, colour, zoom, arrange, photos, Drive, Google Photos…), loaded in the order `index.html` lists them |
-| `js/shared/` | Unchanged copies of the hub's Google sign-in and Drive store |
 | `cutout-worker.js`, `recognise-worker.js` | Background workers for *Clean background* and *What I wore* |
 | `sw.js` | The service worker: what is kept for offline use |
 

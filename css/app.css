@@ -3,6 +3,24 @@
 :root{--accent:#475569;--accent-ink:#ffffff;--accent-soft:#e5e9ef}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--accent:#a5b4c8;--accent-ink:#10161d;--accent-soft:#222b36}}
 :root[data-theme="dark"]{--accent:#a5b4c8;--accent-ink:#10161d;--accent-soft:#222b36}
+/* Wardrobe's own parts that used to sit in the pasted shared look */
+.szpick{position:relative}
+.szpop{position:absolute;z-index:30;top:calc(100% + 6px);left:0;width:max-content;min-width:220px;max-width:min(380px,calc(100vw - 32px));max-height:60vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 12px 12px;box-shadow:0 8px 28px rgba(0,0,0,.22)}
+.szpop h4{margin:8px 0 6px}
+.szpop .chip .n{font-weight:500;opacity:.7;margin-left:4px;font-size:11px}
+.chip.fam{background:var(--fill);color:var(--on);border-color:transparent}
+.chip.fam-light{border-color:#9aa3ab}
+.chip.fam[aria-pressed="true"]{background:var(--fill);color:var(--on);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+.chip.fam[aria-pressed="true"]::before{content:"✓ ";font-weight:800}
+:root[data-theme="dark"] .chip.fam-dark{border-color:#5b6670}
+.chip .swatch,.chip .wemoji{margin-right:5px}
+.wemoji{font-style:normal}
+.word-row input.emoji{width:52px;text-align:center;font-size:18px;padding-inline:4px}
+.word-row input[type=text]{max-width:220px}
+.word-row input[type=color]{width:34px;height:30px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.foot{color:var(--faint);font-size:12px;padding-top:24px;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 24px);text-align:center}
+@media (max-width:520px){.szpop{position:fixed;left:16px;right:16px;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:auto;max-width:none}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip.fam-dark{border-color:#5b6670}}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}

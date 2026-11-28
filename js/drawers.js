@@ -1,11 +1,16 @@
 'use strict';
 /* ---------- Drawers ---------- */
+let drawerLayer = null; // its BackStack entry, so the phone's Back closes it
 function openDrawer(html, cls = '') {
+  if (!drawerLayer && typeof BackStack !== 'undefined') drawerLayer = BackStack.push(why => {
+    drawerLayer = null; if (why !== 'close') closeDrawer();
+  });
   $('#layer').innerHTML = `<div class="scrim" data-close></div><div class="drawer${cls ? ' ' + cls : ''}" role="dialog" aria-modal="true"><button type="button" class="x" data-close aria-label="Close">×</button>${html}</div>`;
   fillThumbs($('#layer'));
   const f = $('#layer input,#layer select,#layer textarea'); if (f) f.focus();
 }
 function closeDrawer() {
+  const l = drawerLayer; drawerLayer = null; if (l) l.close();
   if (typeof Arrange !== 'undefined' && Arrange.on) Arrange.stop();
   const back = outfitReturn && editing && editing.id === outfitReturn.item ? outfitReturn : null; outfitReturn = null;
   $('#layer').innerHTML = ''; editing = null; cosClosed(); lookEd = null;

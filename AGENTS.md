@@ -3,13 +3,15 @@
 Follow the shared standards in [petravanta/general STANDARDS.md](https://github.com/petravanta/general/blob/main/STANDARDS.md)
 (locally `../general/STANDARDS.md`). Only Wardrobe specifics are here.
 
-- **Static files, no build step**: `index.html` holds the markup and loads `css/theme.css` (the shared look, a copy of
-  `general/shared/theme.css` between its marker comments), `css/app.css`, then the `js/*.js` files with plain `<script>`
-  tags in the order listed there. They are classic scripts sharing one global scope, so a file may use functions from
-  any other at run time, but code that runs while a file loads can only use files above it. `js/start.js` comes last.
-  `js/shared/google-token.js` and `js/shared/drive-store.js` are unchanged copies of `shared/` in the
-  [petravanta/general](https://github.com/petravanta/general) repo; when those change, copy them again (from GitHub: a
-  local `site/general` folder may be older). A new file needs its `<script>` tag and an entry in `sw.js` (`APP_SHELL`).
+- **Static files, no build step**: `index.html` holds the markup and loads the shared look (`../general/shared/theme.css`),
+  `css/app.css`, then the shared libraries (`google-token.js`, `drive-store.js`, `local-day.js` from `../general/shared/`) and
+  the `js/*.js` files with plain `<script>` tags in the order listed there, and last the shared `app.js` (Back, hub link,
+  theme switch, version footer, service worker). They are classic scripts sharing one global scope, so a file may use
+  functions from any other at run time, but code that runs while a file loads can only use files above it. `js/start.js`
+  comes last of ours. Shared code is loaded by URL, never copied (STANDARDS, *Shared code*); the paths are relative so
+  the locally hosted copy works too. A new file needs its `<script>` tag and an entry in `sw.js` (`APP_SHELL`).
+- **Back**: `openDrawer()` pushes one `BackStack` layer for the drawer (re-rendering it reuses it) and `closeDrawer()`
+  closes it; a product's sampler pushes its own (`sampLayer`), so Back steps back to the product. The photo close-up (`Zoom`) has its own layer.
 - **Accent**: slate, `#475569` light / `#a5b4c8` dark.
 - **Built-in knowledge** is in `data/*.json` with schemas in `data/schema/`. Run `node scripts/check-data.js` after
   changing data. Item records refer to entries by id; ids are never renamed or reused.
@@ -91,3 +93,5 @@ Follow the shared standards in [petravanta/general STANDARDS.md](https://github.
   `zoneMissing()`: season targets no `zoneHave()` colour comes near (only ✓ shades, each `parts` colour of a multicolour one). Multicolour shades keep `parts` and `multi`; `hex` stays the main colour,
   so anything else that matches colours (looks, the Colour tab) reads `hex`, and anything that draws one uses `shadeBg()`.
 - The design and roadmap are in the README (*Next steps*).
+
+Checked against General as of 2026-11-28.
