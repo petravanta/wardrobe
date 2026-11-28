@@ -43,24 +43,27 @@ function lookFace(l, big) {
   const z = id => zoneHex((l.zones || {})[id]), f = (id, extra = '') => { const h = z(id); return h ? `fill="${esc(h)}" ${extra}` : 'fill="none" stroke="var(--faint)" stroke-dasharray="3 3"'; };
   const st = (id, w) => { const h = z(id); return h ? `stroke="${esc(h)}" stroke-width="${w}"` : `stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="3 3"`; };
   const g = (id, inner) => `<g data-zone="${id}"${big ? ` class="fz${lookEd && lookEd.zone === id ? ' on' : ''}" role="button" tabindex="0" aria-label="${esc(kname('faceZones', id))}"` : ''}>${inner}</g>`;
-  const eye = (cx, s) => `${g('crease', `<path d="M${cx - 22} 128 Q${cx} 106 ${cx + 22} 128" fill="none" ${st('crease', 6)} stroke-linecap="round" opacity=".8"/>`)}
-    ${g('lid', `<path d="M${cx - 20} 133 Q${cx} 113 ${cx + 20} 133 Q${cx} 125 ${cx - 20} 133Z" ${f('lid')}/>`)}
-    <ellipse cx="${cx}" cy="134" rx="15" ry="5.5" fill="#fff" stroke="var(--line)"/><circle cx="${cx + s}" cy="134" r="4" fill="var(--muted)"/>
-    ${g('liner', `<path d="M${cx - 20} 133 Q${cx} 125 ${cx + 20} 133 L${cx + 25} 129" fill="none" ${st('liner', 2.5)} stroke-linecap="round"/>`)}`;
+  const ink = 'stroke="var(--muted)" stroke-linecap="round" fill="none"';
+  // Eyes closed, as on a make-up artist's face chart: the whole lid shows, the lash line carries the liner
+  const eye = (cx, d) => `${g('lid', `<path d="M${cx - 21} 131 Q${cx} 112 ${cx + 21} 131 Q${cx} 141 ${cx - 21} 131Z" ${f('lid', 'opacity=".9"')}/>`)}
+    ${g('crease', `<path d="M${cx - 23} 128 Q${cx} 104 ${cx + 23} 128" fill="none" ${st('crease', 5)} stroke-linecap="round" opacity=".75"/>`)}
+    <path d="M${cx - 21} 131 Q${cx} 141 ${cx + 21} 131" ${ink} stroke-width="1.6" opacity=".8"/>
+    ${[-12, -4, 4, 12].map(x => `<path d="M${cx + x} ${139 - Math.abs(x) / 3} l${x / 6 + d * 1.5} 5" ${ink} stroke-width="1.2" opacity=".6"/>`).join('')}
+    ${g('liner', `<path d="M${cx - 21} 131 Q${cx} 141 ${cx + 21} 131 L${cx + 21 + d * 6} 127" fill="none" ${st('liner', 2.5)} stroke-linecap="round"/>`)}`;
   // Soft edges (blur) on powders once they have a colour; an empty part is a dashed outline
   const pw = (id, op) => z(id) ? `fill="${esc(z(id))}" opacity="${op}" filter="url(#fzSoft)"` : f(id);
   const ps = (id, w, op) => z(id) ? `fill="none" stroke="${esc(z(id))}" stroke-width="${w}" stroke-linecap="round" opacity="${op}" filter="url(#fzSoft)"` : st(id, 1.5) + ' fill="none"';
   return `<svg class="face${big ? ' face-lg' : ''}" viewBox="0 0 240 300" aria-hidden="${big ? 'false' : 'true'}" role="img" aria-label="Face chart">
     <defs><filter id="fzSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter></defs>
-    <path d="M24 214 C14 120 40 22 120 20 C200 22 226 120 216 214 C200 160 196 110 188 92 C160 70 92 64 56 92 C44 110 40 160 24 214Z" fill="var(--muted)" opacity=".28"/>
-    <path d="M98 236 L96 272 L144 272 L142 236Z" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
-    <path d="M120 34 C168 34 196 70 197 122 C198 162 188 196 168 222 C153 242 137 254 120 254 C103 254 87 242 72 222 C52 196 42 162 43 122 C44 70 72 34 120 34Z" fill="var(--surface)" stroke="var(--line)" stroke-width="2"/>
-    <path d="M62 72 C84 50 140 46 168 64 C150 60 120 64 100 82 C88 76 74 74 62 72Z" fill="var(--muted)" opacity=".28"/>
+    <path d="M30 206 C18 120 44 24 120 22 C196 24 222 120 210 206" ${ink} stroke-width="1.6" opacity=".5"/>
+    <path d="M100 240 L98 272 M140 240 L142 272" ${ink} stroke-width="1.6" opacity=".55"/>
+    <path d="M120 34 C168 34 196 70 197 122 C198 162 188 196 168 222 C153 242 137 254 120 254 C103 254 87 242 72 222 C52 196 42 162 43 122 C44 70 72 34 120 34Z" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.6" stroke-opacity=".7"/>
+    <path d="M58 86 C78 52 140 44 172 66 M100 82 C110 64 128 54 150 52" ${ink} stroke-width="1.6" opacity=".5"/>
     ${g('contour', `<path d="M50 168 Q66 182 92 190" ${ps('contour', 10, .45)}/><path d="M190 168 Q174 182 148 190" ${ps('contour', 10, .45)}/>`)}
     ${g('bronze', `<ellipse cx="60" cy="112" rx="9" ry="22" transform="rotate(12 60 112)" ${pw('bronze', .5)}/><ellipse cx="180" cy="112" rx="9" ry="22" transform="rotate(-12 180 112)" ${pw('bronze', .5)}/>`)}
-    <path d="M66 108 Q84 98 106 105 M134 105 Q156 98 174 108" fill="none" stroke="var(--muted)" stroke-width="3" stroke-linecap="round" opacity=".55"/>
-    ${eye(86, 1)}${eye(154, -1)}
-    <path d="M118 148 Q115 176 110 186 Q120 192 130 186" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" opacity=".45"/>
+    <path d="M64 108 Q84 97 106 104 M134 104 Q156 97 176 108" ${ink} stroke-width="2.4" opacity=".55"/>
+    ${eye(86, -1)}${eye(154, 1)}
+    <path d="M117 150 Q114 176 111 185 Q116 190 121 188" ${ink} stroke-width="1.4" opacity=".45"/>
     ${g('cheeks', `<ellipse cx="80" cy="176" rx="20" ry="13" transform="rotate(-12 80 176)" ${pw('cheeks', .55)}/><ellipse cx="160" cy="176" rx="20" ry="13" transform="rotate(12 160 176)" ${pw('cheeks', .55)}/>`)}
     ${g('highlight', `<ellipse cx="74" cy="158" rx="13" ry="4" transform="rotate(-12 74 158)" ${pw('highlight', .9)}/><ellipse cx="166" cy="158" rx="13" ry="4" transform="rotate(12 166 158)" ${pw('highlight', .9)}/><ellipse cx="120" cy="164" rx="2.5" ry="9" ${pw('highlight', .7)}/>`)}
     ${g('lips', `<path d="M100 212 Q110 204 120 208 Q130 204 140 212 Q120 217 100 212Z" ${f('lips')}/><path d="M100 212 Q120 230 140 212 Q120 217 100 212Z" ${f('lips')}/>`)}
