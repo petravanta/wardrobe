@@ -1,6 +1,10 @@
 'use strict';
 function remoteIn(data) { doc = mergeDocs(doc, data); lsSet(KEY, doc); if (!$('#layer').innerHTML) render(); }
-function showSaveState() { $('#saveState').textContent = store.known ? store.status() || 'Saved in this browser' : 'Saved in this browser'; }
+function showSaveState() {
+  const el = $('#saveState'), p = store.known && store.problem;
+  const t = store.known ? store.status() || 'Saved in this browser' : 'Saved in this browser';
+  el.textContent = t; el.dataset.state = p ? p.kind : !store.known || store.needsTap ? 'local' : /saving/i.test(t) ? 'saving' : 'ok';
+}
 addEventListener('storage', e => { if (e.key === KEY && !$('#layer').innerHTML) { doc = upgrade(lsGet(KEY)); render(); } });
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState === 'visible' && store.known && store.live() && await store.refresh()) remoteIn(store.data);

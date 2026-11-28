@@ -6,7 +6,7 @@
 // before white correction (raw), so its dot shows on the photo and a later white tap can correct it again. Photos are
 // {id, role: 'product' | 'swatch', white?}: stored and uploaded to Google Photos like item photos, never put in Drive.
 // Types come from data/cosmetic-types.json; a type of your own is ownType (its name), reused from the products you have.
-let cosEditing = null, cosSamp = null;
+let cosEditing = null, cosSamp = null, sampLayer = null;
 const COS_OWN = '__own';
 const cosById = id => doc.cosmetics.find(c => c.id === id);
 const cosTypeName = c => c.ownType || kname('cosmeticTypes', c.type);
@@ -221,6 +221,7 @@ async function cosSampler(pid) {
   const blob = await Photos.full(pid);
   if (!blob) return toast('This photo isn’t on this device yet (it was added on another one), so its colours can’t be read here.', 6000);
   let bmp; try { bmp = await createImageBitmap(blob); } catch (e) { return toast('This browser can’t read that photo. Try a JPEG or PNG.'); }
+  if (!sampLayer && typeof BackStack !== 'undefined') sampLayer = BackStack.push(why => { sampLayer = null; if (why === 'back' && cosSamp) sampBack(); }); // Back goes back to the product
   cosSamp = { pid, mode: 'shade', size: cosSamp && cosSamp.size || 'm', sel: null, zoom: 1 };
   sampOpen(bmp); bmp.close && bmp.close();
 }
@@ -409,6 +410,7 @@ function sampToggleMulti(id, on) {
   if (multi && n.parts) toast(n.parts.length > 1 ? `Found ${n.parts.length} main colours` : 'Only one main colour there. Drag a bigger box over the glitter to catch more.', 4000);
 }
 function sampBack() {
+  const l = sampLayer; sampLayer = null; if (l) l.close();
   if (cosSamp && cosSamp.cv) cosSamp.cv.width = cosSamp.cv.height = 0;
   if (cosSamp && cosSamp.sheet) { if (cosSamp.bmp && cosSamp.bmp.close) cosSamp.bmp.close(); cosSamp = null; return closeDrawer(); }
   const c = cosEditing; cosSamp = null; cosForm(c);

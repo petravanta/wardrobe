@@ -3,7 +3,7 @@
 // Any item photo opens full size over everything else: tap or click to zoom in at that spot (again to zoom out), drag or
 // scroll to look around, arrows for the item's other photos (and on to the next item, from the closet), and Esc, × or a tap beside the photo to close
 const Zoom = (() => {
-  let el = null, set = [], at = 0, label = '', back = null, own = '', drag = null, seq = 0, pushed = false, items = null;
+  let el = null, set = [], at = 0, label = '', back = null, own = '', drag = null, seq = 0, layer = null, items = null;
   const q = s => el.querySelector(s);
   async function show() {
     const view = q('.zoom-view'), img = q('img'), p = set[at], n = ++seq;
@@ -48,18 +48,17 @@ const Zoom = (() => {
   function close(byHistory = false) {
     if (!el) return; if (own) URL.revokeObjectURL(own); own = ''; el.remove(); el = null; seq++;
     removeEventListener('pointermove', move); removeEventListener('pointerup', up);
-    if (pushed) { pushed = false; if (!byHistory) history.back(); }
+    const l = layer; layer = null; if (l && !byHistory) l.close();
     if (back && back.isConnected) back.focus(); back = null;
   }
-  // The phone's Back gesture closes the close-up instead of leaving the app
-  addEventListener('popstate', () => { if (el) close(true); });
   function open(photos, start = 0, name = '', from = null, nav = null) {
     if (!photos.length || el) return;
     set = photos; at = Math.min(Math.max(0, start), photos.length - 1); label = name; back = from; items = nav;
     el = document.createElement('div'); el.className = 'zoom'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', 'Photo close-up');
     el.innerHTML = `<button type="button" class="zoom-x" data-zclose><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>Close</button><div class="zoom-view"><img alt="" draggable="false"></div><div class="zoom-bar"><span class="zoom-cap"></span><span class="zoom-hint"><span class="fine">Tap outside or press Esc to close</span><span class="touch">Tap outside to close</span></span><button type="button" data-zstep="-1" aria-label="Previous photo">‹</button><button type="button" data-zstep="1" aria-label="Next photo">›</button><button type="button" class="zitem" data-zitem="-1" aria-label="Previous item" hidden>‹ Item</button><button type="button" class="zitem" data-zitem="1" aria-label="Next item" hidden>Item ›</button></div>`;
     document.body.append(el);
-    try { history.pushState({ zoom: true }, ''); pushed = true; } catch (e) { pushed = false; }
+    // The phone's Back gesture closes the close-up instead of leaving the app
+    layer = typeof BackStack !== 'undefined' ? BackStack.push(why => { if (why !== 'close') { layer = null; close(true); } }) : null;
     const view = q('.zoom-view'), img = q('img');
     el.addEventListener('click', e => {
       e.stopPropagation();
