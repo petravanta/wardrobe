@@ -100,11 +100,13 @@ function lookForm(l, zone) {
   $('#layer .x').focus();
 }
 function zonePicker(z, s, v) {
-  const mine = zoneShades(z, s), targets = zoneTargets(z, s);
+  const mine = zoneShades(z, s), all = s ? zoneTargets(z, s) : [], left = s ? zoneMissing(z, s) : [];
+  const targets = all.filter(t => left.some(m => m.hex === t.hex) || (v && v.find && v.hex === t.hex)); // the chosen one stays even if you have it now
   const cur = x => v && !v.find && v.shade === x.id;
   return `<div class="lz-pick stack">
     ${mine.length ? `<div><p class="small muted lz-sub">From your make-up</p><ul class="lz-shades">${mine.map(({ c, x, fits }) => `<li><button type="button" class="shade-chip${cur(x) ? ' on' : ''}" data-look-shade="${esc(c.id)}|${esc(x.id)}" aria-pressed="${cur(x)}" title="${esc([x.name, c.brand, c.name].filter(Boolean).join(' · '))}"><i style="background:${esc(shadeBg(x))};color:${inkOn(x.hex)}">${fits ? '✓' : ''}</i><span>${esc(x.name || c.name || cosTypeName(c))}</span><span class="muted">${esc(c.brand || '')}</span></button></li>`).join('')}</ul>${s && !mine.some(m => m.fits) ? '<p class="small muted" style="margin:4px 0 0">None of these is in your season’s palette; a season colour below is something to look for.</p>' : ''}</div>`
       : `<p class="small muted" style="margin:0">No ${esc(z.name.toLowerCase())} make-up with a colour yet.</p>`}
+    ${s && all.length && !targets.length ? `<p class="small muted" style="margin:0">Your ✓ shades already cover every ${esc(s.name)} colour for this.</p>` : ''}
     ${targets.length ? `<div><p class="small muted lz-sub">${esc(s.name)} colours to look for</p><div class="chips">${targets.map(c => `<button type="button" class="chip" data-look-find="${esc(c.hex)}|${esc(c.name)}" aria-pressed="${!!(v && v.find && v.hex === c.hex)}"><i class="swatch" style="background:${esc(c.hex)}"></i>${esc(c.name)}</button>`).join('')}</div></div>` : ''}
     ${v ? '<div><button type="button" class="btn ghost sm" data-look-clear>Clear this part</button></div>' : ''}
   </div>`;
@@ -152,18 +154,24 @@ document.addEventListener('submit', e => {
 });
 // The Shades view's gaps: for each part of the face, the season's colours for it that none of your shades for that part
 // comes near (within CS_MATCH), so you know what to look for when you shop
-function seasonGaps() {
-  const s = K.byId.colourSeasons.get(doc.settings.colourSeason);
-  if (!s) return `<section class="panel row gaps"><span class="small muted">Pick your colour season to see which of its colours your make-up doesn’t cover yet.</span><button type="button" class="btn sm" data-tab="colour">Find my season</button></section>`;
-  const rows = K.faceZones.map(z => {
-    const mine = doc.cosmetics.filter(c => zoneTypeOk(z, c)).flatMap(c => (c.shades || []).filter(x => okHex(x.hex)).map(x => labOf(x.hex)));
-    const miss = zoneTargets(z, s, true).filter(t => { const l = labOf(t.hex); return !mine.some(m => dE(m, l) <= CS_MATCH); });
-    return { z, miss: miss.slice(0, 8), have: mine.length };
-  }).filter(r => r.miss.length);
-  const n = rows.reduce((a, r) => a + r.miss.length, 0);
-  return `<details class="panel gaps"${cosF().gapsShut ? '' : ' open'} data-gaps><summary><b>${esc(s.name)} colours you don’t have yet</b> <span class="count">${n}</span></summary>
-    ${rows.length ? `<p class="small muted">Suggested from your season’s palette for each part of the face, and not close to any shade you own for it. A guide for shopping, not a rule.</p>
-    <div class="stack">${rows.map(r => `<div class="gap-row"><span class="small"><b>${esc(r.z.name)}</b>${r.have ? '' : ' <span class="muted">(none yet)</span>'}</span><div class="chips">${r.miss.map(c => `<span class="chip gap-chip"><i class="swatch" style="background:${esc(c.hex)}"></i>${esc(c.name)}</span>`).join('')}</div></div>`).join('')}</div>`
-    : '<p class="small muted">Your make-up covers every colour your season suggests. Nice.</p>'}</details>`;
+// Season gaps for the Shades view: for each part of the face, the season's colours (strict list) that no shade you own
+// for that part comes near. { s: null } without a season.
+// The colours of your make-up for a zone that count as having a season colour: only those in the season's palette (the
+// ✓ rule: within CS_MATCH of a palette colour and nearer it than any colour to avoid), and every colour of a multicolour shade
+function zoneHave(z, s) {
+  const good = [...s.colours, ...s.neutrals].map(c => labOf(c.hex)), bad = s.avoid.map(c => labOf(c.hex));
+  return doc.cosmetics.filter(c => zoneTypeOk(z, c)).flatMap(c => (c.shades || []).filter(x => okHex(x.hex))
+    .flatMap(x => [x.hex, ...(x.multi ? (x.parts || []).map(p => p.hex).filter(okHex) : [])])).map(labOf)
+    .filter(l => { const g = Math.min(...good.map(t => dE(l, t))), b = Math.min(Infinity, ...bad.map(t => dE(l, t))); return g <= CS_MATCH && g < b; });
 }
-document.addEventListener('toggle', e => { if (e.target.dataset && e.target.dataset.gaps !== undefined) { const shut = !e.target.open; if (!!cosF().gapsShut !== shut) setSetting('cos', { ...cosF(), gapsShut: shut || undefined }); } }, true);
+// The season's colours for a zone that none of those comes near
+const zoneMissing = (z, s, strict) => { const have = zoneHave(z, s); return zoneTargets(z, s, strict).filter(t => { const l = labOf(t.hex); return !have.some(m => dE(m, l) <= CS_MATCH); }); };
+function gapRows() {
+  const s = K.byId.colourSeasons.get(doc.settings.colourSeason);
+  if (!s) return { s: null, rows: [] };
+  return { s, rows: K.faceZones.map(z => {
+    return { z, miss: zoneMissing(z, s, true).slice(0, 8) };
+  }).filter(r => r.miss.length) };
+}
+const gapRow = (r, s) => `<div class="gap-row" title="${esc(s.name)} colours for ${esc(r.z.name.toLowerCase())} that none of your shades comes near: a guide for shopping, not a rule"><span class="small muted">${esc(s.name)} ideas for <b>${esc(r.z.name.toLowerCase())}</b></span><div class="chips">${r.miss.map(c => `<span class="chip gap-chip"><i class="swatch" style="background:${esc(c.hex)}"></i>${esc(c.name)}</span>`).join('')}</div></div>`;
+const gapHint = () => '<section class="panel row gaps"><span class="small muted">Pick your colour season to see, under each kind of make-up, which of its colours you don’t have yet.</span><button type="button" class="btn sm" data-tab="colour">Find my season</button></section>';

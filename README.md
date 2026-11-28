@@ -275,12 +275,15 @@ The *Make-up* tab keeps the make-up you own: lipsticks, lip liners, eyeshadow pa
   says which parts of the face it suits, from its colour and the ranges in `data/face-zones.json`, and a look's
   *Suggest* takes the best-suited pan for contour, bronzer and highlight (`ownFirst` zones) from whatever palette
   you have, in the season's palette or not.
-- **Season gaps**: the *Shades* view opens with the colours your season suggests for each part of the face that none
-  of your shades for that part comes near (within ΔE 20), up to eight a part, as a shopping guide.
+- **Season gaps**: in the *Shades* view, each kind of make-up shows, above its shades, the colours your season suggests
+  for the parts of the face it's for that none of your ✓ shades for that part (in the palette, each colour of a ✦
+  multicolour shade counting on its own) comes near (within ΔE 20), up to eight a
+  part, as a shopping guide. A part with none of its make-up yet (nails, say) gets its own shelf. *Season suggestions*
+  at the top turns them off and on.
 - **Looks**: a look is a face palette, one colour each for lips, cheeks, contour, bronzer, highlight, eyelid,
   crease, liner and nails (`data/face-zones.json`), shown on a face chart. It opens in a large panel like an outfit:
   tap a part of the face, or its row, to choose from your own shades that fit it (✓ marks those in your colour
-  season's palette, the same rule as the closet on the *Colour* tab) or from the season's colours to look for.
+  season's palette, the same rule as the closet on the *Colour* tab) or from the season's colours to look for (the ones your ✓ shades for that part don't already cover).
   *Suggest* fills the empty parts (your shades in the palette first, a season colour only where you have none) and
   *Mix it up* picks again for every part. Each zone in `data/face-zones.json` says which make-up types fit it and
   which part of the palette to suggest (colours or neutrals, with lightness, chroma and hue ranges), and `ownFirst` makes Suggest take your best-suited shade even outside the palette. Looks keep a
